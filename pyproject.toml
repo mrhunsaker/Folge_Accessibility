@@ -1,0 +1,49 @@
+[project]
+name = "folge-vision-pipeline"
+version = "2026.7.18"
+description = "Automated documentation publishing pipeline with Ollama Vision AI enrichment and PDF/UA-compliant output"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+authors = [
+    { name = "Michael Hunsaker" },
+]
+keywords = [
+    "accessibility",
+    "documentation",
+    "pdf-ua",
+    "wcag",
+    "aria",
+    "ollama",
+    "vision-ai",
+    "pandoc",
+    "weasyprint",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Documentation",
+    "Topic :: Text Processing :: Markup :: Markdown",
+    "Topic :: Text Processing :: Markup :: HTML",
+    "Topic :: Text Processing :: Markup :: LaTeX",
+]
+dependencies = [
+    "jsonschema>=4.17.0",
+    "jinja2>=3.1.0",
+    "requests>=2.28.0",
+    "weasyprint>=60.0",
+    "pymupdf>=1.23.0",
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
+    "pymdown-extensions>=10.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/mrhunsaker/Folge_Accessibility"
+Repository = "https://github.com/mrhunsaker/Folge_Accessibility"
+Issues = "https://github.com/mrhunsaker/Folge_Accessibility/issues"

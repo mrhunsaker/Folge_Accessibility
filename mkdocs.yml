@@ -1,0 +1,77 @@
+site_name: Folge Vision Publishing Pipeline
+site_url: https://mrhunsaker.github.io/Folge_Accessibility/
+site_author: Michael Hunsaker
+site_description: >-
+  Automated documentation publishing pipeline with Ollama Vision AI
+  enrichment and PDF/UA-compliant output.
+
+repo_url: https://github.com/mrhunsaker/Folge_Accessibility
+repo_name: mrhunsaker/Folge_Accessibility
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - navigation.expand
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.arithmatex:
+      generic: true
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Pipeline:
+      - Overview: pipeline/index.md
+      - "Step 1: Export": pipeline/export.md
+      - "Step 2: Enrich": pipeline/enrich.md
+      - "Step 3: Merge": pipeline/merge.md
+      - "Step 4: Validate": pipeline/validate.md
+      - "Step 5: Render": pipeline/render.md
+      - "Step 6: Publish": pipeline/publish.md
+  - PDF/UA Guarantee: pdf-ua.md
+  - Configuration: configuration.md
+  - Reference:
+      - Scripts: reference/scripts.md
+      - Lua Filters: reference/lua-filters.md
+  - Contributing: contributing.md
+  - License: license.md

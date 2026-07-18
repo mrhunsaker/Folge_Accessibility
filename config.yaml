@@ -21,7 +21,7 @@ targets:
   - name: "pdf"
     enabled: true
     include_long_descriptions: true
-    lua_filter: "accessibility.lua"
+    lua_filter: "pdf-accessibility.lua"
     output_extension: ".pdf"
 
   - name: "docx"
