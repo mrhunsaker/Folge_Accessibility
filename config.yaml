@@ -1,0 +1,57 @@
+project:
+  name: "Folge Vision Publishing"
+  version: "1.0.0"
+  description: "Automated documentation publishing with vision enrichment"
+
+ollama:
+  base_url: "http://localhost:11434/v1"
+  model: "qwen2.5vl:7b"
+  timeout: 120
+  rate_limit: 0.5
+  max_workers: 2
+
+paths:
+  input_dir: "./input"
+  output_dir: "./output"
+  images_dir: "./images"
+  templates_dir: "./templates"
+  scripts_dir: "./scripts"
+
+targets:
+  - name: "pdf"
+    enabled: true
+    include_long_descriptions: true
+    lua_filter: "accessibility.lua"
+    output_extension: ".pdf"
+
+  - name: "docx"
+    enabled: true
+    include_long_descriptions: true
+    lua_filter: "docx-accessibility.lua"
+    output_extension: ".docx"
+
+  - name: "html"
+    enabled: true
+    include_long_descriptions: true
+    include_ocr: true
+    include_ui_controls: true
+    lua_filter: "accessibility.lua"
+    output_extension: ".html"
+
+  - name: "github"
+    enabled: true
+    include_long_descriptions: false
+    lua_filter: null
+    output_extension: ".md"
+
+validation:
+  min_confidence: 0.8
+  require_alt_text: true
+  require_long_description: true
+  max_alt_text_length: 150
+
+qa:
+  flag_low_confidence: true
+  low_confidence_threshold: 0.7
+  flag_missing_ui_elements: true
+  required_ui_types: ["button", "text_field", "dropdown"]
