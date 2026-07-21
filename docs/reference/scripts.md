@@ -46,7 +46,7 @@ uv run python scripts/batch_process.py <guide.json> <images-dir> <output.json>
 
 **Key behaviors:**
 
-- Uses `qwen2.5vl:7b` model (configurable via env)
+- Uses `qwen2.5vl-8k:latest` model (configurable via env)
 - Rate-limits requests (0.5s between calls)
 - Parallel workers (default: 2)
 - Handles JSON parse errors gracefully

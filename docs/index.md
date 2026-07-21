@@ -83,7 +83,7 @@ cd Folge_Accessibility
 uv sync
 
 # Pull the vision model
-ollama pull qwen2.5vl:7b
+ollama pull qwen2.5vl-8k:latest
 
 # Place your Folge export and screenshots
 # (guide.json in root, images in images/)

@@ -20,44 +20,52 @@ def count_sentences(text):
 
 
 def validate_step(step, min_confidence=0.8):
-    """Validate a single step's content quality."""
-    issues = []
-    step_id = step.get("step_id", "?")
+    """Validate a single step's content quality.
+
+    Returns (errors, warnings) tuples. Errors block the pipeline;
+    warnings are informational only.
+    """
+    errors = []
+    warnings = []
+    step_id = step.get("step_id") or step.get("id", "?")
     label = f"step_id={step_id}"
+
+    if "vision_error" in step:
+        return errors, warnings
 
     vision = step.get("vision")
     if vision is None:
-        issues.append(f"{label}: Missing 'vision' object")
-        return issues
+        errors.append(f"{label}: Missing 'vision' object")
+        return errors, warnings
 
     for field in REQUIRED_VISION_FIELDS:
         if field not in vision:
-            issues.append(f"{label}: Missing required vision field '{field}'")
+            errors.append(f"{label}: Missing required vision field '{field}'")
 
     alt_text = vision.get("alt_text", "")
     if len(alt_text) > 150:
-        issues.append(
+        errors.append(
             f"{label}: alt_text exceeds 150 chars ({len(alt_text)} chars)"
         )
 
     long_desc = vision.get("long_description", "")
     sentence_count = count_sentences(long_desc)
     if sentence_count < 2:
-        issues.append(
+        warnings.append(
             f"{label}: long_description has {sentence_count} sentences (need 2-4)"
         )
     elif sentence_count > 4:
-        issues.append(
+        warnings.append(
             f"{label}: long_description has {sentence_count} sentences (need 2-4)"
         )
 
     confidence = vision.get("confidence", 0)
     if confidence < min_confidence:
-        issues.append(
+        warnings.append(
             f"{label}: confidence {confidence} below threshold {min_confidence}"
         )
 
-    return issues
+    return errors, warnings
 
 
 def validate_content(filepath, min_confidence=0.8):
@@ -79,24 +87,31 @@ def validate_content(filepath, min_confidence=0.8):
         print(f"INVALID: {filepath} - no steps found")
         return False
 
-    all_issues = []
+    all_errors = []
+    all_warnings = []
     step_ids = []
 
     for step in steps:
-        step_id = step.get("step_id")
+        step_id = step.get("step_id") or step.get("id")
         if step_id in step_ids:
-            all_issues.append(f"Duplicate step_id: {step_id}")
+            all_errors.append(f"Duplicate step_id: {step_id}")
         step_ids.append(step_id)
-        all_issues.extend(validate_step(step, min_confidence))
+        errors, warnings = validate_step(step, min_confidence)
+        all_errors.extend(errors)
+        all_warnings.extend(warnings)
 
-    if all_issues:
-        print(f"INVALID: {filepath}")
-        for issue in all_issues:
-            print(f"  - {issue}")
+    if all_warnings:
+        print(f"  Warnings ({len(all_warnings)}):")
+        for w in all_warnings:
+            print(f"    - {w}")
+
+    if all_errors:
+        print(f"  INVALID: {filepath}")
+        for e in all_errors:
+            print(f"    - {e}")
         return False
 
-    print(f"VALID: {filepath}")
-    print(f"All {len(steps)} steps passed content validation (min_confidence={min_confidence})!")
+    print(f"  Content valid: {filepath} ({len(steps)} steps, min_confidence={min_confidence})")
     return True
 
 

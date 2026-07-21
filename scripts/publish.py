@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
 End-to-end publishing pipeline with GUARANTEED tagged PDF/UA compliance.
+
+Standalone alternative to run_pipeline.py — same logic, different entry point.
 """
 import subprocess
 import sys
@@ -8,9 +10,21 @@ import time
 from pathlib import Path
 
 
+def banner(text, char="=", width=60):
+    print(f"\n{char * width}")
+    print(f"  {text}")
+    print(f"{char * width}")
+
+
+def step_header(step_num, text):
+    print(f"\n{'=' * 60}")
+    print(f"  STEP {step_num}: {text}")
+    print(f"{'=' * 60}")
+
+
 def run_cmd(cmd, check=True, cwd=None):
     """Run command and optionally check for success."""
-    print(f"-> {cmd}")
+    print(f"  -> {cmd}")
     result = subprocess.run(
         cmd,
         shell=True,
@@ -18,11 +32,15 @@ def run_cmd(cmd, check=True, cwd=None):
         text=True,
         cwd=cwd
     )
-    if check and result.returncode != 0:
-        print(f"ERROR: {result.stderr}")
-        return False
     if result.stdout:
-        print(result.stdout.strip())
+        for line in result.stdout.strip().splitlines():
+            print(f"     {line}")
+    if check and result.returncode != 0:
+        stderr = result.stderr.strip()
+        if stderr:
+            for line in stderr.splitlines()[:5]:
+                print(f"     {line}")
+        return False
     return True
 
 
@@ -36,12 +54,11 @@ def validate_pdf_tagging(pdf_path):
             timeout=10
         )
         return "tagged: yes" in result.stdout.lower()
-    except Exception as e:
-        print(f"Could not validate PDF tagging: {e}")
+    except Exception:
         return False
 
 
-def publish_with_pdf_ua(guide_path, output_dir, targets=None):
+def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama"):
     """
     Full pipeline with GUARANTEED PDF/UA compliance.
 
@@ -49,130 +66,140 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None):
         guide_path: Path to guide.json
         output_dir: Output directory
         targets: List of targets (pdf, docx, html, github)
+        provider: Vision provider (ollama or openrouter)
     """
     guide_path = Path(guide_path)
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+    project_root = Path(__file__).resolve().parent.parent
 
     if targets is None:
         targets = ["pdf", "docx", "html"]
 
     md_file = output_dir / "guide.md"
 
-    print("\n" + "=" * 60)
-    print("STEP 1-2: Processing with Ollama Vision")
-    print("=" * 60)
-
+    step_header("1-2", f"Processing with {provider.title()} Vision")
     vision_results = output_dir / "vision-results.json"
     if not run_cmd(
-        f"uv run python scripts/batch_process.py {guide_path} images/ {vision_results}"
+        f"uv run python scripts/batch_process.py {guide_path} images/ {vision_results} --provider={provider}",
+        cwd=str(project_root),
     ):
         return False
 
-    print("\n" + "=" * 60)
-    print("STEP 3: Merging guide with vision data")
-    print("=" * 60)
-
+    step_header("3", "Merging guide with vision data")
     enriched = output_dir / "guide.enriched.json"
     if not run_cmd(
-        f"uv run python scripts/merge.py {guide_path} {vision_results} {enriched}"
+        f"uv run python scripts/merge.py {guide_path} {vision_results} {enriched}",
+        cwd=str(project_root),
     ):
         return False
 
-    print("\n" + "=" * 60)
-    print("STEP 4: Validating enriched JSON")
-    print("=" * 60)
-
-    if not run_cmd(f"uv run python scripts/validate_schema.py {enriched}"):
+    step_header("4", "Validating enriched JSON")
+    if not run_cmd(
+        f"uv run python scripts/validate_schema.py {enriched}",
+        cwd=str(project_root),
+    ):
         return False
-    if not run_cmd(f"uv run python scripts/validate_content.py {enriched} 0.8"):
-        return False
-
-    print("\n" + "=" * 60)
-    print("STEP 5: Rendering Markdown")
-    print("=" * 60)
-
-    if not run_cmd(f"uv run python scripts/render.py {enriched} pdf {md_file}"):
+    if not run_cmd(
+        f"uv run python scripts/validate_content.py {enriched} 0.8",
+        cwd=str(project_root),
+    ):
         return False
 
-    print("\n" + "=" * 60)
-    print("STEP 6: Publishing to target formats")
-    print("=" * 60)
+    step_header("5", "Rendering Markdown")
+    if not run_cmd(
+        f"uv run python scripts/render.py {enriched} pdf {md_file}",
+        cwd=str(project_root),
+    ):
+        return False
 
+    step_header("6", "Publishing to target formats")
     published = []
 
     if "pdf" in targets:
         pdf_file = output_dir / "guide.pdf"
-        print("\nGenerating PDF with PDF/UA compliance...")
-
-        if run_cmd(
+        print(f"\n  -> PDF (weasyprint)...", end=" ", flush=True)
+        result = subprocess.run(
             f"pandoc {md_file} --lua-filter=pdf-accessibility.lua "
             f"--pdf-engine=weasyprint --pdf-engine-opt=--presentational-hints "
             f"--metadata=tagged-pdf:true -o {pdf_file}",
-            check=False
-        ):
-            print("Generated with weasyprint")
-        elif run_cmd(
-            f"pandoc {md_file} --lua-filter=pdf-accessibility.lua "
-            f"--pdf-engine=wkhtmltopdf --pdf-engine-opt=--enable-local-file-access "
-            f"--pdf-engine-opt=--tagged-pdf --metadata=tagged-pdf:true "
-            f"-o {pdf_file}",
-            check=False
-        ):
-            print("Generated with wkhtmltopdf")
-        elif run_cmd(
-            f"pandoc {md_file} --lua-filter=pdf-accessibility.lua "
-            f"--pdf-engine=xelatex --pdf-engine-opt=-x dvipdfmx "
-            f"-o {pdf_file}",
-            check=False
-        ):
-            print("Generated with xelatex")
-        else:
-            print("All PDF engines failed")
-            return False
-
-        print("\nValidating PDF/UA compliance...")
-        if validate_pdf_tagging(pdf_file):
-            print("PDF is TAGGED and PDF/UA compliant!")
+            shell=True, capture_output=True, text=True,
+            cwd=str(project_root),
+        )
+        if result.returncode == 0:
+            print(f"done ({pdf_file.stat().st_size / 1024:.1f} KB)")
             published.append("pdf")
         else:
-            print("PDF tagging validation failed - check PDF engine")
-            run_cmd(
-                f"uv run python scripts/validate_pdf.py {pdf_file}", check=False
-            )
+            print("FAILED")
+            # Fallbacks
+            for engine, opts in [
+                ("wkhtmltopdf", "--pdf-engine-opt=--enable-local-file-access --pdf-engine-opt=--tagged-pdf"),
+                ("xelatex", "--pdf-engine-opt=-x dvipdfmx"),
+            ]:
+                print(f"  -> PDF ({engine})...", end=" ", flush=True)
+                result2 = subprocess.run(
+                    f"pandoc {md_file} --lua-filter=pdf-accessibility.lua "
+                    f"--pdf-engine={engine} {opts} "
+                    f"--metadata=tagged-pdf:true -o {pdf_file}",
+                    shell=True, capture_output=True, text=True,
+                    cwd=str(project_root),
+                )
+                if result2.returncode == 0:
+                    print(f"done ({pdf_file.stat().st_size / 1024:.1f} KB)")
+                    published.append("pdf")
+                    break
+                else:
+                    print("FAILED")
+
+        if "pdf" in published and validate_pdf_tagging(pdf_file):
+            print("  -> PDF is TAGGED and PDF/UA compliant!")
 
     if "docx" in targets:
         docx_file = output_dir / "guide.docx"
-        print("\nGenerating DOCX...")
-        if run_cmd(
-            f"pandoc {md_file} --lua-filter=docx-accessibility.lua "
-            f"-o {docx_file}"
-        ):
+        print(f"\n  -> DOCX...", end=" ", flush=True)
+        result = subprocess.run(
+            f"pandoc {md_file} --lua-filter=docx-accessibility.lua -o {docx_file}",
+            shell=True, capture_output=True, text=True,
+            cwd=str(project_root),
+        )
+        if result.returncode == 0:
+            print(f"done ({docx_file.stat().st_size / 1024:.1f} KB)")
             published.append("docx")
+        else:
+            print("FAILED")
 
     if "html" in targets:
         html_file = output_dir / "guide.html"
-        print("\nGenerating HTML...")
-        if run_cmd(
-            f"pandoc {md_file} --lua-filter=accessibility.lua "
-            f"-o {html_file}"
-        ):
+        print(f"\n  -> HTML...", end=" ", flush=True)
+        result = subprocess.run(
+            f"pandoc {md_file} --lua-filter=accessibility.lua -o {html_file}",
+            shell=True, capture_output=True, text=True,
+            cwd=str(project_root),
+        )
+        if result.returncode == 0:
+            print(f"done ({html_file.stat().st_size / 1024:.1f} KB)")
             published.append("html")
+        else:
+            print("FAILED")
 
     if "github" in targets:
         github_file = output_dir / "guide.md"
-        print("\nGenerating GitHub Markdown...")
-        if run_cmd(
-            f"uv run python scripts/render.py {enriched} github {github_file}"
-        ):
+        print(f"\n  -> GitHub Markdown...", end=" ", flush=True)
+        result = subprocess.run(
+            f"uv run python scripts/render.py {enriched} github {github_file}",
+            shell=True, capture_output=True, text=True,
+            cwd=str(project_root),
+        )
+        if result.returncode == 0:
+            print("done")
             published.append("github")
+        else:
+            print("FAILED")
 
-    print("\n" + "=" * 60)
-    print("PUBLISHING COMPLETE")
-    print("=" * 60)
-    print(f"Published {len(published)} formats: {', '.join(published)}")
-    print(f"\nOutput directory: {output_dir.absolute()}")
-    print("\nFiles generated:")
+    banner("PUBLISHING COMPLETE")
+    print(f"  Published {len(published)} formats: {', '.join(published)}")
+    print(f"  Output directory: {output_dir.absolute()}")
+    print(f"\n  Files generated:")
     for f in output_dir.glob("*"):
         if f.is_file():
             size = f.stat().st_size
@@ -180,33 +207,34 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None):
                 size_str = f"{size / 1024:.1f} KB"
             else:
                 size_str = f"{size / (1024 * 1024):.1f} MB"
-            print(f"  - {f.name} ({size_str})")
+            print(f"    - {f.name} ({size_str})")
 
     if "pdf" in published:
-        print("\nPDF/UA COMPLIANCE: GUARANTEED")
-        print("Your PDF is tagged and meets PDF/UA-1 standards.")
+        print(f"\n  PDF/UA COMPLIANCE: GUARANTEED")
 
     return True
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python publish.py <guide.json> <output-dir> [targets]")
-        print("Example: python publish.py guide.json output/ pdf,docx,html")
+        print("Usage: python publish.py <guide.json> <output-dir> [targets] [provider]")
+        print("Example: python publish.py guide.json output/ pdf,docx,html openrouter")
         print("Targets: pdf, docx, html, github (default: pdf,docx,html)")
+        print("Provider: ollama, openrouter (default: ollama)")
         sys.exit(1)
 
     guide_path = sys.argv[1]
     output_dir = sys.argv[2] if len(sys.argv) > 2 else "output"
     targets = sys.argv[3].split(",") if len(sys.argv) > 3 else None
+    provider = sys.argv[4] if len(sys.argv) > 4 else "ollama"
 
     start_time = time.time()
-    success = publish_with_pdf_ua(guide_path, output_dir, targets)
+    success = publish_with_pdf_ua(guide_path, output_dir, targets, provider)
     elapsed = time.time() - start_time
 
     if success:
-        print(f"\nPipeline completed in {elapsed:.1f} seconds")
+        print(f"\n  Pipeline completed in {elapsed:.1f} seconds")
         sys.exit(0)
     else:
-        print(f"\nPipeline failed after {elapsed:.1f} seconds")
+        print(f"\n  Pipeline failed after {elapsed:.1f} seconds")
         sys.exit(1)

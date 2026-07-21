@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Render Markdown from enriched JSON using Jinja2 templates."""
 import json
+import os
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 
@@ -37,8 +38,19 @@ def render_markdown(guide_path, template_name="markdown.md",
         "include_long_descriptions": True,
         "include_ocr": False,
         "include_ui_controls": False,
-        "newpage_enabled": True
+        "newpage_enabled": True,
+        "image_prefix": "",
     }
+
+    # Compute image_prefix: relative path from output dir to images dir
+    if output_path:
+        output_dir = Path(output_path).resolve().parent
+        images_dir = Path("images").resolve()
+        try:
+            rel = os.path.relpath(images_dir, output_dir)
+            default_config["image_prefix"] = rel + "/"
+        except ValueError:
+            default_config["image_prefix"] = "images/"
 
     # Merge configuration
     if config:
@@ -52,9 +64,13 @@ def render_markdown(guide_path, template_name="markdown.md",
 
     # Write to file if output_path provided
     if output_path:
-        with open(output_path, 'w', encoding='utf-8') as f:
+        out = Path(output_path)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        with open(out, 'w', encoding='utf-8') as f:
             f.write(markdown)
-        print(f"Rendered Markdown to {output_path}")
+        size = out.stat().st_size
+        size_str = f"{size / 1024:.1f} KB" if size < 1024 * 1024 else f"{size / (1024*1024):.1f} MB"
+        print(f"  Rendered to {out} ({size_str})")
 
     return markdown
 

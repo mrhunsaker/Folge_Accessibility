@@ -10,7 +10,7 @@ SCHEMA:
     "long_description": "<string, 2-4 sentences>",
     "ocr_text": ["<array of visible text strings>"],
     "ui_controls": [{"type": "<button|text_field|dropdown|checkbox|radio|slider|navigation|menu|tab|icon|link|other>", "label": "<string>"}],
-    "important_element": "<string, max 200 chars>",
+    "important_element": "<string, max 200 chars, plain text NOT an object>",
     "confidence": <number, 0.0 to 1.0>
   }
 }
@@ -29,7 +29,7 @@ RULES:
 - long_description: EXACTLY 2-4 sentences. Mention important controls. Explain user focus.
 - ocr_text: Array of ALL visible text strings. ONLY text appearing in image.
 - ui_controls: Array of objects with type and label. Type must be from enum list.
-- important_element: Single most important element user should focus on.
+- important_element: Plain text string (NOT an object like {"type":...}), max 200 chars. Single most important element user should focus on.
 - confidence: Your accuracy confidence (0.0 to 1.0).
 
 EXAMPLE:

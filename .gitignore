@@ -219,4 +219,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
-.idea/
+.idea
+
+images/*.png
+output/*.html
+output/*.md
+output/*.json
+output/*.pdf
+output/*.docx

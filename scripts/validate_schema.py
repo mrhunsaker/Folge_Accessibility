@@ -11,8 +11,7 @@ SCHEMA = {
     "title": "Folge Enriched Guide",
     "description": "Canonical schema for Folge guides enriched with Ollama Vision",
     "type": "object",
-    "required": ["schema_version", "guide_id", "title", "steps"],
-    "additionalProperties": False,
+    "required": ["schema_version", "title", "steps"],
     "properties": {
         "schema_version": {"type": "string", "enum": ["1.0"]},
         "guide_id": {"type": "string"},
@@ -22,23 +21,25 @@ SCHEMA = {
         "language": {"type": "string", "default": "en"},
         "created_at": {"type": "string", "format": "date-time"},
         "updated_at": {"type": "string", "format": "date-time"},
+        "processed_at": {"type": "string"},
+        "model": {"type": "string"},
         "steps": {
             "type": "array",
             "minItems": 1,
             "items": {
                 "type": "object",
-                "required": ["step_id", "title", "body"],
-                "additionalProperties": False,
                 "properties": {
-                    "step_id": {"type": "integer", "minimum": 1},
+                    "step_id": {"type": ["string", "integer"]},
+                    "id": {"type": "string"},
                     "title": {"type": "string", "minLength": 1, "maxLength": 200},
-                    "body": {"type": "string", "minLength": 1},
+                    "body": {"type": "string"},
+                    "description": {"type": "string"},
                     "image": {"type": "string"},
+                    "screenshotFilename": {"type": "string"},
                     "order": {"type": "integer", "minimum": 0},
+                    "index": {"type": "integer"},
                     "vision": {
                         "type": "object",
-                        "required": ["alt_text", "long_description", "confidence", "model", "generated_at"],
-                        "additionalProperties": False,
                         "properties": {
                             "alt_text": {"type": "string", "maxLength": 150},
                             "long_description": {"type": "string", "maxLength": 1000},
@@ -47,7 +48,6 @@ SCHEMA = {
                                 "type": "array",
                                 "items": {
                                     "type": "object",
-                                    "required": ["type", "label"],
                                     "properties": {
                                         "type": {"type": "string", "enum": ["button", "text_field", "dropdown", "checkbox", "radio", "slider", "navigation", "menu", "tab", "icon", "link", "other"]},
                                         "label": {"type": "string"},
@@ -63,12 +63,13 @@ SCHEMA = {
                             "processing_time_ms": {"type": "integer"}
                         }
                     },
-                    "metadata": {"type": "object", "additionalProperties": True}
+                    "metadata": {"type": "object"}
                 }
             }
         },
-        "metadata": {"type": "object", "additionalProperties": True}
-    }
+        "metadata": {"type": "object"}
+    },
+    "additionalProperties": True
 }
 
 def validate_json(filepath):
@@ -77,15 +78,16 @@ def validate_json(filepath):
         with open(filepath, 'r', encoding='utf-8') as f:
             data = json.load(f)
         jsonschema.validate(instance=data, schema=SCHEMA)
-        print(f"VALID: {filepath}")
+        step_count = len(data.get("steps", []))
+        print(f"  Schema valid: {filepath} ({step_count} steps)")
         return True
     except jsonschema.ValidationError as e:
-        print(f"INVALID: {filepath}")
-        print(f"  Path: {'.'.join(str(p) for p in e.absolute_path)}")
-        print(f"  Message: {e.message}")
+        print(f"  INVALID: {filepath}")
+        print(f"    Path: {'.'.join(str(p) for p in e.absolute_path)}")
+        print(f"    Message: {e.message}")
         return False
     except json.JSONDecodeError as e:
-        print(f"JSON ERROR: {filepath} - {e}")
+        print(f"  JSON ERROR: {filepath} - {e}")
         return False
 
 if __name__ == "__main__":

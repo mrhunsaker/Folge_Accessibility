@@ -6,18 +6,29 @@
 {% endif %}
 
 {% for step in steps %}
-## Step {{step.step_id}}: {{step.title}}
+## Step {{loop.index}}: {{step.title}}
 
 {{step.body}}
 
 {% if step.image %}
-![{{step.vision.alt_text}}]({{step.image}}){longdesc="{{step.vision.long_description | replace('"', '\\"')}}"}
+{% if step.vision %}
+![{{step.vision.alt_text}}]({{image_prefix}}{{step.image}}){longdesc="{{step.vision.long_description | replace('"', '\\"')}}"}
 
 {% if include_long_descriptions %}
 <div class="image-description">
 **Image Description:** {{step.vision.long_description}}
 </div>
 
+{% endif %}
+{% else %}
+![Image needs manual alt text]({{image_prefix}}{{step.image}}){longdesc="Manual description required"}
+
+{% if include_long_descriptions %}
+<div class="image-description">
+**Image Description:** *Vision processing failed for this step. Please provide a manual description.*
+</div>
+
+{% endif %}
 {% endif %}
 {% endif %}
 

@@ -47,7 +47,7 @@ The vision processing is configured in `.env` and `config.yaml`:
 | Setting | Default | Description |
 |---------|---------|-------------|
 | `OLLAMA_BASE_URL` | `http://localhost:11434/v1` | Ollama API endpoint |
-| `OLLAMA_MODEL` | `qwen2.5vl:7b` | Vision model to use |
+| `OLLAMA_MODEL` | `qwen2.5vl-8k:latest` | Vision model to use |
 | `OLLAMA_TIMEOUT` | `120` | Request timeout in seconds |
 | `OLLAMA_RATE_LIMIT` | `0.5` | Seconds between requests |
 | `OLLAMA_MAX_WORKERS` | `2` | Parallel request workers |
@@ -62,7 +62,7 @@ The vision processing is configured in `.env` and `config.yaml`:
   "guide_id": "...",
   "title": "...",
   "processed_at": "2026-07-18T00:00:00Z",
-  "model": "qwen2.5vl:7b",
+  "model": "qwen2.5vl-8k:latest",
   "steps": [
     {
       "step_id": 1,
@@ -82,5 +82,5 @@ The vision processing is configured in `.env` and `config.yaml`:
 ## Prerequisites
 
 - Ollama must be running locally (`ollama serve`)
-- The `qwen2.5vl:7b` model must be pulled (`ollama pull qwen2.5vl:7b`)
+- The `qwen2.5vl-8k:latest` model must be pulled (`ollama pull qwen2.5vl-8k:latest`)
 - Images must be present in `images/`

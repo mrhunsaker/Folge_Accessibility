@@ -27,30 +27,7 @@ function Header(header)
   return header
 end
 
-function Para(para)
-  para.attributes["pdf-tag"] = "P"
-  return para
-end
 
-function List(list)
-  list.attributes["pdf-tag"] = "L"
-  return list
-end
-
-function BlockQuote(block)
-  block.attributes["pdf-tag"] = "BlockQuote"
-  return block
-end
-
-function CodeBlock(code)
-  code.attributes["pdf-tag"] = "Code"
-  return code
-end
-
-function Table(table)
-  table.attributes["pdf-tag"] = "Table"
-  return table
-end
 
 function Meta(meta)
   meta = meta or {}

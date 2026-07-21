@@ -41,7 +41,7 @@ cd Folge_Accessibility
 uv sync
 
 # Pull the vision model
-ollama pull qwen2.5vl:7b
+ollama pull qwen2.5vl-8k:latest
 
 # Place your Folge export and screenshots
 # (guide.json in root, images in images/)
@@ -70,7 +70,7 @@ Output files appear in `output/`: a tagged PDF/UA-compliant PDF, DOCX, HTML, and
 ### Vision Model
 
 ```bash
-ollama pull qwen2.5vl:7b
+ollama pull qwen2.5vl-8k:latest
 ```
 
 ### Python Dependencies

@@ -25,7 +25,7 @@ This guide walks you through installing the pipeline and running it for the firs
 Download the recommended vision model:
 
 ```bash
-ollama pull qwen2.5vl:7b
+ollama pull qwen2.5vl-8k:latest
 ```
 
 ## Installation

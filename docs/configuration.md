@@ -40,7 +40,7 @@ project:
 
 ollama:
   base_url: "http://localhost:11434/v1"
-  model: "qwen2.5vl:7b"
+  model: "qwen2.5vl-8k:latest"
   timeout: 120
   rate_limit: 0.5
   max_workers: 2
@@ -74,7 +74,7 @@ Environment variables for Ollama connection and project paths.
 ```bash
 # Ollama
 OLLAMA_BASE_URL=http://localhost:11434/v1
-OLLAMA_MODEL=qwen2.5vl:7b
+OLLAMA_MODEL=qwen2.5vl-8k:latest
 OLLAMA_TIMEOUT=120
 OLLAMA_RATE_LIMIT=0.5
 OLLAMA_MAX_WORKERS=2
