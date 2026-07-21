@@ -257,7 +257,10 @@ def run_pipeline(args):
 
     # --- Step 4: Validate ---
     step_header("4", "Validating enriched JSON")
-    if not run_cmd(f"uv run python scripts/validate_schema.py {enriched}"):
+    schema_warnings = output_dir / "schema-warnings.json"
+    if not run_cmd(
+        f"uv run python scripts/validate_schema.py {enriched} --warnings-out {schema_warnings}"
+    ):
         print("\nFATAL: Schema validation failed.")
         sys.exit(1)
     if not run_cmd(f"uv run python scripts/validate_content.py {enriched} 0.8"):
@@ -273,10 +276,12 @@ def run_pipeline(args):
 
     # --- Step 5b: Manual attention list ---
     manual_file = output_dir / "manual-attention-needed.md"
-    run_cmd(
-        f"uv run python scripts/generate_manual_attention.py {enriched} images/ {manual_file}",
-        check=False,
+    manual_cmd = (
+        f"uv run python scripts/generate_manual_attention.py {enriched} images/ {manual_file}"
     )
+    if schema_warnings.exists():
+        manual_cmd += f" {schema_warnings}"
+    run_cmd(manual_cmd, check=False)
 
     # --- Step 6: Publish ---
     step_header("6", "Publishing to target formats")

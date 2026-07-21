@@ -266,6 +266,10 @@ def normalize_vision_result(result):
     if isinstance(long_desc, str) and len(long_desc) > 1000:
         vision["long_description"] = long_desc[:997] + "..."
 
+    important = vision.get("important_element", "")
+    if isinstance(important, str) and len(important) > 200:
+        vision["important_element"] = important[:197] + "..."
+
     return result
 
 
@@ -449,24 +453,28 @@ def process_guide(guide_path, image_dir, output_path, provider, sequential=False
     else:
         with ThreadPoolExecutor(max_workers=provider["workers"]) as executor:
             futures = {}
+            future_start = {}
             for i, step in enumerate(steps):
                 cur = i + 1
                 prev = steps[i - 1] if i > 0 else None
                 nxt = steps[i + 1] if i < total - 1 else None
                 step_start(cur, total, step["title"], step.get("image", ""))
+                t0 = time.monotonic()
                 future = executor.submit(
                     process_single_step,
                     step, guide_title, prev, nxt, image_dir, provider,
                 )
                 futures[future] = (cur, step["title"])
+                future_start[future] = t0
 
             for future in as_completed(futures):
                 result = future.result()
                 cur, title = futures[future]
+                elapsed = time.monotonic() - future_start[future]
                 if "vision_error" in result:
                     step_error(cur, total, title, result["vision_error"][:80])
                 else:
-                    step_ok(cur, total, title)
+                    step_ok(cur, total, title, elapsed)
                 results.append(result)
 
     elapsed = time.monotonic() - start

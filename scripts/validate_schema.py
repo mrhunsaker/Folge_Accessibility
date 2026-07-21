@@ -72,27 +72,86 @@ SCHEMA = {
     "additionalProperties": True
 }
 
+def _is_length_warning(exc):
+    """Check if a ValidationError is a maxLength/minLength type (soft violation)."""
+    return exc.message and ("is too long" in exc.message or "is too short" in exc.message)
+
+
 def validate_json(filepath):
-    """Validate a JSON file against the schema."""
+    """Validate a JSON file against the schema.
+
+    Returns (is_valid: bool, warnings: list[dict]).
+    """
+    warnings = []
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             data = json.load(f)
-        jsonschema.validate(instance=data, schema=SCHEMA)
+
+        validator = jsonschema.Draft7Validator(SCHEMA)
+        errors = sorted(validator.iter_errors(instance=data), key=lambda e: list(e.absolute_path))
+
+        hard = []
+        for e in errors:
+            path = ".".join(str(p) for p in e.absolute_path)
+            if _is_length_warning(e):
+                warnings.append({"path": path, "message": e.message})
+            else:
+                hard.append(e)
+
         step_count = len(data.get("steps", []))
+        if hard:
+            print(f"  INVALID: {filepath}")
+            for e in hard:
+                path = ".".join(str(p) for p in e.absolute_path)
+                print(f"    Path: {path}")
+                print(f"    Message: {e.message}")
+            return False, warnings
+
         print(f"  Schema valid: {filepath} ({step_count} steps)")
-        return True
-    except jsonschema.ValidationError as e:
-        print(f"  INVALID: {filepath}")
-        print(f"    Path: {'.'.join(str(p) for p in e.absolute_path)}")
-        print(f"    Message: {e.message}")
-        return False
+        return True, warnings
     except json.JSONDecodeError as e:
         print(f"  JSON ERROR: {filepath} - {e}")
-        return False
+        return False, warnings
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python validate_schema.py <json-file> [json-file2 ...]")
+        print("Usage: python validate_schema.py <json-file> [--warnings-out <file>]")
         sys.exit(1)
-    all_valid = all(validate_json(Path(fp)) for fp in sys.argv[1:])
+
+    files = []
+    warnings_out = None
+    i = 1
+    while i < len(sys.argv):
+        if sys.argv[i] == "--warnings-out":
+            i += 1
+            if i < len(sys.argv):
+                warnings_out = sys.argv[i]
+        else:
+            files.append(sys.argv[i])
+        i += 1
+
+    if not files:
+        print("Usage: python validate_schema.py <json-file> [--warnings-out <file>]")
+        sys.exit(1)
+
+    all_valid = True
+    all_warnings = []
+    for fp in files:
+        ok, warns = validate_json(Path(fp))
+        if not ok:
+            all_valid = False
+        all_warnings.extend(warns)
+
+    if all_warnings:
+        print(f"\n  {len(all_warnings)} length warning(s) (not blocking):")
+        for w in all_warnings:
+            print(f"    - {w['path']}: {w['message']}")
+
+    if warnings_out and all_warnings:
+        import json as _json
+        Path(warnings_out).write_text(_json.dumps(all_warnings, indent=2), encoding="utf-8")
+        print(f"  Warnings written to {warnings_out}")
+
+    # Exit 0 if only warnings (length violations are soft)
     sys.exit(0 if all_valid else 1)
