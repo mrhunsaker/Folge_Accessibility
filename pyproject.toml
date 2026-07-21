@@ -43,6 +43,7 @@ dependencies = [
     "pymdown-extensions>=10.0",
     "Pillow>=10.0",
     "pyyaml>=6.0",
+    "pypandoc>=1.17",
 ]
 
 [project.urls]

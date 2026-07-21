@@ -293,11 +293,11 @@ def run_pipeline(args):
         print(f"\n  -> PDF (weasyprint)...", end=" ", flush=True)
 
         result = subprocess.run(
-            f"pandoc {md_file} --lua-filter=pdf-accessibility.lua "
+            f"pandoc guide.md --lua-filter=../pdf-accessibility.lua "
             f"--pdf-engine=weasyprint --pdf-engine-opt=--presentational-hints "
-            f"--metadata=tagged-pdf:true -o {pdf_file}",
+            f"--metadata=tagged-pdf:true -o guide.pdf",
             shell=True, capture_output=True, text=True,
-            cwd=str(PROJECT_ROOT),
+            cwd=str(output_dir),
         )
         if result.returncode == 0:
             print(f"done ({pdf_file.stat().st_size / 1024:.1f} KB)")
@@ -310,13 +310,13 @@ def run_pipeline(args):
             # Fallback: wkhtmltopdf
             print(f"  -> PDF (wkhtmltopdf)...", end=" ", flush=True)
             result2 = subprocess.run(
-                f"pandoc {md_file} --lua-filter=pdf-accessibility.lua "
+                f"pandoc guide.md --lua-filter=../pdf-accessibility.lua "
                 f"--pdf-engine=wkhtmltopdf "
                 f"--pdf-engine-opt=--enable-local-file-access "
                 f"--pdf-engine-opt=--tagged-pdf --metadata=tagged-pdf:true "
-                f"-o {pdf_file}",
+                f"-o guide.pdf",
                 shell=True, capture_output=True, text=True,
-                cwd=str(PROJECT_ROOT),
+                cwd=str(output_dir),
             )
             if result2.returncode == 0:
                 print(f"done ({pdf_file.stat().st_size / 1024:.1f} KB)")
@@ -329,11 +329,11 @@ def run_pipeline(args):
                 # Fallback: xelatex
                 print(f"  -> PDF (xelatex)...", end=" ", flush=True)
                 result3 = subprocess.run(
-                    f"pandoc {md_file} --lua-filter=pdf-accessibility.lua "
+                    f"pandoc guide.md --lua-filter=../pdf-accessibility.lua "
                     f"--pdf-engine=xelatex --pdf-engine-opt=-x dvipdfmx "
-                    f"-o {pdf_file}",
+                    f"-o guide.pdf",
                     shell=True, capture_output=True, text=True,
-                    cwd=str(PROJECT_ROOT),
+                    cwd=str(output_dir),
                 )
                 if result3.returncode == 0:
                     print(f"done ({pdf_file.stat().st_size / 1024:.1f} KB)")
@@ -354,9 +354,9 @@ def run_pipeline(args):
         docx_file = output_dir / "guide.docx"
         print(f"\n  -> DOCX...", end=" ", flush=True)
         result = subprocess.run(
-            f"pandoc {md_file} --lua-filter=docx-accessibility.lua -o {docx_file}",
+            f"pandoc guide.md --lua-filter=../docx-accessibility.lua -o guide.docx",
             shell=True, capture_output=True, text=True,
-            cwd=str(PROJECT_ROOT),
+            cwd=str(output_dir),
         )
         if result.returncode == 0:
             print(f"done ({docx_file.stat().st_size / 1024:.1f} KB)")
@@ -371,9 +371,9 @@ def run_pipeline(args):
         html_file = output_dir / "guide.html"
         print(f"\n  -> HTML...", end=" ", flush=True)
         result = subprocess.run(
-            f"pandoc {md_file} --lua-filter=accessibility.lua -o {html_file}",
+            f"pandoc guide.md --lua-filter=../accessibility.lua -o guide.html",
             shell=True, capture_output=True, text=True,
-            cwd=str(PROJECT_ROOT),
+            cwd=str(output_dir),
         )
         if result.returncode == 0:
             print(f"done ({html_file.stat().st_size / 1024:.1f} KB)")
