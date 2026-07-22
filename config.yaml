@@ -52,6 +52,12 @@ targets:
     lua_filter: "accessibility.lua"
     output_extension: ".html"
 
+  - name: "pptx"
+    enabled: true
+    include_long_descriptions: true
+    lua_filter: "docx-accessibility.lua"
+    output_extension: ".pptx"
+
   - name: "github"
     enabled: true
     include_long_descriptions: false

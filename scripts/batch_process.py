@@ -172,6 +172,21 @@ UI_CONTROL_TYPE_MAP = {
 }
 
 
+def normalize_ocr_text(val):
+    """Coerce ocr_text to a flat array of strings."""
+    if not isinstance(val, list):
+        return []
+    result = []
+    for item in val:
+        if isinstance(item, list):
+            result.append(" ".join(str(x) for x in item))
+        elif isinstance(item, str):
+            result.append(item)
+        else:
+            result.append(str(item))
+    return result
+
+
 def normalize_ui_controls(ui):
     """Coerce ui_controls to a valid array of {type, label} objects."""
     if ui is None:
@@ -247,6 +262,7 @@ def normalize_vision_result(result):
 
     vision["ui_controls"] = normalize_ui_controls(vision.get("ui_controls"))
     vision["important_element"] = normalize_important_element(vision.get("important_element"))
+    vision["ocr_text"] = normalize_ocr_text(vision.get("ocr_text"))
 
     alt = vision.get("alt_text", "")
     if isinstance(alt, str) and len(alt) > 150:

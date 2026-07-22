@@ -48,6 +48,19 @@ def _is_vision_error(vision):
     return has_error and not has_alt and not has_desc
 
 
+def _normalize_vision(vision):
+    """Flatten nested ocr_text arrays to strings for schema compliance."""
+    if not isinstance(vision, dict):
+        return vision
+    ocr = vision.get("ocr_text")
+    if isinstance(ocr, list):
+        vision["ocr_text"] = [
+            " ".join(str(x) for x in item) if isinstance(item, list) else str(item)
+            for item in ocr
+        ]
+    return vision
+
+
 def deterministic_merge(guide_path, vision_path, output_path):
     """
     Merge guide.json with vision-results.json.
@@ -107,7 +120,7 @@ def deterministic_merge(guide_path, vision_path, output_path):
                 if _is_vision_error(vision):
                     enriched_step["vision_error"] = vision.get("vision_error") or vision.get("error", "unknown error")
                 else:
-                    enriched_step["vision"] = _clean(vision)
+                    enriched_step["vision"] = _normalize_vision(_clean(vision))
             elif "vision_error" in vision_data:
                 enriched_step["vision_error"] = vision_data["vision_error"]
             else:
@@ -119,7 +132,7 @@ def deterministic_merge(guide_path, vision_path, output_path):
                 if _is_vision_error(root_vision):
                     enriched_step["vision_error"] = vision_data.get("error") or vision_data.get("vision_error", "unknown error")
                 else:
-                    enriched_step["vision"] = _clean(root_vision)
+                    enriched_step["vision"] = _normalize_vision(_clean(root_vision))
         else:
             warnings.append(f"No vision data for step_id {step_id}")
 

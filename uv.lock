@@ -363,8 +363,7 @@ wheels = [
 
 [[package]]
 name = "folge-vision-pipeline"
-version = "2026.7.18"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "jinja2" },
     { name = "jsonschema" },

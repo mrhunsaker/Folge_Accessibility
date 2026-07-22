@@ -1,12 +1,16 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "folge-vision-pipeline"
-version = "2026.7.18"
-description = "Automated documentation publishing pipeline with Ollama Vision AI enrichment and PDF/UA-compliant output"
+dynamic = ["version"]
+description = "Semi-Automated documentation publishing pipeline with Ollama Vision AI enrichment and PDF/UA-compliant output"
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.10"
 authors = [
-    { name = "Michael Hunsaker" },
+    { name = "Michael Ryan Hunsaker, M.Ed., Ph.D." },
 ]
 keywords = [
     "accessibility",
@@ -21,7 +25,6 @@ keywords = [
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
-    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -50,3 +53,9 @@ dependencies = [
 Homepage = "https://github.com/mrhunsaker/Folge_Accessibility"
 Repository = "https://github.com/mrhunsaker/Folge_Accessibility"
 Issues = "https://github.com/mrhunsaker/Folge_Accessibility/issues"
+
+[tool.setuptools.dynamic]
+version = {attr = "_version.__version__"}
+
+[tool.setuptools]
+py-modules = ["_version"]

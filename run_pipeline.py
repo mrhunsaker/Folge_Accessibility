@@ -86,20 +86,21 @@ def check_prerequisites():
 
     try:
         result = subprocess.run(
-            "pdfinfo --version",
-            shell=True, capture_output=True, text=True, timeout=5,
+            ["/usr/bin/pdfinfo", "--version"],
+            capture_output=True, text=True, timeout=5,
         )
         if result.returncode == 0:
-            print("  [OK] pdfinfo (poppler-utils)")
+            print("  [OK] pdfinfo (poppler-utils) at /usr/bin/pdfinfo")
         else:
-            print("  [WARN] pdfinfo not found - PDF validation will use pymupdf only")
+            print("  [WARN] pdfinfo not found at /usr/bin/pdfinfo - PDF validation will use pymupdf only")
     except Exception:
-        print("  [WARN] pdfinfo not found - PDF validation will use pymupdf only")
+        print("  [WARN] pdfinfo not found at /usr/bin/pdfinfo - PDF validation will use pymupdf only")
 
+    venv_python = str(PROJECT_ROOT / ".venv" / "bin" / "python")
     try:
         result = subprocess.run(
-            "uv run python -c \"import fitz; print('OK')\"",
-            shell=True, capture_output=True, text=True, timeout=10,
+            [venv_python, "-c", "import fitz; print('OK')"],
+            capture_output=True, text=True, timeout=10,
         )
         if result.returncode == 0 and "OK" in result.stdout:
             print("  [OK] pymupdf")
@@ -174,7 +175,7 @@ def validate_pdf_tagging(pdf_path):
     """Quick check that PDF is tagged via pdfinfo."""
     try:
         result = subprocess.run(
-            ["pdfinfo", str(pdf_path)],
+            ["/usr/bin/pdfinfo", str(pdf_path)],
             capture_output=True,
             text=True,
             timeout=10,
@@ -199,7 +200,7 @@ def run_pipeline(args):
     """Execute the full pipeline."""
     guide_path = Path(args.guide)
     output_dir = Path(args.output)
-    targets = args.targets.split(",") if args.targets else ["pdf", "docx", "html"]
+    targets = args.targets.split(",") if args.targets else ["pdf", "docx", "html", "pptx"]
     provider_name = args.provider or "ollama"
     api_key = args.api_key or os.environ.get("OPENROUTER_API_KEY")
 
@@ -293,7 +294,9 @@ def run_pipeline(args):
         print(f"\n  -> PDF (weasyprint)...", end=" ", flush=True)
 
         result = subprocess.run(
-            f"pandoc guide.md --lua-filter=../pdf-accessibility.lua "
+            f"pandoc guide.md --lua-filter=../templates/pagebreak.lua "
+            f"--lua-filter=../pdf-accessibility.lua "
+            f"--css=../templates/landscape.css "
             f"--pdf-engine=weasyprint --pdf-engine-opt=--presentational-hints "
             f"--metadata=tagged-pdf:true -o guide.pdf",
             shell=True, capture_output=True, text=True,
@@ -310,7 +313,8 @@ def run_pipeline(args):
             # Fallback: wkhtmltopdf
             print(f"  -> PDF (wkhtmltopdf)...", end=" ", flush=True)
             result2 = subprocess.run(
-                f"pandoc guide.md --lua-filter=../pdf-accessibility.lua "
+                f"pandoc guide.md --lua-filter=../templates/pagebreak.lua "
+                f"--lua-filter=../pdf-accessibility.lua "
                 f"--pdf-engine=wkhtmltopdf "
                 f"--pdf-engine-opt=--enable-local-file-access "
                 f"--pdf-engine-opt=--tagged-pdf --metadata=tagged-pdf:true "
@@ -329,7 +333,8 @@ def run_pipeline(args):
                 # Fallback: xelatex
                 print(f"  -> PDF (xelatex)...", end=" ", flush=True)
                 result3 = subprocess.run(
-                    f"pandoc guide.md --lua-filter=../pdf-accessibility.lua "
+                    f"pandoc guide.md --lua-filter=../templates/pagebreak.lua "
+                    f"--lua-filter=../pdf-accessibility.lua "
                     f"--pdf-engine=xelatex --pdf-engine-opt=-x dvipdfmx "
                     f"-o guide.pdf",
                     shell=True, capture_output=True, text=True,
@@ -354,7 +359,8 @@ def run_pipeline(args):
         docx_file = output_dir / "guide.docx"
         print(f"\n  -> DOCX...", end=" ", flush=True)
         result = subprocess.run(
-            f"pandoc guide.md --lua-filter=../docx-accessibility.lua -o guide.docx",
+            f"pandoc guide.md --lua-filter=../templates/pagebreak.lua "
+            f"--lua-filter=../docx-accessibility.lua -o guide.docx",
             shell=True, capture_output=True, text=True,
             cwd=str(output_dir),
         )
@@ -378,6 +384,25 @@ def run_pipeline(args):
         if result.returncode == 0:
             print(f"done ({html_file.stat().st_size / 1024:.1f} KB)")
             published.append("html")
+        else:
+            print("FAILED")
+            if result.stderr:
+                for line in result.stderr.strip().splitlines()[:5]:
+                    print(f"    {line}")
+
+    if "pptx" in targets:
+        pptx_file = output_dir / "guide.pptx"
+        print(f"\n  -> PPTX...", end=" ", flush=True)
+        result = subprocess.run(
+            f"pandoc guide.md --lua-filter=../templates/pagebreak.lua "
+            f"--lua-filter=../docx-accessibility.lua "
+            f"--to pptx -o guide.pptx",
+            shell=True, capture_output=True, text=True,
+            cwd=str(output_dir),
+        )
+        if result.returncode == 0:
+            print(f"done ({pptx_file.stat().st_size / 1024:.1f} KB)")
+            published.append("pptx")
         else:
             print("FAILED")
             if result.stderr:
@@ -429,7 +454,7 @@ def main():
             "Examples:\n"
             "  uv run run_pipeline.py guide.json\n"
             "  uv run run_pipeline.py guide.json output/ --targets pdf,html\n"
-            "  uv run run_pipeline.py guide.json ./build --targets pdf,docx,html,github\n"
+            "  uv run run_pipeline.py guide.json ./build --targets pdf,docx,html,pptx,github\n"
             "  uv run run_pipeline.py guide.json --provider=openrouter\n"
         ),
     )
@@ -443,7 +468,7 @@ def main():
     parser.add_argument(
         "--targets",
         default=None,
-        help="Comma-separated target formats: pdf,docx,html,github (default: pdf,docx,html)",
+        help="Comma-separated target formats: pdf,docx,html,pptx,github (default: pdf,docx,html,pptx)",
     )
     parser.add_argument(
         "--provider",

@@ -1,0 +1,15 @@
+@page {
+  size: letter landscape;
+  margin: 1in;
+}
+
+img {
+  max-width: 100%;
+  max-height: 75vh;
+}
+
+.image-description {
+  font-size: 0.9em;
+  color: #444;
+  margin-top: 0.5em;
+}

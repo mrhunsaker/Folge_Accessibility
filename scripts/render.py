@@ -94,6 +94,10 @@ def render_for_target(guide_path, target, output_path):
             "include_long_descriptions": True,
             "newpage_enabled": True
         },
+        "pptx": {
+            "include_long_descriptions": True,
+            "newpage_enabled": True
+        },
         "html": {
             "include_long_descriptions": True,
             "include_ocr": True,
@@ -114,7 +118,7 @@ if __name__ == "__main__":
     if len(sys.argv) < 3:
         print("Usage: python render.py <guide.enriched.json> <output.md>")
         print("       python render.py <guide.enriched.json> <target> <output.md>")
-        print("  Target: pdf, docx, html, github")
+        print("  Target: pdf, docx, pptx, html, github")
         sys.exit(1)
 
     guide_path = Path(sys.argv[1])

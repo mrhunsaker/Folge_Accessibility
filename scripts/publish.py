@@ -48,7 +48,7 @@ def validate_pdf_tagging(pdf_path):
     """Quick validation that PDF is tagged."""
     try:
         result = subprocess.run(
-            ["pdfinfo", str(pdf_path)],
+            ["/usr/bin/pdfinfo", str(pdf_path)],
             capture_output=True,
             text=True,
             timeout=10
@@ -74,7 +74,7 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama")
     project_root = Path(__file__).resolve().parent.parent
 
     if targets is None:
-        targets = ["pdf", "docx", "html"]
+        targets = ["pdf", "docx", "html", "pptx"]
 
     md_file = output_dir / "guide.md"
 
@@ -120,7 +120,9 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama")
         pdf_file = output_dir / "guide.pdf"
         print(f"\n  -> PDF (weasyprint)...", end=" ", flush=True)
         result = subprocess.run(
-            f"pandoc {md_file} --lua-filter=pdf-accessibility.lua "
+            f"pandoc {md_file} --lua-filter=templates/pagebreak.lua "
+            f"--lua-filter=pdf-accessibility.lua "
+            f"--css=templates/landscape.css "
             f"--pdf-engine=weasyprint --pdf-engine-opt=--presentational-hints "
             f"--metadata=tagged-pdf:true -o {pdf_file}",
             shell=True, capture_output=True, text=True,
@@ -133,8 +135,8 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama")
             print("FAILED")
             # Fallbacks
             for engine, opts in [
-                ("wkhtmltopdf", "--pdf-engine-opt=--enable-local-file-access --pdf-engine-opt=--tagged-pdf"),
-                ("xelatex", "--pdf-engine-opt=-x dvipdfmx"),
+                ("wkhtmltopdf", "--lua-filter=templates/pagebreak.lua --pdf-engine-opt=--enable-local-file-access --pdf-engine-opt=--tagged-pdf"),
+                ("xelatex", "--lua-filter=templates/pagebreak.lua --pdf-engine-opt=-x dvipdfmx"),
             ]:
                 print(f"  -> PDF ({engine})...", end=" ", flush=True)
                 result2 = subprocess.run(
@@ -158,7 +160,8 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama")
         docx_file = output_dir / "guide.docx"
         print(f"\n  -> DOCX...", end=" ", flush=True)
         result = subprocess.run(
-            f"pandoc {md_file} --lua-filter=docx-accessibility.lua -o {docx_file}",
+            f"pandoc {md_file} --lua-filter=templates/pagebreak.lua "
+            f"--lua-filter=docx-accessibility.lua -o {docx_file}",
             shell=True, capture_output=True, text=True,
             cwd=str(project_root),
         )
@@ -179,6 +182,22 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama")
         if result.returncode == 0:
             print(f"done ({html_file.stat().st_size / 1024:.1f} KB)")
             published.append("html")
+        else:
+            print("FAILED")
+
+    if "pptx" in targets:
+        pptx_file = output_dir / "guide.pptx"
+        print(f"\n  -> PPTX...", end=" ", flush=True)
+        result = subprocess.run(
+            f"pandoc {md_file} --lua-filter=templates/pagebreak.lua "
+            f"--lua-filter=docx-accessibility.lua "
+            f"--to pptx -o {pptx_file}",
+            shell=True, capture_output=True, text=True,
+            cwd=str(project_root),
+        )
+        if result.returncode == 0:
+            print(f"done ({pptx_file.stat().st_size / 1024:.1f} KB)")
+            published.append("pptx")
         else:
             print("FAILED")
 
@@ -218,8 +237,8 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama")
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python publish.py <guide.json> <output-dir> [targets] [provider]")
-        print("Example: python publish.py guide.json output/ pdf,docx,html openrouter")
-        print("Targets: pdf, docx, html, github (default: pdf,docx,html)")
+        print("Example: python publish.py guide.json output/ pdf,docx,html,pptx openrouter")
+        print("Targets: pdf, docx, html, pptx, github (default: pdf,docx,html,pptx)")
         print("Provider: ollama, openrouter (default: ollama)")
         sys.exit(1)
 
