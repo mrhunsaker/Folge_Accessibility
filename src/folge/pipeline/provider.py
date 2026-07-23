@@ -7,55 +7,56 @@ from typing import Tuple
 from folge.pipeline.progress import ProgressCallback, banner, ok, warn, error
 
 
-def check(provider_name: str = "ollama", api_key: str = None, on_progress: ProgressCallback = None) -> Tuple[bool, str]:
+def _check_local_server(base_url, timeout=5):
+    """Quick HTTP check for a local server."""
+    try:
+        import requests
+        resp = requests.get(base_url.rstrip("/v1"), timeout=timeout)
+        return resp.status_code < 500
+    except Exception:
+        return False
+
+
+def check(provider_name: str = "ollama", api_key: str = None,
+          on_progress: ProgressCallback = None) -> Tuple[bool, str]:
     """Check if the selected vision provider is reachable.
 
     Args:
-        provider_name: "ollama" or "openrouter"
-        api_key: API key for OpenRouter (optional)
+        provider_name: Provider name from PROVIDER_REGISTRY
+        api_key: API key for cloud providers (optional)
         on_progress: Progress callback
 
     Returns:
         (ok, message) where ok is True if provider is available.
     """
+    from folge.pipeline.batch_process import PROVIDER_REGISTRY
+
     banner(on_progress, "CHECKING PROVIDER")
 
-    if provider_name == "openrouter":
-        key = api_key or os.environ.get("OPENROUTER_API_KEY")
+    reg = PROVIDER_REGISTRY.get(provider_name)
+    if not reg:
+        msg = f"Unknown provider: {provider_name}"
+        error(on_progress, msg)
+        return False, msg
+
+    is_local = reg["api_key_env"] is None
+
+    if is_local:
+        if _check_local_server(reg["base_url"]):
+            ok(on_progress, f"Provider: {reg['label']}")
+            ok(on_progress, f"Server reachable at {reg['base_url']}")
+            return True, f"{reg['label']} ready"
+        else:
+            msg = f"{reg['label']} not reachable at {reg['base_url']}"
+            error(on_progress, msg)
+            return False, msg
+    else:
+        key = api_key or os.environ.get(reg["api_key_env"])
         if not key:
-            msg = "OPENROUTER_API_KEY not set. export OPENROUTER_API_KEY='sk-or-...'"
+            msg = f"{reg['api_key_env']} not set. export {reg['api_key_env']}='sk-...'"
             error(on_progress, msg)
             return False, msg
         masked = key[:8] + "..." + key[-4:] if len(key) > 12 else "***"
-        ok(on_progress, f"Provider: OpenRouter (cloud)")
+        ok(on_progress, f"Provider: {reg['label']}")
         ok(on_progress, f"API key: {masked}")
-        return True, "OpenRouter ready"
-
-    # Ollama (default)
-    try:
-        result = subprocess.run(
-            "curl -s http://localhost:11434/api/tags",
-            shell=True, capture_output=True, text=True, timeout=5,
-        )
-        if result.returncode == 0:
-            data = result.stdout
-            if "qwen2.5vl" in data:
-                ok(on_progress, "Provider: Ollama (local)")
-                ok(on_progress, "Ollama running with qwen2.5vl model")
-                return True, "Ollama ready with qwen2.5vl"
-            elif "granite" in data:
-                msg = "Ollama running but qwen2.5vl not found (granite available)"
-                warn(on_progress, msg)
-                return False, msg
-            else:
-                msg = "Ollama running but no vision model detected. Run: ollama pull qwen2.5vl-8k:latest"
-                warn(on_progress, msg)
-                return False, msg
-        else:
-            msg = "Ollama not reachable at localhost:11434"
-            error(on_progress, msg)
-            return False, msg
-    except Exception:
-        msg = "Could not check Ollama status"
-        error(on_progress, msg)
-        return False, msg
+        return True, f"{reg['label']} ready"

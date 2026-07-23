@@ -75,6 +75,12 @@ def deterministic_merge(guide_path: Path, vision_path: Path, output_path: Path,
                 vision = {"vision_error": "No vision data available"}
 
             enriched_step = dict(step)
+            enriched_step["instruction"] = (
+                step.get("instruction")
+                or step.get("body")
+                or step.get("description")
+                or ""
+            )
             enriched_step["vision"] = _normalize_vision(vision)
             enriched_steps.append(enriched_step)
 

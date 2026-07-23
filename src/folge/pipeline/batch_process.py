@@ -1,8 +1,9 @@
 """Batch vision processing for the Folge Vision Pipeline.
 
-Processes all steps in a Folge guide through a vision API (Ollama or OpenRouter)
+Processes all steps in a Folge guide through a vision API
 to extract accessibility metadata from screenshots.
 """
+import base64
 import json
 import os
 import re
@@ -21,10 +22,71 @@ from folge.pipeline.progress import (
     step_start, summary, warn,
 )
 
-OLLAMA_BASE_URL = "http://localhost:11434/v1"
-OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-DEFAULT_MODEL = "qwen2.5vl-8k:latest"
-OPENROUTER_MODEL = "qwen/qwen-2.5-vl-72b-instruct"
+PROVIDER_REGISTRY = {
+    "ollama": {
+        "label": "Ollama (local)",
+        "base_url": "http://localhost:11434/v1",
+        "model": "qwen2.5vl-8k:latest",
+        "api_key_env": None,
+        "auth_type": None,
+        "workers": 2, "timeout": 300, "retries": 3, "retry_delay": 5,
+        "warmup": True,
+    },
+    "lmstudio": {
+        "label": "LMStudio (local)",
+        "base_url": "http://localhost:1234/v1",
+        "model": "default",
+        "api_key_env": None,
+        "auth_type": None,
+        "workers": 2, "timeout": 300, "retries": 3, "retry_delay": 5,
+        "warmup": False,
+    },
+    "llamacpp": {
+        "label": "llama.cpp server (local)",
+        "base_url": "http://localhost:8080/v1",
+        "model": "default",
+        "api_key_env": None,
+        "auth_type": None,
+        "workers": 1, "timeout": 300, "retries": 2, "retry_delay": 5,
+        "warmup": False,
+    },
+    "openrouter": {
+        "label": "OpenRouter (cloud)",
+        "base_url": "https://openrouter.ai/api/v1",
+        "model": "qwen/qwen-2.5-vl-72b-instruct",
+        "api_key_env": "OPENROUTER_API_KEY",
+        "auth_type": "bearer",
+        "workers": 4, "timeout": 60, "retries": 2, "retry_delay": 2,
+        "warmup": False,
+    },
+    "openai": {
+        "label": "OpenAI (cloud)",
+        "base_url": "https://api.openai.com/v1",
+        "model": "gpt-4o",
+        "api_key_env": "OPENAI_API_KEY",
+        "auth_type": "bearer",
+        "workers": 4, "timeout": 60, "retries": 2, "retry_delay": 2,
+        "warmup": False,
+    },
+    "gemini": {
+        "label": "Google Gemini (cloud)",
+        "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+        "model": "gemini-2.0-flash",
+        "api_key_env": "GEMINI_API_KEY",
+        "auth_type": "bearer",
+        "workers": 4, "timeout": 60, "retries": 2, "retry_delay": 2,
+        "warmup": False,
+    },
+    "claude": {
+        "label": "Anthropic Claude (cloud)",
+        "base_url": "https://api.anthropic.com/v1",
+        "model": "claude-sonnet-4-20250514",
+        "api_key_env": "ANTHROPIC_API_KEY",
+        "auth_type": "anthropic",
+        "workers": 4, "timeout": 60, "retries": 2, "retry_delay": 2,
+        "warmup": False,
+    },
+}
 VALID_UI_TYPES = {
     "button", "text_field", "dropdown", "checkbox", "radio",
     "slider", "navigation", "menu", "tab", "icon", "link", "other",
@@ -60,13 +122,14 @@ def load_config():
 
 
 def resolve_provider(provider: str = None, api_key: str = None,
-                     model: str = None):
-    """Resolve provider configuration from arguments and config.yaml.
+                     model: str = None, base_url: str = None):
+    """Resolve provider configuration from arguments, env, and config.yaml.
 
     Args:
-        provider: "ollama" or "openrouter" (None to use config default)
-        api_key: API key override for OpenRouter
+        provider: Provider name (None to use config default)
+        api_key: API key override
         model: Model name override
+        base_url: Base URL override
 
     Returns:
         Provider config dict.
@@ -74,42 +137,46 @@ def resolve_provider(provider: str = None, api_key: str = None,
     config = load_config()
     provider_name = provider or config.get("provider", "ollama")
 
-    if provider_name == "openrouter":
+    reg = PROVIDER_REGISTRY.get(provider_name)
+    if not reg:
+        warn(None, f"Unknown provider '{provider_name}', falling back to ollama")
+        reg = PROVIDER_REGISTRY["ollama"]
+        provider_name = "ollama"
+
+    config_block = config.get(provider_name, {})
+
+    resolved_key = None
+    if reg["api_key_env"]:
         resolved_key = (
             api_key
-            or os.environ.get("OPENROUTER_API_KEY")
-            or config.get("openrouter", {}).get("api_key")
+            or os.environ.get(reg["api_key_env"])
+            or config_block.get("api_key")
         )
-        base_url = config.get("openrouter", {}).get("base_url", OPENROUTER_BASE_URL)
-        resolved_model = model or config.get("openrouter", {}).get("model", OPENROUTER_MODEL)
-        workers = config.get("openrouter", {}).get("max_workers", 4)
-        timeout = config.get("openrouter", {}).get("timeout", 60)
-        retries = config.get("openrouter", {}).get("retries", 2)
-        retry_delay = config.get("openrouter", {}).get("retry_delay", 2)
-        return {
-            "name": "openrouter",
-            "base_url": base_url,
-            "model": resolved_model,
-            "api_key": resolved_key,
-            "workers": workers,
-            "timeout": timeout,
-            "retries": retries,
-            "retry_delay": retry_delay,
-            "max_width": config.get("openrouter", {}).get("image_max_width", 1024),
-        }
-    else:
-        ollama = config.get("ollama", {})
-        return {
-            "name": "ollama",
-            "base_url": ollama.get("base_url", OLLAMA_BASE_URL),
-            "model": model or ollama.get("model", DEFAULT_MODEL),
-            "api_key": None,
-            "workers": ollama.get("max_workers", 2),
-            "timeout": ollama.get("timeout", 300),
-            "retries": ollama.get("retries", 3),
-            "retry_delay": ollama.get("retry_delay", 5),
-            "max_width": ollama.get("image_max_width", 1024),
-        }
+
+    resolved_base_url = (
+        base_url
+        or config_block.get("base_url")
+        or reg["base_url"]
+    )
+    resolved_model = (
+        model
+        or config_block.get("model")
+        or reg["model"]
+    )
+
+    return {
+        "name": provider_name,
+        "base_url": resolved_base_url,
+        "model": resolved_model,
+        "api_key": resolved_key,
+        "workers": config_block.get("max_workers", reg["workers"]),
+        "timeout": config_block.get("timeout", reg["timeout"]),
+        "retries": config_block.get("retries", reg["retries"]),
+        "retry_delay": config_block.get("retry_delay", reg["retry_delay"]),
+        "max_width": config_block.get("image_max_width", 1024),
+        "auth_type": reg["auth_type"],
+        "warmup": reg["warmup"],
+    }
 
 
 def normalize_guide(guide):
@@ -364,9 +431,50 @@ RETURN ONLY JSON."""
 def _build_auth_headers(provider):
     """Build request headers for the given provider."""
     headers = {"Content-Type": "application/json"}
-    if provider["name"] == "openrouter" and provider.get("api_key"):
+    auth_type = provider.get("auth_type")
+    if auth_type == "bearer" and provider.get("api_key"):
         headers["Authorization"] = f"Bearer {provider['api_key']}"
+    elif auth_type == "anthropic" and provider.get("api_key"):
+        headers["x-api-key"] = provider["api_key"]
+        headers["anthropic-version"] = "2023-06-01"
     return headers
+
+
+def _build_claude_payload(prompt, image_b64, image_mime, model, max_tokens=8192):
+    """Build Claude Messages API payload."""
+    return {
+        "model": model,
+        "max_tokens": max_tokens,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": image_mime,
+                            "data": image_b64,
+                        },
+                    },
+                    {"type": "text", "text": prompt},
+                ],
+            }
+        ],
+        "temperature": 0.1,
+    }
+
+
+def _get_image_mime(image_path):
+    """Get MIME type from image file extension."""
+    ext = Path(image_path).suffix.lower()
+    return {
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".gif": "image/gif",
+        ".webp": "image/webp",
+    }.get(ext, "image/png")
 
 
 def process_single_step(step, guide_title, previous_step, next_step,
@@ -382,41 +490,57 @@ def process_single_step(step, guide_title, previous_step, next_step,
         }
 
     prompt = generate_prompt(step, guide_title, previous_step, next_step)
-    payload_template = {
-        "model": provider["model"],
-        "messages": [
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": prompt},
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/png;base64,{encode_image(image_path, provider['max_width'])}"
-                        },
-                    },
-                ],
-            }
-        ],
-        "max_tokens": 8192,
-        "temperature": 0.1,
-        "top_p": 0.9,
-        "stream": False,
-    }
-
+    image_b64 = encode_image(image_path, provider["max_width"])
     headers = _build_auth_headers(provider)
+
+    is_claude = provider["name"] == "claude"
+    image_mime = _get_image_mime(image_path) if is_claude else None
+
+    if is_claude:
+        endpoint = f"{provider['base_url']}/messages"
+        payload_template = _build_claude_payload(
+            prompt, image_b64, image_mime, provider["model"]
+        )
+    else:
+        endpoint = f"{provider['base_url']}/chat/completions"
+        payload_template = {
+            "model": provider["model"],
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{image_b64}"
+                            },
+                        },
+                    ],
+                }
+            ],
+            "max_tokens": 8192,
+            "temperature": 0.1,
+            "top_p": 0.9,
+            "stream": False,
+        }
+
     last_error = None
     for attempt in range(1, provider["retries"] + 1):
         try:
             response = requests.post(
-                f"{provider['base_url']}/chat/completions",
+                endpoint,
                 headers=headers,
                 json=payload_template,
                 timeout=provider["timeout"],
             )
             response.raise_for_status()
 
-            content = response.json()["choices"][0]["message"]["content"]
+            resp_json = response.json()
+            if is_claude:
+                content = resp_json["content"][0]["text"]
+            else:
+                content = resp_json["choices"][0]["message"]["content"]
 
             result = parse_json_response(content)
             result["step_id"] = step["step_id"]
@@ -532,6 +656,7 @@ def process_guide(guide_path, image_dir, output_path, provider,
 
 def run(guide_path: Path, images_dir: Path, output_path: Path,
         provider: str = "ollama", api_key: str = None, model: str = None,
+        base_url: str = None,
         sequential: bool = False,
         on_progress: ProgressCallback = None) -> Path:
     """Run batch vision processing on all guide steps.
@@ -540,9 +665,10 @@ def run(guide_path: Path, images_dir: Path, output_path: Path,
         guide_path: Path to guide.json
         images_dir: Directory containing step screenshots
         output_path: Where to write vision-results.json
-        provider: "ollama" or "openrouter"
-        api_key: API key for OpenRouter (optional)
+        provider: Provider name from PROVIDER_REGISTRY
+        api_key: API key for cloud providers (optional)
         model: Override model name (optional)
+        base_url: Override base URL (optional)
         sequential: Process one step at a time without threading
         on_progress: Progress callback
 
@@ -551,9 +677,11 @@ def run(guide_path: Path, images_dir: Path, output_path: Path,
     """
     banner(on_progress, "STEP: BATCH VISION PROCESSING")
 
-    prov = resolve_provider(provider=provider, api_key=api_key, model=model)
+    prov = resolve_provider(
+        provider=provider, api_key=api_key, model=model, base_url=base_url
+    )
 
-    if prov["name"] == "ollama":
+    if prov.get("warmup") and prov["name"] == "ollama":
         if not check_model_loadable(prov["base_url"], prov["model"]):
             error(on_progress, f"Model '{prov['model']}' is not loadable. Check Ollama logs.")
             info(on_progress, "  ollama list  (to verify model exists)")

@@ -8,6 +8,7 @@ import sys
 import time
 from pathlib import Path
 
+from dotenv import load_dotenv
 from folge.pipeline.prerequisites import check as check_prereq
 from folge.pipeline.provider import check as check_prov
 from folge.pipeline.batch_process import run as run_batch
@@ -29,6 +30,8 @@ def run_pipeline(args):
     targets = args.targets.split(",") if args.targets else ["pdf", "docx", "html", "pptx"]
     provider = args.provider or "ollama"
     api_key = args.api_key
+    model = args.model
+    base_url = args.base_url
 
     if not guide_path.exists():
         print(f"ERROR: Guide file not found: {guide_path}")
@@ -56,7 +59,7 @@ def run_pipeline(args):
     images_dir = output_dir / "images" if not (PROJECT_ROOT / "images").exists() else PROJECT_ROOT / "images"
     vision_path = output_dir / "vision-results.json"
     run_batch(guide_path, images_dir, vision_path,
-              provider=provider, api_key=api_key)
+              provider=provider, api_key=api_key, model=model, base_url=base_url)
 
     # Step 4: Merge
     enriched_path = output_dir / "guide.enriched.json"
@@ -80,6 +83,7 @@ def run_pipeline(args):
 
 def main():
     """CLI entry point."""
+    load_dotenv()
     parser = argparse.ArgumentParser(
         description="Folge Vision Publishing Pipeline",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -88,6 +92,7 @@ def main():
             "  uv run run_pipeline.py guide.json\n"
             "  uv run run_pipeline.py guide.json output/ --targets pdf,html\n"
             "  uv run run_pipeline.py guide.json --provider=openrouter\n"
+            "  uv run run_pipeline.py guide.json --provider=claude --model=claude-sonnet-4-20250514\n"
         ),
     )
     parser.add_argument("guide", help="Path to guide.json (Folge export)")
@@ -100,13 +105,15 @@ def main():
         help="Comma-separated: pdf,docx,html,pptx,github",
     )
     parser.add_argument(
-        "--provider", choices=["ollama", "openrouter"], default=None,
+        "--provider",
+        choices=["ollama", "lmstudio", "llamacpp", "openrouter",
+                 "openai", "gemini", "claude"],
+        default=None,
         help="Vision backend (default: ollama)",
     )
-    parser.add_argument(
-        "--api-key", default=None,
-        help="API key for OpenRouter",
-    )
+    parser.add_argument("--api-key", default=None, help="API key for cloud providers")
+    parser.add_argument("--model", default=None, help="Override model name")
+    parser.add_argument("--base-url", default=None, help="Override base URL")
 
     args = parser.parse_args()
     run_pipeline(args)

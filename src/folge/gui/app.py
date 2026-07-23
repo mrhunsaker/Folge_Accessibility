@@ -57,6 +57,12 @@ class PipelineWizard:
         self.github_check = None
         self.confidence_slider = None
         self.provider_select = None
+        self.api_key_input = None
+        self.model_input = None
+        self.base_url_input = None
+        self.api_key_row = None
+        self.model_row = None
+        self.base_url_row = None
 
         self.right_panel = None
         self.codemirror_container = None
@@ -197,10 +203,36 @@ class PipelineWizard:
                     with ui.column():
                         ui.label('Vision Provider:').classes('text-weight-bold')
                         self.provider_select = ui.select(
-                            ['ollama', 'openrouter'],
+                            ['ollama', 'lmstudio', 'llamacpp', 'openrouter',
+                             'openai', 'gemini', 'claude'],
                             value='ollama',
                             label='Provider',
+                            on_change=self._on_provider_change,
                         ).classes('w-48')
+
+                with ui.column().classes('w-full gap-2'):
+                    self.api_key_row = ui.row().classes('w-full items-center gap-2 hidden')
+                    with self.api_key_row:
+                        self.api_key_input = ui.input(
+                            label='API Key',
+                            password=True,
+                            password_toggle_button=True,
+                            placeholder='sk-...',
+                        ).classes('flex-grow')
+
+                    self.model_row = ui.row().classes('w-full items-center gap-2')
+                    with self.model_row:
+                        self.model_input = ui.input(
+                            label='Model Override (optional)',
+                            placeholder='Leave empty for provider default',
+                        ).classes('flex-grow')
+
+                    self.base_url_row = ui.row().classes('w-full items-center gap-2')
+                    with self.base_url_row:
+                        self.base_url_input = ui.input(
+                            label='Base URL Override (optional)',
+                            placeholder='Leave empty for provider default',
+                        ).classes('flex-grow')
 
     def _pick_file(self, target_input, filter_str=''):
         self._open_browser(target_input, mode='file', pattern='*.json')
@@ -343,6 +375,15 @@ class PipelineWizard:
                 except Exception:
                     pass
 
+    def _on_provider_change(self, e):
+        provider = e.value if e else 'ollama'
+        local_providers = {'ollama', 'lmstudio', 'llamacpp'}
+        is_local = provider in local_providers
+        if self.api_key_row:
+            self.api_key_row.visible = not is_local
+        if self.base_url_row:
+            self.base_url_row.visible = is_local
+
     def _on_progress(self, message, current=0, total=0):
         self._schedule(lambda m=message, c=current, t=total: (
             self._log(m),
@@ -358,7 +399,9 @@ class PipelineWizard:
     def _run_provider(self):
         from folge.pipeline.provider import check
         provider = self.provider_select.value if self.provider_select else 'ollama'
-        ok, msg = check(provider_name=provider, on_progress=self._on_progress)
+        api_key = self.api_key_input.value if self.api_key_input else None
+        ok, msg = check(provider_name=provider, api_key=api_key,
+                        on_progress=self._on_progress)
         self.step_results[1] = (ok, msg)
         return ok
 
@@ -368,8 +411,12 @@ class PipelineWizard:
         images = Path(self.images_input.value)
         output = Path(self.output_input.value)
         provider = self.provider_select.value if self.provider_select else 'ollama'
+        api_key = self.api_key_input.value if self.api_key_input else None
+        model = self.model_input.value if self.model_input else None
+        base_url = self.base_url_input.value if self.base_url_input else None
         vision_path = run(guide, images, output / 'vision-results.json',
-                          provider=provider, on_progress=self._on_progress)
+                          provider=provider, api_key=api_key, model=model,
+                          base_url=base_url, on_progress=self._on_progress)
         self.step_results[2] = (True, vision_path)
         return True
 

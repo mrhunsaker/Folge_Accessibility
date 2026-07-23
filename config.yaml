@@ -1,9 +1,9 @@
 project:
   name: "Folge Vision Publishing"
-  version: "1.0.0"
+  version: "2026.7.22"
   description: "Automated documentation publishing with vision enrichment"
 
-provider: "ollama"  # "ollama" or "openrouter"
+provider: "ollama"
 
 ollama:
   base_url: "http://localhost:11434/v1"
@@ -15,6 +15,24 @@ ollama:
   image_max_width: 1024
   warmup: true
 
+lmstudio:
+  base_url: "http://localhost:1234/v1"
+  model: null
+  timeout: 120
+  max_workers: 2
+  retries: 2
+  retry_delay: 3
+  image_max_width: 1024
+
+llamacpp:
+  base_url: "http://localhost:8080/v1"
+  model: null
+  timeout: 120
+  max_workers: 1
+  retries: 2
+  retry_delay: 3
+  image_max_width: 1024
+
 openrouter:
   base_url: "https://openrouter.ai/api/v1"
   model: "qwen/qwen-2.5-vl-72b-instruct"
@@ -22,6 +40,33 @@ openrouter:
   max_workers: 4
   retries: 2
   retry_delay: 2
+  image_max_width: 1024
+
+openai:
+  base_url: "https://api.openai.com/v1"
+  model: "gpt-4o"
+  timeout: 60
+  max_workers: 4
+  retries: 2
+  retry_delay: 2
+  image_max_width: 1024
+
+gemini:
+  base_url: "https://generativelanguage.googleapis.com/v1beta/openai"
+  model: "gemini-2.5-flash"
+  timeout: 60
+  max_workers: 4
+  retries: 2
+  retry_delay: 2
+  image_max_width: 1024
+
+claude:
+  base_url: "https://api.anthropic.com/v1"
+  model: "claude-sonnet-4-20250514"
+  timeout: 90
+  max_workers: 3
+  retries: 2
+  retry_delay: 3
   image_max_width: 1024
 
 paths:
