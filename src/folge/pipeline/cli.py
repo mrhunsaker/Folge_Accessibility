@@ -1,5 +1,7 @@
-#!/usr/bin/env python3
-"""CLI entry point for the Folge Vision Pipeline."""
+"""CLI entry point for the Folge Vision Pipeline.
+
+This module is referenced by pyproject.toml's [project.scripts] entry.
+"""
 
 import argparse
 import sys
@@ -16,7 +18,8 @@ from folge.pipeline.publish import run as run_publish
 from folge.pipeline.manual_attention import generate as gen_attention
 from folge.pipeline.progress import banner, ok, error
 
-PROJECT_ROOT = Path(__file__).resolve().parent
+
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 
 def run_pipeline(args):
@@ -50,8 +53,9 @@ def run_pipeline(args):
     start_time = time.time()
 
     # Step 3: Batch vision processing
+    images_dir = output_dir / "images" if not (PROJECT_ROOT / "images").exists() else PROJECT_ROOT / "images"
     vision_path = output_dir / "vision-results.json"
-    run_batch(guide_path, output_dir / "images", vision_path,
+    run_batch(guide_path, images_dir, vision_path,
               provider=provider, api_key=api_key)
 
     # Step 4: Merge
@@ -60,7 +64,7 @@ def run_pipeline(args):
 
     # Step 5: Generate manual attention list
     attention_path = output_dir / "manual-attention-needed.md"
-    gen_attention(enriched_path, output_dir / "images", attention_path)
+    gen_attention(enriched_path, images_dir, attention_path)
 
     # Step 6: Validate
     run_validate(enriched_path, output_dir=output_dir)
@@ -75,19 +79,34 @@ def run_pipeline(args):
 
 
 def main():
+    """CLI entry point."""
     parser = argparse.ArgumentParser(
         description="Folge Vision Publishing Pipeline",
         formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "Examples:\n"
+            "  uv run run_pipeline.py guide.json\n"
+            "  uv run run_pipeline.py guide.json output/ --targets pdf,html\n"
+            "  uv run run_pipeline.py guide.json --provider=openrouter\n"
+        ),
     )
     parser.add_argument("guide", help="Path to guide.json (Folge export)")
-    parser.add_argument("output", nargs="?", default="output",
-                        help="Output directory (default: output/)")
-    parser.add_argument("--targets", default=None,
-                        help="Comma-separated: pdf,docx,html,pptx,github")
-    parser.add_argument("--provider", choices=["ollama", "openrouter"],
-                        default=None, help="Vision backend (default: ollama)")
-    parser.add_argument("--api-key", default=None,
-                        help="API key for OpenRouter")
+    parser.add_argument(
+        "output", nargs="?", default="output",
+        help="Output directory (default: output/)",
+    )
+    parser.add_argument(
+        "--targets", default=None,
+        help="Comma-separated: pdf,docx,html,pptx,github",
+    )
+    parser.add_argument(
+        "--provider", choices=["ollama", "openrouter"], default=None,
+        help="Vision backend (default: ollama)",
+    )
+    parser.add_argument(
+        "--api-key", default=None,
+        help="API key for OpenRouter",
+    )
 
     args = parser.parse_args()
     run_pipeline(args)

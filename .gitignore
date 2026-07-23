@@ -222,8 +222,4 @@ __marimo__/
 .idea
 
 images/*.png
-output/*.html
-output/*.md
-output/*.json
-output/*.pdf
-output/*.docx
+

@@ -1,11 +1,8 @@
-#!/usr/bin/env python3
-"""Process all steps through Vision API with retry, resize, and error handling.
+"""Batch vision processing for the Folge Vision Pipeline.
 
-Supports two providers:
-  - ollama   (default, local)
-  - openrouter (cloud, requires OPENROUTER_API_KEY)
+Processes all steps in a Folge guide through a vision API (Ollama or OpenRouter)
+to extract accessibility metadata from screenshots.
 """
-import argparse
 import json
 import os
 import re
@@ -13,41 +10,78 @@ import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+from typing import Optional
 
 import requests
 import yaml
 from PIL import Image
 
-from progress import banner, error, info, ok, step_error, step_ok, step_start, summary, warn
+from folge.pipeline.progress import (
+    ProgressCallback, banner, error, info, ok, step_error, step_ok,
+    step_start, summary, warn,
+)
 
 OLLAMA_BASE_URL = "http://localhost:11434/v1"
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 DEFAULT_MODEL = "qwen2.5vl-8k:latest"
 OPENROUTER_MODEL = "qwen/qwen-2.5-vl-72b-instruct"
+VALID_UI_TYPES = {
+    "button", "text_field", "dropdown", "checkbox", "radio",
+    "slider", "navigation", "menu", "tab", "icon", "link", "other",
+}
+UI_CONTROL_TYPE_MAP = {
+    "text": "text_field",
+    "label": "text_field",
+    "heading": "text_field",
+    "paragraph": "text_field",
+    "input": "text_field",
+    "toolbar": "navigation",
+    "sidebar": "navigation",
+    "tab_bar": "navigation",
+    "navbar": "navigation",
+    "font": "other",
+    "size": "other",
+    "color": "other",
+    "spacing": "other",
+    "alignment": "other",
+    "bold": "other",
+    "italic": "other",
+    "underline": "other",
+}
 
 
 def load_config():
     """Load config.yaml from project root."""
-    config_path = Path(__file__).resolve().parent.parent / "config.yaml"
+    config_path = Path(__file__).resolve().parents[3] / "config.yaml"
     if config_path.exists():
         with open(config_path, "r", encoding="utf-8") as f:
             return yaml.safe_load(f) or {}
     return {}
 
 
-def resolve_provider(args):
-    """Resolve provider from CLI, config, or default."""
-    config = load_config()
-    provider = getattr(args, "provider", None) or config.get("provider", "ollama")
+def resolve_provider(provider: str = None, api_key: str = None,
+                     model: str = None):
+    """Resolve provider configuration from arguments and config.yaml.
 
-    if provider == "openrouter":
-        api_key = (
-            getattr(args, "api_key", None)
+    Args:
+        provider: "ollama" or "openrouter" (None to use config default)
+        api_key: API key override for OpenRouter
+        model: Model name override
+
+    Returns:
+        Provider config dict.
+    """
+    config = load_config()
+    provider_name = provider or config.get("provider", "ollama")
+
+    if provider_name == "openrouter":
+        resolved_key = (
+            api_key
             or os.environ.get("OPENROUTER_API_KEY")
             or config.get("openrouter", {}).get("api_key")
         )
         base_url = config.get("openrouter", {}).get("base_url", OPENROUTER_BASE_URL)
-        model = config.get("openrouter", {}).get("model", OPENROUTER_MODEL)
+        resolved_model = model or config.get("openrouter", {}).get("model", OPENROUTER_MODEL)
         workers = config.get("openrouter", {}).get("max_workers", 4)
         timeout = config.get("openrouter", {}).get("timeout", 60)
         retries = config.get("openrouter", {}).get("retries", 2)
@@ -55,8 +89,8 @@ def resolve_provider(args):
         return {
             "name": "openrouter",
             "base_url": base_url,
-            "model": model,
-            "api_key": api_key,
+            "model": resolved_model,
+            "api_key": resolved_key,
             "workers": workers,
             "timeout": timeout,
             "retries": retries,
@@ -68,7 +102,7 @@ def resolve_provider(args):
         return {
             "name": "ollama",
             "base_url": ollama.get("base_url", OLLAMA_BASE_URL),
-            "model": getattr(args, "model", None) or ollama.get("model", DEFAULT_MODEL),
+            "model": model or ollama.get("model", DEFAULT_MODEL),
             "api_key": None,
             "workers": ollama.get("max_workers", 2),
             "timeout": ollama.get("timeout", 300),
@@ -144,32 +178,6 @@ def parse_json_response(content):
         if match:
             return json.loads(match.group())
         raise ValueError(f"Invalid JSON in response: {content[:200]}")
-
-
-VALID_UI_TYPES = {
-    "button", "text_field", "dropdown", "checkbox", "radio",
-    "slider", "navigation", "menu", "tab", "icon", "link", "other",
-}
-
-UI_CONTROL_TYPE_MAP = {
-    "text": "text_field",
-    "label": "text_field",
-    "heading": "text_field",
-    "paragraph": "text_field",
-    "input": "text_field",
-    "toolbar": "navigation",
-    "sidebar": "navigation",
-    "tab_bar": "navigation",
-    "navbar": "navigation",
-    "font": "other",
-    "size": "other",
-    "color": "other",
-    "spacing": "other",
-    "alignment": "other",
-    "bold": "other",
-    "italic": "other",
-    "underline": "other",
-}
 
 
 def normalize_ocr_text(val):
@@ -289,9 +297,9 @@ def normalize_vision_result(result):
     return result
 
 
-def warmup_model(base_url, model, timeout=60):
+def warmup_model(base_url, model, timeout=60, on_progress=None):
     """Send a warmup request to load the model into memory."""
-    info("Warming up model...")
+    info(on_progress, "Warming up model...")
     try:
         resp = requests.post(
             f"{base_url.rstrip('/v1')}/api/generate",
@@ -299,12 +307,12 @@ def warmup_model(base_url, model, timeout=60):
             timeout=timeout,
         )
         if resp.status_code == 200:
-            ok("Model warmed up")
+            ok(on_progress, "Model warmed up")
             return True
-        warn(f"Warmup failed: HTTP {resp.status_code}")
+        warn(on_progress, f"Warmup failed: HTTP {resp.status_code}")
         return False
     except Exception as e:
-        warn(f"Warmup failed: {e}")
+        warn(on_progress, f"Warmup failed: {e}")
         return False
 
 
@@ -431,7 +439,8 @@ def process_single_step(step, guide_title, previous_step, next_step,
     }
 
 
-def process_guide(guide_path, image_dir, output_path, provider, sequential=False):
+def process_guide(guide_path, image_dir, output_path, provider,
+                  sequential=False, on_progress=None):
     """Process all steps in a guide through vision API."""
     with open(guide_path, "r", encoding="utf-8") as f:
         guide = json.load(f)
@@ -439,13 +448,13 @@ def process_guide(guide_path, image_dir, output_path, provider, sequential=False
     guide_title, guide_id, steps = normalize_guide(guide)
     total = len(steps)
 
-    info(f"Provider: {provider['name']}")
-    info(f"Model: {provider['model']}")
-    info(f"Steps: {total}")
-    info(f"Timeout: {provider['timeout']}s per request")
-    info(f"Retries: {provider['retries']}")
-    info(f"Max image width: {provider['max_width']}px")
-    info(f"Workers: {'sequential (1)' if sequential else provider['workers']}")
+    info(on_progress, f"Provider: {provider['name']}")
+    info(on_progress, f"Model: {provider['model']}")
+    info(on_progress, f"Steps: {total}")
+    info(on_progress, f"Timeout: {provider['timeout']}s per request")
+    info(on_progress, f"Retries: {provider['retries']}")
+    info(on_progress, f"Max image width: {provider['max_width']}px")
+    info(on_progress, f"Workers: {'sequential (1)' if sequential else provider['workers']}")
 
     results = []
     start = time.monotonic()
@@ -455,16 +464,16 @@ def process_guide(guide_path, image_dir, output_path, provider, sequential=False
             cur = i + 1
             prev = steps[i - 1] if i > 0 else None
             nxt = steps[i + 1] if i < total - 1 else None
-            step_start(cur, total, step["title"], step.get("image", ""))
+            step_start(on_progress, cur, total, step["title"], step.get("image", ""))
             t0 = time.monotonic()
             result = process_single_step(
                 step, guide_title, prev, nxt, image_dir, provider
             )
             elapsed = time.monotonic() - t0
             if "vision_error" in result:
-                step_error(cur, total, step["title"], result["vision_error"][:80])
+                step_error(on_progress, cur, total, step["title"], result["vision_error"][:80])
             else:
-                step_ok(cur, total, step["title"], elapsed)
+                step_ok(on_progress, cur, total, step["title"], elapsed)
             results.append(result)
     else:
         with ThreadPoolExecutor(max_workers=provider["workers"]) as executor:
@@ -474,7 +483,7 @@ def process_guide(guide_path, image_dir, output_path, provider, sequential=False
                 cur = i + 1
                 prev = steps[i - 1] if i > 0 else None
                 nxt = steps[i + 1] if i < total - 1 else None
-                step_start(cur, total, step["title"], step.get("image", ""))
+                step_start(on_progress, cur, total, step["title"], step.get("image", ""))
                 t0 = time.monotonic()
                 future = executor.submit(
                     process_single_step,
@@ -488,9 +497,9 @@ def process_guide(guide_path, image_dir, output_path, provider, sequential=False
                 cur, title = futures[future]
                 elapsed = time.monotonic() - future_start[future]
                 if "vision_error" in result:
-                    step_error(cur, total, title, result["vision_error"][:80])
+                    step_error(on_progress, cur, total, title, result["vision_error"][:80])
                 else:
-                    step_ok(cur, total, title, elapsed)
+                    step_ok(on_progress, cur, total, title, elapsed)
                 results.append(result)
 
     elapsed = time.monotonic() - start
@@ -499,11 +508,11 @@ def process_guide(guide_path, image_dir, output_path, provider, sequential=False
     error_count = sum(1 for r in results if "vision_error" in r)
     success_count = len(results) - error_count
     summary(
-        "Processed",
+        on_progress, "Processed",
         success_count,
         total,
         output_path,
-        f"{error_count} failed \u2014 {elapsed:.1f}s",
+        f"{error_count} failed — {elapsed:.1f}s",
     )
 
     output = {
@@ -521,48 +530,40 @@ def process_guide(guide_path, image_dir, output_path, provider, sequential=False
     return error_count == 0
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Process guide steps through Vision API"
+def run(guide_path: Path, images_dir: Path, output_path: Path,
+        provider: str = "ollama", api_key: str = None, model: str = None,
+        sequential: bool = False,
+        on_progress: ProgressCallback = None) -> Path:
+    """Run batch vision processing on all guide steps.
+
+    Args:
+        guide_path: Path to guide.json
+        images_dir: Directory containing step screenshots
+        output_path: Where to write vision-results.json
+        provider: "ollama" or "openrouter"
+        api_key: API key for OpenRouter (optional)
+        model: Override model name (optional)
+        sequential: Process one step at a time without threading
+        on_progress: Progress callback
+
+    Returns:
+        Path to vision-results.json
+    """
+    banner(on_progress, "STEP: BATCH VISION PROCESSING")
+
+    prov = resolve_provider(provider=provider, api_key=api_key, model=model)
+
+    if prov["name"] == "ollama":
+        if not check_model_loadable(prov["base_url"], prov["model"]):
+            error(on_progress, f"Model '{prov['model']}' is not loadable. Check Ollama logs.")
+            info(on_progress, "  ollama list  (to verify model exists)")
+            info(on_progress, "  journalctl -u ollama  (to check Ollama logs)")
+            raise RuntimeError(f"Model '{prov['model']}' is not loadable")
+        warmup_model(prov["base_url"], prov["model"], on_progress=on_progress)
+
+    process_guide(
+        guide_path, images_dir, output_path, prov,
+        sequential=sequential, on_progress=on_progress,
     )
-    parser.add_argument("guide", help="Path to guide.json")
-    parser.add_argument("image_dir", help="Path to images directory")
-    parser.add_argument("output", help="Output path for vision-results.json")
-    parser.add_argument(
-        "--provider",
-        choices=["ollama", "openrouter"],
-        default=None,
-        help="Vision backend (default: ollama, or config.yaml provider)",
-    )
-    parser.add_argument("--api-key", default=None, help="API key for OpenRouter")
-    parser.add_argument("--model", default=None, help="Override model name")
-    parser.add_argument("--sequential", action="store_true",
-                        help="Process steps one at a time (no threading)")
-    args = parser.parse_args()
 
-    provider = resolve_provider(args)
-
-    # CLI --model overrides the resolved model
-    if args.model:
-        provider["model"] = args.model
-
-    if provider["name"] == "ollama":
-        if not check_model_loadable(provider["base_url"], provider["model"]):
-            error(f"Model '{provider['model']}' is not loadable. Check Ollama logs.")
-            info("  ollama list  (to verify model exists)")
-            info("  journalctl -u ollama  (to check Ollama logs)")
-            sys.exit(1)
-        warmup_model(provider["base_url"], provider["model"])
-
-    success = process_guide(
-        Path(args.guide),
-        Path(args.image_dir),
-        Path(args.output),
-        provider,
-        sequential=args.sequential,
-    )
-    sys.exit(0 if success else 1)
-
-
-if __name__ == "__main__":
-    main()
+    return output_path
