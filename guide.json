@@ -1,0 +1,1452 @@
+{
+    "guide": {
+        "id": "_RIdkNRShXgDsy9_mhwlR",
+        "title": "gudie",
+        "description": ""
+    },
+    "steps": [
+        {
+            "id": "QatJX1vxONIm_nySDUIyv",
+            "index": 1,
+            "parentId": null,
+            "title": "Check Heading Levels in Original Document",
+            "description": "<p>I click by each of my headings just to see what the reported heading level is in LibreOffice. This one is Heading Level 1</p>",
+            "screenshotFilename": "step-0.png",
+            "indexString": "1.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-0.png"
+        },
+        {
+            "id": "MLZJHXH3pkhrUu032Da04",
+            "index": 3,
+            "parentId": null,
+            "title": "Check Heading Levels",
+            "description": "<p>This one is a Heading Level 2</p>",
+            "screenshotFilename": "step-1.png",
+            "indexString": "2.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-1.png"
+        },
+        {
+            "id": "YBEN2oShThNXRhEzWMJbY",
+            "index": 5,
+            "parentId": null,
+            "title": "Check Heading Levels",
+            "description": "<p>This is a Heading Level 3</p>",
+            "screenshotFilename": "step-2.png",
+            "indexString": "3.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-2.png"
+        },
+        {
+            "id": "VxXaSVynrPgOxI0XjdmN7",
+            "index": 7,
+            "parentId": null,
+            "title": "Check Heading Levels",
+            "description": "<p>This is a Heading Level 4. Braille only has 3 Heading Levels, so I will concatenate all of these into Level 3 for braille. Choices on how to distribute Heading levels is down to the transcriber</p>",
+            "screenshotFilename": "step-3.png",
+            "indexString": "4.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-3.png"
+        },
+        {
+            "id": "OIn_glsXMMNMr1y9MYSBA",
+            "index": 9,
+            "parentId": null,
+            "title": "Check Heading Levels",
+            "description": "<p>This is a Heading Level 5. Braille only has 3 Heading Levels, so I will concatenate all of these into Level 3 for braille. Choices on how to distribute Heading levels is down to the transcriber</p>",
+            "screenshotFilename": "step-4.png",
+            "indexString": "5.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-4.png"
+        },
+        {
+            "id": "KiN_G9wzCGFbCaqbeplwO",
+            "index": 14,
+            "parentId": null,
+            "title": "Check Heading Levels",
+            "description": "<p>This is a Heading Level 2.&nbsp;</p>",
+            "screenshotFilename": "step-5.png",
+            "indexString": "6.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-5.png"
+        },
+        {
+            "id": "oRxcCu7uce4oq3G8GV_UX",
+            "index": 16,
+            "parentId": null,
+            "title": "Open BrailleBlaster ",
+            "description": "<p>I have removed all formatting fromt he text, so I need to start by adding in my Heading Levels based on what I saw in the LIbreOffice document.&nbsp;</p>",
+            "screenshotFilename": "step-6.png",
+            "indexString": "7.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-6.png"
+        },
+        {
+            "id": "zU2-w1jfCpVXtP-aV7rxn",
+            "index": 18,
+            "parentId": null,
+            "title": "Click \"Heading\"",
+            "description": "<p>You can either highlight the text like I am to show you what I am changing, or else you can just put your cursor anywhere on the line that you want to change.&nbsp;</p>",
+            "screenshotFilename": "step-7.png",
+            "indexString": "8.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-7.png"
+        },
+        {
+            "id": "rzbayKcdq6hv72Ws3qbB7",
+            "index": 19,
+            "parentId": null,
+            "title": "Click \"Heading 1\"",
+            "description": "<p>For a Centered Heading (Level 1), we select Heading 1 fromt he drop down menu.&nbsp;</p>",
+            "screenshotFilename": "step-8.png",
+            "indexString": "9.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-8.png"
+        },
+        {
+            "id": "xe_-KvdL-AXfrnxpMmC2l",
+            "index": 20,
+            "parentId": null,
+            "title": "Verify Heading Level was Changed",
+            "description": "<p>The style information here on the side chiows that the Heading 1 was applied, and the heading is centered.&nbsp;</p>",
+            "screenshotFilename": "step-9.png",
+            "indexString": "10.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-9.png"
+        },
+        {
+            "id": "_Zg8LlG5MjZd-Lb5zBpaV",
+            "index": 22,
+            "parentId": null,
+            "title": "Click \"Heading\"",
+            "description": "<p>I have highlighted the text I want to apply a Heading Level 2</p>",
+            "screenshotFilename": "step-10.png",
+            "indexString": "11.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-10.png"
+        },
+        {
+            "id": "mYgrFsXc2Ocxa4bl1IedW",
+            "index": 23,
+            "parentId": null,
+            "title": "Click \"Heading 2\"",
+            "description": "<p>I want a Header that started in Cell 5, which is Heading Level 2</p>",
+            "screenshotFilename": "step-11.png",
+            "indexString": "12.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-11.png"
+        },
+        {
+            "id": "sOIJPqYRClPk8gF1JgwVR",
+            "index": 24,
+            "parentId": null,
+            "title": "Verify Heading Level was Changed",
+            "description": "<p>We can confirm that the Heading 2 style was applied, and the text of the heading starts in cell 5.&nbsp;</p>",
+            "screenshotFilename": "step-12.png",
+            "indexString": "13.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-12.png"
+        },
+        {
+            "id": "1-xKMx-vcMbz-CGPq022L",
+            "index": 26,
+            "parentId": null,
+            "title": "Click \"Heading\"",
+            "description": "<p>We now want to apply a Level 3 Heading</p>",
+            "screenshotFilename": "step-13.png",
+            "indexString": "14.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-13.png"
+        },
+        {
+            "id": "XtA897y7NxRR6Ywe9ZAZV",
+            "index": 27,
+            "parentId": null,
+            "title": "Click \"Heading 3\"",
+            "description": "<p>We want a Heading that starts in cell 7, which is Heading Level 3</p>",
+            "screenshotFilename": "step-14.png",
+            "indexString": "15.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-14.png"
+        },
+        {
+            "id": "pioX_TnIcYX3pcdAjlo5k",
+            "index": 28,
+            "parentId": null,
+            "title": "Verify Heading Level was Changed",
+            "description": "<p>We can see that the Heading Level 3 was applied, and the Heading Text starts on cell 7, and the text that carries over onto the next line is also starting in cell 7.&nbsp;</p>",
+            "screenshotFilename": "step-15.png",
+            "indexString": "16.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-15.png"
+        },
+        {
+            "id": "Yvyes-uKdhj-QvcjrQ5o2",
+            "index": 31,
+            "parentId": null,
+            "title": "Click \"Heading\"",
+            "description": "<p>If you remember, this was a Heading Level 4 in the Libre Office document.&nbsp;</p>",
+            "screenshotFilename": "step-16.png",
+            "indexString": "17.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-16.png"
+        },
+        {
+            "id": "voOzoc5vdrn2XOwZrcad_",
+            "index": 32,
+            "parentId": null,
+            "title": "Click \"Heading 3\"",
+            "description": "<p>I made the choice that all Heading Levels 4,5, and 6 are going to be Level 3 Headings&nbsp;</p>",
+            "screenshotFilename": "step-17.png",
+            "indexString": "18.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-17.png"
+        },
+        {
+            "id": "il38S5BbtwmRNldAFEHzn",
+            "index": 33,
+            "parentId": null,
+            "title": "Verifying Heading Levels",
+            "description": "",
+            "screenshotFilename": "step-18.png",
+            "indexString": "19.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-18.png"
+        },
+        {
+            "id": "eY_Io58MvDZJoLj1gFdWq",
+            "index": 35,
+            "parentId": null,
+            "title": "Click \"Heading\"",
+            "description": "<p>This one was a Level 2 Heading in the Libre Office Document</p>",
+            "screenshotFilename": "step-19.png",
+            "indexString": "20.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-19.png"
+        },
+        {
+            "id": "-Cncg3vi4wpHyAHj4OPu4",
+            "index": 36,
+            "parentId": null,
+            "title": "Click \"Heading 2\"",
+            "description": "<p>I want a Cell 5 Heading, so I select Heading Level 2</p>",
+            "screenshotFilename": "step-20.png",
+            "indexString": "21.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-20.png"
+        },
+        {
+            "id": "9KzK7VqA1PvWuN_JXLgjp",
+            "index": 37,
+            "parentId": null,
+            "title": "Verify Heading Level was Changed",
+            "description": "",
+            "screenshotFilename": "step-21.png",
+            "indexString": "22.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-21.png"
+        },
+        {
+            "id": "Zw4CRjrdygHZwbwB4dO3x",
+            "index": 38,
+            "parentId": null,
+            "title": "Click \"custom\"",
+            "description": "",
+            "screenshotFilename": "step-22.png",
+            "indexString": "23.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-22.png"
+        },
+        {
+            "id": "O-3rfbW8jrux-9mzE7Fjk",
+            "index": 41,
+            "parentId": null,
+            "title": "Click \"Lists\"",
+            "description": "<p>As a matter of preference, I always highlight the entire list and set them to be list members rather than setting them one at a time.</p>",
+            "screenshotFilename": "step-23.png",
+            "indexString": "24.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-23.png"
+        },
+        {
+            "id": "CeectaYEsYfov-MORQOcu",
+            "index": 42,
+            "parentId": null,
+            "title": "Click \"List 5a\"",
+            "description": "<p>This is a 5 item list, and this is the 1st level, so we select List 5 Levels &gt; List 5a</p>",
+            "screenshotFilename": "step-24.png",
+            "indexString": "25.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-24.png"
+        },
+        {
+            "id": "ZFKxMYlLQEjyp4EQn8p-v",
+            "index": 43,
+            "parentId": null,
+            "title": "Verify List Level is Set",
+            "description": "<p>The entire block is now a Level 5a list.&nbsp;</p>",
+            "screenshotFilename": "step-25.png",
+            "indexString": "26.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-25.png"
+        },
+        {
+            "id": "IlXOX70AusFc_ZEBO44oO",
+            "index": 47,
+            "parentId": null,
+            "title": "Click \"Lists\"",
+            "description": "<p>I select all the items that are going to be Level 5b or higher</p>",
+            "screenshotFilename": "step-26.png",
+            "indexString": "27.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-26.png"
+        },
+        {
+            "id": "Suby3dv2mSxhONXEh6rQH",
+            "index": 48,
+            "parentId": null,
+            "title": "Click \"List 5b\"",
+            "description": "<p>I select the second level within a Level 5 list.</p>",
+            "screenshotFilename": "step-27.png",
+            "indexString": "28.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-27.png"
+        },
+        {
+            "id": "flnPcYl1aJj-Ngw5cbD65",
+            "index": 49,
+            "parentId": null,
+            "title": "Verify List Level is Set",
+            "description": "<p>My Level 5a List items are unchanged, the rest are now level 5b</p>",
+            "screenshotFilename": "step-28.png",
+            "indexString": "29.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-28.png"
+        },
+        {
+            "id": "yq8sfVa4uB1soSZLBv4JR",
+            "index": 50,
+            "parentId": null,
+            "title": "Click \"Lists\"",
+            "description": "<p>I select all items that are going to be a Level 5c or higher</p>",
+            "screenshotFilename": "step-29.png",
+            "indexString": "30.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-29.png"
+        },
+        {
+            "id": "Mn5GDJTmbJBm83YEX4twr",
+            "index": 51,
+            "parentId": null,
+            "title": "Click \"List 5c\"",
+            "description": "",
+            "screenshotFilename": "step-30.png",
+            "indexString": "31.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-30.png"
+        },
+        {
+            "id": "txVO-R2iztU7I0Re5MjgB",
+            "index": 52,
+            "parentId": null,
+            "title": "Verify List Level is Set",
+            "description": "<p>My Level 5a and 5b list items are unchanged. The rest are Level 5c.</p>",
+            "screenshotFilename": "step-31.png",
+            "indexString": "32.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-31.png"
+        },
+        {
+            "id": "3fofVcx1XFEk0xc9gwRuR",
+            "index": 53,
+            "parentId": null,
+            "title": "Click \"Lists\"",
+            "description": "<p>I select the Items I want to be levels 5d and 5e</p>",
+            "screenshotFilename": "step-32.png",
+            "indexString": "33.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-32.png"
+        },
+        {
+            "id": "errNH9dKt5hKz0EixDfpF",
+            "index": 54,
+            "parentId": null,
+            "title": "Click \"List 5d\"",
+            "description": "<p>I set them both as Level 5d</p>",
+            "screenshotFilename": "step-33.png",
+            "indexString": "34.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-33.png"
+        },
+        {
+            "id": "rCqMe1HAWaIyEeSg4k6Gq",
+            "index": 55,
+            "parentId": null,
+            "title": "Verify List Level is Set",
+            "description": "<p>The items in List 5a, 5b, 5c are all unchanged, but the 2 have been made into 5d.&nbsp;</p>",
+            "screenshotFilename": "step-34.png",
+            "indexString": "35.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-34.png"
+        },
+        {
+            "id": "yt3rlAzD0uPw66kk9c3s-",
+            "index": 58,
+            "parentId": null,
+            "title": "Click \"List 5e\"",
+            "description": "<p>This time, I just put my cursor inside the line I want to change to a List 5e</p>",
+            "screenshotFilename": "step-35.png",
+            "indexString": "36.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-35.png"
+        },
+        {
+            "id": "FketF8dXsWxKfDDINYEeC",
+            "index": 59,
+            "parentId": null,
+            "title": "Verify List if Correctly Formatted",
+            "description": "<p>I have a formatted list with alkl levels matching the LibreOffice document.&nbsp; There is also an empty line between Body Text and the list, which is correct.</p>",
+            "screenshotFilename": "step-36.png",
+            "indexString": "37.",
+            "textblocks": [],
+            "includeInToc": true,
+            "settings": {
+                "forceToANewPage": false,
+                "multiImageStep": false,
+                "focusedView": true,
+                "contentBlock": false,
+                "focusedViewSettings": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                },
+                "substepBlocksSettings": [
+                    {
+                        "id": "title",
+                        "show": false
+                    },
+                    {
+                        "id": "image",
+                        "show": true
+                    },
+                    {
+                        "id": "description",
+                        "show": false
+                    }
+                ],
+                "textblocks": []
+            },
+            "nested": 0,
+            "screenshotRelativePath": "images/step-36.png"
+        }
+    ]
+}

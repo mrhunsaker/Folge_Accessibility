@@ -3,24 +3,33 @@
 Processes all steps in a Folge guide through a vision API
 to extract accessibility metadata from screenshots.
 """
-import base64
+
 import json
+import logging
 import os
 import re
-import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Optional
 
 import requests
 import yaml
 from PIL import Image
 
 from folge.pipeline.progress import (
-    ProgressCallback, banner, error, info, ok, step_error, step_ok,
-    step_start, summary, warn,
+    ProgressCallback,
+    banner,
+    error,
+    info,
+    ok,
+    step_error,
+    step_ok,
+    step_start,
+    summary,
+    warn,
 )
+
+logger = logging.getLogger(__name__)
 
 PROVIDER_REGISTRY = {
     "ollama": {
@@ -29,7 +38,10 @@ PROVIDER_REGISTRY = {
         "model": "qwen2.5vl-8k:latest",
         "api_key_env": None,
         "auth_type": None,
-        "workers": 2, "timeout": 300, "retries": 3, "retry_delay": 5,
+        "workers": 2,
+        "timeout": 1200,
+        "retries": 3,
+        "retry_delay": 5,
         "warmup": True,
     },
     "lmstudio": {
@@ -38,7 +50,10 @@ PROVIDER_REGISTRY = {
         "model": "default",
         "api_key_env": None,
         "auth_type": None,
-        "workers": 2, "timeout": 300, "retries": 3, "retry_delay": 5,
+        "workers": 2,
+        "timeout": 300,
+        "retries": 3,
+        "retry_delay": 5,
         "warmup": False,
     },
     "llamacpp": {
@@ -47,7 +62,10 @@ PROVIDER_REGISTRY = {
         "model": "default",
         "api_key_env": None,
         "auth_type": None,
-        "workers": 1, "timeout": 300, "retries": 2, "retry_delay": 5,
+        "workers": 1,
+        "timeout": 300,
+        "retries": 2,
+        "retry_delay": 5,
         "warmup": False,
     },
     "openrouter": {
@@ -56,7 +74,10 @@ PROVIDER_REGISTRY = {
         "model": "qwen/qwen-2.5-vl-72b-instruct",
         "api_key_env": "OPENROUTER_API_KEY",
         "auth_type": "bearer",
-        "workers": 4, "timeout": 60, "retries": 2, "retry_delay": 2,
+        "workers": 4,
+        "timeout": 60,
+        "retries": 2,
+        "retry_delay": 2,
         "warmup": False,
     },
     "openai": {
@@ -65,7 +86,10 @@ PROVIDER_REGISTRY = {
         "model": "gpt-4o",
         "api_key_env": "OPENAI_API_KEY",
         "auth_type": "bearer",
-        "workers": 4, "timeout": 60, "retries": 2, "retry_delay": 2,
+        "workers": 4,
+        "timeout": 60,
+        "retries": 2,
+        "retry_delay": 2,
         "warmup": False,
     },
     "gemini": {
@@ -74,7 +98,10 @@ PROVIDER_REGISTRY = {
         "model": "gemini-2.0-flash",
         "api_key_env": "GEMINI_API_KEY",
         "auth_type": "bearer",
-        "workers": 4, "timeout": 60, "retries": 2, "retry_delay": 2,
+        "workers": 4,
+        "timeout": 60,
+        "retries": 2,
+        "retry_delay": 2,
         "warmup": False,
     },
     "claude": {
@@ -83,13 +110,26 @@ PROVIDER_REGISTRY = {
         "model": "claude-sonnet-4-20250514",
         "api_key_env": "ANTHROPIC_API_KEY",
         "auth_type": "anthropic",
-        "workers": 4, "timeout": 60, "retries": 2, "retry_delay": 2,
+        "workers": 4,
+        "timeout": 60,
+        "retries": 2,
+        "retry_delay": 2,
         "warmup": False,
     },
 }
 VALID_UI_TYPES = {
-    "button", "text_field", "dropdown", "checkbox", "radio",
-    "slider", "navigation", "menu", "tab", "icon", "link", "other",
+    "button",
+    "text_field",
+    "dropdown",
+    "checkbox",
+    "radio",
+    "slider",
+    "navigation",
+    "menu",
+    "tab",
+    "icon",
+    "link",
+    "other",
 }
 UI_CONTROL_TYPE_MAP = {
     "text": "text_field",
@@ -121,8 +161,9 @@ def load_config():
     return {}
 
 
-def resolve_provider(provider: str = None, api_key: str = None,
-                     model: str = None, base_url: str = None):
+def resolve_provider(
+    provider: str = None, api_key: str = None, model: str = None, base_url: str = None
+):
     """Resolve provider configuration from arguments, env, and config.yaml.
 
     Args:
@@ -148,21 +189,11 @@ def resolve_provider(provider: str = None, api_key: str = None,
     resolved_key = None
     if reg["api_key_env"]:
         resolved_key = (
-            api_key
-            or os.environ.get(reg["api_key_env"])
-            or config_block.get("api_key")
+            api_key or os.environ.get(reg["api_key_env"]) or config_block.get("api_key")
         )
 
-    resolved_base_url = (
-        base_url
-        or config_block.get("base_url")
-        or reg["base_url"]
-    )
-    resolved_model = (
-        model
-        or config_block.get("model")
-        or reg["model"]
-    )
+    resolved_base_url = base_url or config_block.get("base_url") or reg["base_url"]
+    resolved_model = model or config_block.get("model") or reg["model"]
 
     return {
         "name": provider_name,
@@ -187,9 +218,7 @@ def normalize_guide(guide):
         or "Untitled Guide"
     )
     guide_id = (
-        guide.get("guide_id")
-        or (guide.get("guide") or {}).get("id")
-        or guide_title
+        guide.get("guide_id") or (guide.get("guide") or {}).get("id") or guide_title
     )
     normalized_steps = []
     for i, step in enumerate(guide.get("steps", [])):
@@ -198,13 +227,15 @@ def normalize_guide(guide):
         image = step.get("image") or step.get("screenshotFilename") or ""
         title = step.get("title") or ""
         order = step.get("order") or step.get("index") or i
-        normalized_steps.append({
-            "step_id": step_id,
-            "title": title,
-            "body": body,
-            "image": image,
-            "order": order,
-        })
+        normalized_steps.append(
+            {
+                "step_id": step_id,
+                "title": title,
+                "body": body,
+                "image": image,
+                "order": order,
+            }
+        )
     return guide_title, guide_id, normalized_steps
 
 
@@ -217,6 +248,7 @@ def resize_image(image_path, max_width):
     new_size = (max_width, int(img.height * ratio))
     resized = img.resize(new_size, Image.LANCZOS)
     import io
+
     buf = io.BytesIO()
     resized.save(buf, format="PNG")
     return buf.getvalue()
@@ -225,6 +257,7 @@ def resize_image(image_path, max_width):
 def encode_image(image_path, max_width=1024):
     """Encode image to base64, resizing if necessary."""
     import base64
+
     resized = resize_image(image_path, max_width)
     if resized is not None:
         return base64.b64encode(resized).decode("utf-8")
@@ -233,7 +266,7 @@ def encode_image(image_path, max_width=1024):
 
 
 def parse_json_response(content):
-    """Extract and parse JSON from model response, handling markdown fences."""
+    """Extract and parse JSON from model response, handling markdown fences and truncation."""
     content = content.strip()
     content = re.sub(r"^```(?:json)?\s*\n?", "", content)
     content = re.sub(r"\n?```\s*$", "", content)
@@ -241,10 +274,53 @@ def parse_json_response(content):
     try:
         return json.loads(content)
     except json.JSONDecodeError:
+        # Try to find JSON object in the content
         match = re.search(r"\{[\s\S]*\}", content)
         if match:
-            return json.loads(match.group())
+            json_str = match.group()
+            try:
+                return json.loads(json_str)
+            except json.JSONDecodeError:
+                # Attempt to fix truncated JSON by closing open brackets
+                fixed = _fix_truncated_json(json_str)
+                if fixed:
+                    try:
+                        return json.loads(fixed)
+                    except json.JSONDecodeError:
+                        pass
         raise ValueError(f"Invalid JSON in response: {content[:200]}")
+
+
+def _fix_truncated_json(json_str):
+    """Attempt to fix truncated JSON by closing open brackets and strings."""
+    # Count open brackets
+    open_braces = json_str.count("{") - json_str.count("}")
+    open_brackets = json_str.count("[") - json_str.count("]")
+
+    # Check if we're in an unclosed string
+    in_string = False
+    escape_next = False
+    for char in json_str:
+        if escape_next:
+            escape_next = False
+            continue
+        if char == "\\":
+            escape_next = True
+            continue
+        if char == '"':
+            in_string = not in_string
+
+    result = json_str
+    # Close any unclosed string
+    if in_string:
+        result += '"'
+    # Close open brackets (innermost first)
+    for _ in range(open_brackets):
+        result += "]"
+    for _ in range(open_braces):
+        result += "}"
+
+    return result
 
 
 def normalize_ocr_text(val):
@@ -311,7 +387,9 @@ def normalize_vision_result(result):
     if not isinstance(vision, dict):
         return result
 
-    vision["important_element"] = normalize_important_element(vision.get("important_element"))
+    vision["important_element"] = normalize_important_element(
+        vision.get("important_element")
+    )
     vision["ui_controls"] = normalize_ui_controls(vision.get("ui_controls"))
     if "confidence" not in vision:
         vision["confidence"] = 0.7
@@ -328,7 +406,9 @@ def normalize_vision_result(result):
             if field in result and result[field] and field not in vision:
                 vision[field] = result[field]
         vision["ui_controls"] = normalize_ui_controls(vision.get("ui_controls"))
-        vision["important_element"] = normalize_important_element(vision.get("important_element"))
+        vision["important_element"] = normalize_important_element(
+            vision.get("important_element")
+        )
 
     misplaced_fields = ["ui_controls", "important_element", "confidence"]
     for field in misplaced_fields:
@@ -336,7 +416,9 @@ def normalize_vision_result(result):
             vision[field] = result.pop(field)
 
     vision["ui_controls"] = normalize_ui_controls(vision.get("ui_controls"))
-    vision["important_element"] = normalize_important_element(vision.get("important_element"))
+    vision["important_element"] = normalize_important_element(
+        vision.get("important_element")
+    )
     vision["ocr_text"] = normalize_ocr_text(vision.get("ocr_text"))
 
     alt = vision.get("alt_text", "")
@@ -345,7 +427,7 @@ def normalize_vision_result(result):
         for sep in (". ", ", ", "."):
             idx = truncated.rfind(sep)
             if idx > 80:
-                truncated = truncated[:idx + 1]
+                truncated = truncated[: idx + 1]
                 break
         if truncated != alt[:150]:
             truncated = truncated.rstrip(". ,") + "."
@@ -375,6 +457,9 @@ def warmup_model(base_url, model, timeout=60, on_progress=None):
         )
         if resp.status_code == 200:
             ok(on_progress, "Model warmed up")
+            # Allow model to stabilize after warmup
+            info(on_progress, "Waiting for model to stabilize...")
+            time.sleep(3)
             return True
         warn(on_progress, f"Warmup failed: HTTP {resp.status_code}")
         return False
@@ -410,8 +495,8 @@ RETURN ONLY VALID JSON with schema: step_id, vision(alt_text, long_description, 
 
 Guide: {guide_title}
 Previous: {prev_title}
-Current: {step['title']}
-Instruction: {step['body']}
+Current: {step["title"]}
+Instruction: {step["body"]}
 Next: {next_title}
 
 Image: The screenshot is provided as an attachment.
@@ -419,10 +504,12 @@ Image: The screenshot is provided as an attachment.
 RULES:
 - alt_text: Max 150 chars, describe ONLY visible content
 - long_description: 2-4 sentences, mention important controls
-- ocr_text: Only visible text as array
+- ocr_text: Only visible text as array (keep brief - max 10 items)
 - ui_controls: Objects with type and label
 - important_element: Plain text string (NOT an object), max 200 chars, single most important element
 - confidence: 0.0-1.0
+
+KEEP RESPONSE CONCISE - Do not include lengthy descriptions or extensive OCR text.
 
 RETURN ONLY JSON."""
     return prompt
@@ -440,7 +527,7 @@ def _build_auth_headers(provider):
     return headers
 
 
-def _build_claude_payload(prompt, image_b64, image_mime, model, max_tokens=8192):
+def _build_claude_payload(prompt, image_b64, image_mime, model, max_tokens=16384):
     """Build Claude Messages API payload."""
     return {
         "model": model,
@@ -477,8 +564,9 @@ def _get_image_mime(image_path):
     }.get(ext, "image/png")
 
 
-def process_single_step(step, guide_title, previous_step, next_step,
-                        image_dir, provider):
+def process_single_step(
+    step, guide_title, previous_step, next_step, image_dir, provider
+):
     """Process a single step through vision API with retry."""
     image_path = image_dir / step.get("image", "")
 
@@ -512,14 +600,12 @@ def process_single_step(step, guide_title, previous_step, next_step,
                         {"type": "text", "text": prompt},
                         {
                             "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/png;base64,{image_b64}"
-                            },
+                            "image_url": {"url": f"data:image/png;base64,{image_b64}"},
                         },
                     ],
                 }
             ],
-            "max_tokens": 8192,
+            "max_tokens": 16384,
             "temperature": 0.1,
             "top_p": 0.9,
             "stream": False,
@@ -542,16 +628,28 @@ def process_single_step(step, guide_title, previous_step, next_step,
             else:
                 content = resp_json["choices"][0]["message"]["content"]
 
-            result = parse_json_response(content)
-            result["step_id"] = step["step_id"]
-            result["processed_at"] = time.strftime(
-                "%Y-%m-%dT%H:%M:%SZ", time.gmtime()
+            # Log raw response for debugging confidence issues
+            logger.debug(
+                f"Step {step.get('step_id')}: Raw model response: {content[:500]}"
             )
+
+            result = parse_json_response(content)
+
+            # Log extracted confidence for debugging
+            vision = result.get("vision", {})
+            confidence = vision.get("confidence")
+            logger.debug(
+                f"Step {step.get('step_id')}: Extracted confidence: {confidence}"
+            )
+
+            result["step_id"] = step["step_id"]
+            result["processed_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
             result["model"] = provider["model"]
             return normalize_vision_result(result)
 
         except Exception as e:
             last_error = str(e)
+            logger.warning(f"Step {step.get('step_id')}: Attempt {attempt} failed: {e}")
             if attempt < provider["retries"]:
                 wait = provider["retry_delay"] * attempt
                 time.sleep(wait)
@@ -563,8 +661,9 @@ def process_single_step(step, guide_title, previous_step, next_step,
     }
 
 
-def process_guide(guide_path, image_dir, output_path, provider,
-                  sequential=False, on_progress=None):
+def process_guide(
+    guide_path, image_dir, output_path, provider, sequential=False, on_progress=None
+):
     """Process all steps in a guide through vision API."""
     with open(guide_path, "r", encoding="utf-8") as f:
         guide = json.load(f)
@@ -578,7 +677,10 @@ def process_guide(guide_path, image_dir, output_path, provider,
     info(on_progress, f"Timeout: {provider['timeout']}s per request")
     info(on_progress, f"Retries: {provider['retries']}")
     info(on_progress, f"Max image width: {provider['max_width']}px")
-    info(on_progress, f"Workers: {'sequential (1)' if sequential else provider['workers']}")
+    info(
+        on_progress,
+        f"Workers: {'sequential (1)' if sequential else provider['workers']}",
+    )
 
     results = []
     start = time.monotonic()
@@ -595,7 +697,9 @@ def process_guide(guide_path, image_dir, output_path, provider,
             )
             elapsed = time.monotonic() - t0
             if "vision_error" in result:
-                step_error(on_progress, cur, total, step["title"], result["vision_error"][:80])
+                step_error(
+                    on_progress, cur, total, step["title"], result["vision_error"][:80]
+                )
             else:
                 step_ok(on_progress, cur, total, step["title"], elapsed)
             results.append(result)
@@ -607,11 +711,18 @@ def process_guide(guide_path, image_dir, output_path, provider,
                 cur = i + 1
                 prev = steps[i - 1] if i > 0 else None
                 nxt = steps[i + 1] if i < total - 1 else None
-                step_start(on_progress, cur, total, step["title"], step.get("image", ""))
+                step_start(
+                    on_progress, cur, total, step["title"], step.get("image", "")
+                )
                 t0 = time.monotonic()
                 future = executor.submit(
                     process_single_step,
-                    step, guide_title, prev, nxt, image_dir, provider,
+                    step,
+                    guide_title,
+                    prev,
+                    nxt,
+                    image_dir,
+                    provider,
                 )
                 futures[future] = (cur, step["title"])
                 future_start[future] = t0
@@ -621,7 +732,9 @@ def process_guide(guide_path, image_dir, output_path, provider,
                 cur, title = futures[future]
                 elapsed = time.monotonic() - future_start[future]
                 if "vision_error" in result:
-                    step_error(on_progress, cur, total, title, result["vision_error"][:80])
+                    step_error(
+                        on_progress, cur, total, title, result["vision_error"][:80]
+                    )
                 else:
                     step_ok(on_progress, cur, total, title, elapsed)
                 results.append(result)
@@ -632,7 +745,8 @@ def process_guide(guide_path, image_dir, output_path, provider,
     error_count = sum(1 for r in results if "vision_error" in r)
     success_count = len(results) - error_count
     summary(
-        on_progress, "Processed",
+        on_progress,
+        "Processed",
         success_count,
         total,
         output_path,
@@ -654,11 +768,17 @@ def process_guide(guide_path, image_dir, output_path, provider,
     return error_count == 0
 
 
-def run(guide_path: Path, images_dir: Path, output_path: Path,
-        provider: str = "ollama", api_key: str = None, model: str = None,
-        base_url: str = None,
-        sequential: bool = False,
-        on_progress: ProgressCallback = None) -> Path:
+def run(
+    guide_path: Path,
+    images_dir: Path,
+    output_path: Path,
+    provider: str = "ollama",
+    api_key: str = None,
+    model: str = None,
+    base_url: str = None,
+    sequential: bool = False,
+    on_progress: ProgressCallback = None,
+) -> Path:
     """Run batch vision processing on all guide steps.
 
     Args:
@@ -683,15 +803,33 @@ def run(guide_path: Path, images_dir: Path, output_path: Path,
 
     if prov.get("warmup") and prov["name"] == "ollama":
         if not check_model_loadable(prov["base_url"], prov["model"]):
-            error(on_progress, f"Model '{prov['model']}' is not loadable. Check Ollama logs.")
+            error(
+                on_progress,
+                f"Model '{prov['model']}' is not loadable. Check Ollama logs.",
+            )
             info(on_progress, "  ollama list  (to verify model exists)")
             info(on_progress, "  journalctl -u ollama  (to check Ollama logs)")
             raise RuntimeError(f"Model '{prov['model']}' is not loadable")
         warmup_model(prov["base_url"], prov["model"], on_progress=on_progress)
 
+    # For small guides, force sequential to avoid concurrency-related confidence issues
+    with open(guide_path, "r", encoding="utf-8") as f:
+        guide = json.load(f)
+    _, _, steps = normalize_guide(guide)
+    if not sequential and len(steps) <= 3:
+        info(
+            on_progress,
+            "Small guide detected, using sequential processing for better results",
+        )
+        sequential = True
+
     process_guide(
-        guide_path, images_dir, output_path, prov,
-        sequential=sequential, on_progress=on_progress,
+        guide_path,
+        images_dir,
+        output_path,
+        prov,
+        sequential=sequential,
+        on_progress=on_progress,
     )
 
     return output_path

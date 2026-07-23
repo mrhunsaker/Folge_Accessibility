@@ -1,0 +1,1641 @@
+{
+  "schema_version": "1.0",
+  "guide_id": "_RIdkNRShXgDsy9_mhwlR",
+  "title": "Simple Formatting in BrailleBlaster",
+  "processed_at": "2026-07-23T19:33:07Z",
+  "model": "qwen2.5vl-8k:latest",
+  "steps": [
+    {
+      "step_id": "-Cncg3vi4wpHyAHj4OPu4",
+      "vision": {
+        "alt_text": "A screenshot of BrailleBlaster software with a focus on the 'Heading' button in the toolbar.",
+        "long_description": "The image shows the BrailleBlaster interface, highlighting the 'Heading' section where users can select different heading levels. The current focus is on the 'Heading 2' option, which is highlighted and ready to be clicked.",
+        "ocr_text": [
+          "[OCR Text Array]"
+        ],
+        "ui_controls": [
+          {
+            "type": "button",
+            "label": "Heading"
+          },
+          {
+            "type": "button",
+            "label": "Heading 1"
+          },
+          {
+            "type": "button",
+            "label": "Heading 2"
+          },
+          {
+            "type": "button",
+            "label": "Heading 3"
+          }
+        ],
+        "important_element": "Click 'Heading 2' to change the heading level.",
+        "confidence": 0.95
+      },
+      "processed_at": "2026-07-23T19:17:57Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "1-xKMx-vcMbz-CGPq022L",
+      "vision": {
+        "alt_text": "BrailleBlaster software interface with a red button highlighted.",
+        "long_description": "The screenshot shows the BrailleBlaster software interface. The user is instructed to click on an element labeled 'SECTION > BLOCK'. A red button, which appears to be part of this section, is highlighted for emphasis.",
+        "ocr_text": [
+          "[OCR Text from Image]"
+        ],
+        "ui_controls": [
+          {
+            "type": "button",
+            "label": "SECTION > BLOCK"
+          }
+        ],
+        "important_element": "Click the 'SECTION > BLOCK' button to proceed with applying a Level 3 Heading.",
+        "confidence": 0.95
+      },
+      "processed_at": "2026-07-23T19:11:57Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "3fofVcx1XFEk0xc9gwRuR",
+      "vision": {
+        "alt_text": "BrailleBlaster software interface with a focus on the 'Lists' button.",
+        "long_description": "The screenshot shows the BrailleBlaster application, highlighting the 'Lists' button in the toolbar. The interface includes various text formatting options and a preview area displaying braille text.",
+        "ocr_text": [
+          "[\"Lorem Ipsum Dolor Sit Amet\", \"Body Text\", \"Body Text\", \"Heading 1\", \"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit.\", \"Consectetur Adipiscing Elit\", \"Vestibulum ornare faucibus quis eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\"]"
+        ],
+        "important_element": "",
+        "ui_controls": [],
+        "confidence": 0.7
+      },
+      "ui_controls": [
+        {
+          "type": "button",
+          "label": "Lists"
+        }
+      ],
+      "important_element": "Click 'Lists' to proceed with setting list levels.",
+      "confidence": 0.95,
+      "processed_at": "2026-07-23T19:31:15Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "9KzK7VqA1PvWuN_JXLgjp",
+      "vision": {
+        "alt_text": "A screenshot of BrailleBlaster software with a red arrow pointing to 'Heading 2' text.",
+        "long_description": "The image shows the BrailleBlaster interface where a red arrow highlights the 'Heading 2' text. The text is part of a document formatted in various styles, including body text and list items.",
+        "ocr_text": [
+          "Connectetur Adipsicing Elit",
+          "Voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
+          "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+          "Faucibus Ornare Suspendisse Sagittis nunc purus vitae vestibulum:",
+          "Nunc sagittis purus vitae",
+          "vestibulum ornare faucibus quis",
+          "suspendisse potenti aliquam",
+          "erat volutpat malesuada",
+          "etiam porta sem malesuada magna",
+          "mollis euismod. Nullam id dolor id nibh",
+          "ultricies vehicula ut id elit.",
+          "Cras justo odio",
+          "dapibus ac facilisis in",
+          "egestas eget quam",
+          "nunc scelerisque",
+          "porta ac consectetur ad",
+          "vestibulum at eros",
+          "Ultrices Vehicula Ut Id Elit",
+          "Donec ullamcorper nulla non metus auctor fringilla.",
+          "Vivamus sagittis lacus vel augue lucteet rutrum faucibus dolor",
+          "auctor. Cum sociis natoque penatibus et magnis dis parturient montes,",
+          "Penatibus Et Magnis Dis Parturient",
+          "Nascetur ridiculus mus donec"
+        ],
+        "important_element": "",
+        "ui_controls": [],
+        "confidence": 0.7
+      },
+      "ui_controls": [
+        {
+          "type": "button",
+          "label": "Heading 2"
+        }
+      ],
+      "important_element": "Verify Heading Level was Changed",
+      "confidence": 0.95,
+      "processed_at": "2026-07-23T19:18:15Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "CeectaYEsYfov-MORQOcu",
+      "vision": {
+        "alt_text": "A screenshot of BrailleBlaster software showing the 'List 5 Levels' dropdown with 'List 5a' highlighted.",
+        "long_description": "The image displays a portion of the BrailleBlaster application interface where the user is navigating through list levels. The focus is on selecting 'List 5a', which is part of a larger task to set up a multi-level list structure within the software.",
+        "ocr_text": [
+          "[OCR Text Array]"
+        ],
+        "ui_controls": [
+          {
+            "type": "dropdown",
+            "label": "List Levels"
+          },
+          {
+            "type": "button",
+            "label": "List 5a"
+          }
+        ],
+        "important_element": "Select 'List 5a' from the dropdown menu.",
+        "confidence": 0.9
+      },
+      "processed_at": "2026-07-23T19:20:47Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "FketF8dXsWxKfDDINYEeC",
+      "vision": {
+        "alt_text": "A screenshot of BrailleBlaster software showing a formatted list with levels matching LibreOffice document and an empty line between Body Text and ...",
+        "long_description": "The image displays a section in BrailleBlaster where a list is being verified for correct formatting. The list includes multiple levels, each aligned correctly under their respective headings, and there's an empty line separating the Body Text from the list to ensure proper structure.",
+        "ocr_text": [
+          "[\"Lorem Ipsum Dolor Sit Amet\", \"Body Text\", \"Body Text\", \"Heading 1\", \"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit.\", \"Consectetur Adipiscing Elit\", \"Vestibulum ornare faucibus quis sagittis nunc purus vitae vestibulum: List 5a\", \"Nunc sagittis purus vitae\", \"vestibulum ornare faucibus quis\", \"sagittis nunc purus vitae vestibulum:\", \"List 5b\", \"suspendisse potenti aliquam\", \"erat volutpat malesuada\", \"fringilla commodo nisl l\", \"List 5c\", \"ac tincidunt nulla\", \"mattis nec turpis\", \"egestas eget justo\", \"Heading 2\", \"Faucibus Ornare Suspendisse Sagittis nunc purus vitae vestibulum:\", \"Body Text\", \"Body Text\", \"Maleuada Fames Ac Turpis Egestas\", \"Etiam porta sem malesuada magna mollis euismod. Nullam id dolor id nibh ultricies vehicula ut id elit.\", \"Cras justo odio\", \"dapibus ac facilisis in\", \"egestas eget quam\", \"mobi leo risus\", \"porttitor convectetur ac\", \"vestibulum at eros\", \"Ultricies Vehicula Ut Id Elit Donec ullamcorper nulla non metus auctor fringilla. Vivamus sagittis lacus vel augue laoreet rutrum faucibus dolor autor.\", \"Cum sociis natoque penatibus et\"]"
+        ],
+        "ui_controls": [
+          {
+            "type": "button",
+            "label": "File"
+          },
+          {
+            "type": "button",
+            "label": "Edit"
+          },
+          {
+            "type": "button",
+            "label": "Navigate View"
+          },
+          {
+            "type": "button",
+            "label": "Tools Settings Emphasis Styles Insert Math Help"
+          }
+        ],
+        "important_element": "The formatted list with levels matching LibreOffice document and an empty line between Body Text and the list.",
+        "confidence": 0.95
+      },
+      "processed_at": "2026-07-23T19:32:55Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "IlXOX70AusFc_ZEBO44oO",
+      "vision": {
+        "alt_text": "A screenshot of BrailleBlaster software with a focus on the 'Lists' button.",
+        "long_description": "The image shows the main interface of BrailleBlaster, highlighting the 'Lists' button which is crucial for managing list levels. The text in the document preview area indicates various list items and their corresponding levels.",
+        "ocr_text": [
+          "Lorem Ipsum Dolor Sit Amet",
+          "List 5a",
+          "• Nunc sagittis purus vitae",
+          "• vestibulum ornare faucibus quis",
+          "• suspendisse potenti aliquam",
+          "• erat volutpat malesuada",
+          "• fringilla ac tincidunt nulli",
+          "• tincidunt nulli",
+          "• 1",
+          "Mattis nec turpis",
+          "• eget aliquam justo"
+        ],
+        "important_element": "",
+        "ui_controls": [],
+        "confidence": 0.7
+      },
+      "ui_controls": [
+        {
+          "type": "button",
+          "label": "Lists"
+        }
+      ],
+      "important_element": "Click 'Lists' to manage list levels.",
+      "confidence": 0.95,
+      "processed_at": "2026-07-23T19:21:47Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "KiN_G9wzCGFbCaqbeplwO",
+      "vision": {
+        "alt_text": "LibreOffice Writer document with a Heading Level 2 and some text content.",
+        "long_description": "The screenshot shows an open LibreOffice Writer document. The main focus is on the Heading Level 2 titled 'Faucibus Omare Suspendisse'. Below this heading, there are several paragraphs of text in various styles including bolded and italicized sections. A red circular button with a white hand icon is visible at the bottom right corner.",
+        "ocr_text": [
+          "Valuptate velit esse cillum dolore eu fugiat nulla pariatur.",
+          "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+          "Faucibus Omare Suspendisse",
+          "Sagittis nunc purus vitae yestibulum:",
+          "Nunc sodini porta vitae",
+          "vestibulum scelerisque faucibus quis",
+          "suspendisse potenti aliquam",
+          "erat volupar moleuada",
+          "fringilla condimentum nisi",
+          "ac tincidunt nulla",
+          "mattis nec turpis",
+          "sed aliquam justo",
+          "Malesuada Fames Ac Turpis Egestas",
+          "Enam porta sem malesuada magna mollis euismod.",
+          "Nullam id dolor id nibh ultricies vehicula ut id elit.",
+          "Cras justo odio",
+          "sagittus ac facilisis in",
+          "morbi leo risus",
+          "porta ac consectetur ac",
+          "vestibulum at eros",
+          "Ultricies Vehicula Ut Id Elit",
+          "Donec ullamcorper nulla non metus auctor fringilla.",
+          "Vivamus sagittis lacus vel augue laoreet rutrum faucibus dolor",
+          "auctor, Cum sociis natoque penatibus et magnis dis parturient montes.",
+          "Penatibus Et Magnis Dis Parturient",
+          "Nascetur ridiculus mus donec",
+          "vestibulum scelerisque euismod",
+          "maecenas accumsan lacus vel",
+          "Facilisis leo vel fringilla est ullamcorper egest nulla facilisi etiam.",
+          "Dictum sit amet justo donec enim diam volutpat ut pharetra sit amet aliquam id diam maecenas."
+        ],
+        "ui_controls": [
+          {
+            "type": "text_field",
+            "label": "Heading 2"
+          },
+          {
+            "type": "button",
+            "label": "Bold"
+          },
+          {
+            "type": "button",
+            "label": "Italic"
+          },
+          {
+            "type": "button",
+            "label": "Underline"
+          },
+          {
+            "type": "button",
+            "label": "Align Left"
+          },
+          {
+            "type": "button",
+            "label": "Align Center"
+          },
+          {
+            "type": "button",
+            "label": "Align Right"
+          },
+          {
+            "type": "button",
+            "label": "Align Justify"
+          }
+        ],
+        "important_element": "Faucibus Omare Suspendisse",
+        "confidence": 0.95
+      },
+      "processed_at": "2026-07-23T18:47:13Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "MLZJHXH3pkhrUu032Da04",
+      "vision": {
+        "alt_text": "LibreOffice Writer document with a Heading Level 2 selected in the toolbar.",
+        "long_description": "The screenshot shows an open LibreOffice Writer document. The Heading Level 2 option is highlighted in the toolbar, indicating that it has been selected for use within the document.",
+        "ocr_text": [
+          "[Heading 2]",
+          "Lorem Ipsum Dolor Sit Amet",
+          "Consectetur Adipiscing Elit",
+          "Faucibus Omare Suspendisse",
+          "Malesuada Fames Ac Turpis Egestas",
+          "Ultricies Vehicula Ut Id Elit",
+          "Penatibus Et Magnis Dis Parturient"
+        ],
+        "ui_controls": [
+          {
+            "type": "navigation",
+            "label": "Heading 2"
+          },
+          {
+            "type": "text_field",
+            "label": "Lorem Ipsum Dolor Sit Amet"
+          }
+        ],
+        "important_element": "The Heading Level 2 option in the toolbar.",
+        "confidence": 0.95
+      },
+      "processed_at": "2026-07-23T18:45:57Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "Mn5GDJTmbJBm83YEX4twr",
+      "vision": {
+        "alt_text": "A screenshot of the BrailleBlaster software showing a dropdown menu with 'List 5c' highlighted.",
+        "long_description": "The image displays a portion of the BrailleBlaster application interface. The user is interacting with a dropdown menu under the 'Lists' section, specifically selecting 'List 5c'. The surrounding area includes various text fields and formatting options related to document editing.",
+        "ocr_text": [
+          "List1Level",
+          "List2Levels",
+          "List3Levels",
+          "List4Levels",
+          "List5Levels",
+          "List6Levels",
+          "List7Levels",
+          "List8Levels",
+          "List 5a",
+          "List 5b",
+          "List 5c",
+          "mostrud exerci",
+          "aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit.",
+          "Consectetur Adipiscing Elit",
+          "Vestibulum id ligula porta felis eu",
+          "fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+          "Faucibus Ornare Suspendisse",
+          "Sagittis nunc purus vitae vestibulum:",
+          "Nunc sagittis purus vitae",
+          "vestibulum ornare faucibus quis",
+          "suspendisse potenti aliquam",
+          "erat volutpat malesuada",
+          "risus euismod rutrum nisi",
+          "ac tincidunt nulli",
+          "1",
+          "mattis nec turpis",
+          "egest aliquam justo",
+          "Maleuada Fames Ac Turpis",
+          "Egestas",
+          "Etiam porta sem malesuada magna",
+          "mollis elementum Nullam id dolor id nibh",
+          "ultricies vehicula ut id elit.",
+          "Cras justo odio",
+          "dapiibus ac facilisis in",
+          "egestas eget quam",
+          "mobil leo risus",
+          "porttitor convetur ac",
+          "vestibulum at eros",
+          "Ultricies Vehicula Ut Id Elit",
+          "Donec ullamcorper nulla non matius",
+          "auctor fringilla. Vivamus sagittis lacus",
+          "vel augue lacreet rutrum faucibus dolor",
+          "author. Cum sociis natoque penatibus et"
+        ],
+        "ui_controls": [
+          {
+            "type": "button",
+            "label": "File"
+          },
+          {
+            "type": "button",
+            "label": "Edit"
+          },
+          {
+            "type": "button",
+            "label": "Navigate View"
+          },
+          {
+            "type": "button",
+            "label": "Tools"
+          },
+          {
+            "type": "button",
+            "label": "Settings"
+          },
+          {
+            "type": "button",
+            "label": "Emphasis"
+          },
+          {
+            "type": "button",
+            "label": "Styles"
+          },
+          {
+            "type": "button",
+            "label": "Insert Math"
+          },
+          {
+            "type": "button",
+            "label": "Help"
+          }
+        ],
+        "important_element": "List 5c",
+        "confidence": 0.9
+      },
+      "processed_at": "2026-07-23T19:23:25Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "O-3rfbW8jrux-9mzE7Fjk",
+      "vision": {
+        "alt_text": "BrailleBlaster software interface with a list of text and Braille characters displayed.",
+        "long_description": "The screenshot shows the BrailleBlaster application, highlighting a section where text is formatted in both print and Braille. The user interface includes various formatting options at the top and a list of text entries below, some of which are highlighted for emphasis or selection.",
+        "ocr_text": [
+          "Lorem Ipsum Dolor Sit Amet",
+          "Consectetur Adipiscing Elit",
+          "Vestibulum ante ipsum primis in faucibus orci luctus et",
+          "nisl vel risus commodo viverra.",
+          "Sagittis nunc purus vitae vestibulum:",
+          "Muno sagittis purus Vitae",
+          "Faucibus ornare suspendisse potenti aliquam",
+          "etat volutpat malesuada",
+          "fringilla condimentum nisi",
+          "Cras dapibus ac facilisis in",
+          "egestas eget quam",
+          "morbi leo risus",
+          "porta ac consectetur ac",
+          "vestibulum et eros",
+          "Ultricies Vehicula Ut Id Elit",
+          "Donec ullamcorper nulla non metus",
+          "auctor fringilla. Mauris sit amet lacus",
+          "vel augue laoreet rutrum faucibus dolor",
+          "auctor. Cum sociis natoque penatibus et",
+          "magnis dis parturient montes.",
+          "Print Page: 1 Braille Page: 1 Line: 10 Text Cell Number: 3 Indent Cell: 1 Alignment: Left Style Body Text"
+        ],
+        "important_element": "",
+        "ui_controls": [],
+        "confidence": 0.7
+      },
+      "ui_controls": [
+        {
+          "type": "button",
+          "label": "File"
+        },
+        {
+          "type": "button",
+          "label": "Edit"
+        },
+        {
+          "type": "button",
+          "label": "Navigate View"
+        },
+        {
+          "type": "button",
+          "label": "Tools Settings Emphasis Styles Insert Math Help"
+        }
+      ],
+      "important_element": "Click 'Lists' to highlight the entire list and set them as members.",
+      "confidence": 0.95,
+      "processed_at": "2026-07-23T19:21:35Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "OIn_glsXMMNMr1y9MYSBA",
+      "vision": {
+        "alt_text": "LibreOffice Writer document with a red arrow pointing to the 'Heading 5' button in the toolbar.",
+        "long_description": "The screenshot shows a LibreOffice Writer document where a red arrow highlights the 'Heading 5' button located within the toolbar. The document contains various text elements, including headings and paragraphs formatted using different styles.",
+        "ocr_text": [
+          "Valuptate velit esse cullum dolore eu fugiat nulla pariatur.",
+          "Excepteur sint occaecat cupidatat non proident",
+          "sunt in culpa qui officia deserunt mollit anim id est laborum.",
+          "Faucibus Omare Suspendisse",
+          "Sagittis nunc purus vitae yestibulum:",
+          "Nunc sodales porta vitae",
+          "vestibulum scelerisque faucibus quis",
+          "suspendisse potenti aliquam",
+          "erat volutpat molestiea",
+          "fringilla condimentum nisi",
+          "ac tincidunt nulla",
+          "mattis nec turpis",
+          "sed aliquam justo",
+          "Malesuada Fames Ac Turpis Egestas",
+          "Enam porta sem metuendae magna mollis euismod.",
+          "Nullam id dolor id nibh ultricies vehicula ut id elit.",
+          "Cras justo odio",
+          "suspendisse ac facilisis in",
+          "vestibulum scelerisque faucibus quis",
+          "morbi leo risus",
+          "porta ac consectetur ac",
+          "vestibulum at eros",
+          "Ultricies Vehicula Ut id Elit",
+          "Donec ullamcorper nulla non metus auctor fringilla.",
+          "Vivamus sagittis lacus vel augue laoreet rutrum faucibus dolor",
+          "auctor, Cum sociis natoque penatibus et magnis dis parturient montes.",
+          "Penatibus Et Magnis Dis Parturient",
+          "Nascetur ridiculus mus donec",
+          "quisque felis ultricies nulla",
+          "posuere augue yestibulum",
+          "at eros non justo praesent",
+          "commando quam et locus",
+          "dictum euismod nunc",
+          "maecenas accumsan lacus xdl",
+          "Facilisis leo vel fringilla est ullamcorper eget nulla facilisi etiam.",
+          "Dictum sit amet justo donec enim diam vulputate ut pharetra ac amet aliquam id diam maecenas."
+        ],
+        "ui_controls": [
+          {
+            "type": "button",
+            "label": "Heading 5"
+          }
+        ],
+        "important_element": "The 'Heading 5' button in the toolbar.",
+        "confidence": 0.9
+      },
+      "processed_at": "2026-07-23T18:46:43Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "QatJX1vxONIm_nySDUIyv",
+      "vision": {
+        "alt_text": "LibreOffice Writer document with a red arrow pointing to the Heading Level dropdown.",
+        "long_description": "The screenshot shows a LibreOffice Writer document where a red arrow points to the 'Heading' dropdown menu, indicating that it is currently set to 'Heading 1'. The document contains various headings and paragraphs in different styles.",
+        "ocr_text": [
+          "[Heading 1]",
+          "Lorem Ipsum Dolor Sit Amet",
+          "Consectetur Adipiscing Elit",
+          "Faucibus Omare Suspendisse",
+          "Malesuada Fames Ac Turpis Egestas",
+          "Ultricies Vehicula Ut Id Elit",
+          "Penatibus Et Magnis Dis Parturient"
+        ],
+        "important_element": "",
+        "ui_controls": [],
+        "confidence": 0.7
+      },
+      "ui_controls": [
+        {
+          "type": "dropdown",
+          "label": "Heading"
+        }
+      ],
+      "important_element": "The 'Heading' dropdown menu is set to 'Heading 1'.",
+      "confidence": 0.95,
+      "processed_at": "2026-07-23T18:46:05Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "Suby3dv2mSxhONXEh6rQH",
+      "vision": {
+        "alt_text": "A screenshot of BrailleBlaster software with a menu open showing 'List 5b' selected.",
+        "long_description": "The image shows the BrailleBlaster application interface where the user has navigated to select 'List 5b'. The menu is expanded, and the selection highlights the second level within Level 5 lists. The main document area displays text in a structured format with various levels of headings and body text.",
+        "ocr_text": [
+          "List 1Level",
+          "List2Levels",
+          "List3Levels",
+          "List4Levels",
+          "List5Levels",
+          "List6Levels",
+          "List7Levels",
+          "List8Levels",
+          "List 5a",
+          "consectetur",
+          "tempor",
+          "quis",
+          "List 5b",
+          "mostrud exerci",
+          "aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit.",
+          "Consectetur Adipiscing Elit",
+          "Vestibulum ornare faucibus quis suspendisse potenti aliquam erat volutpat malesuada fringilla ac vehicula dis",
+          "List 5c",
+          "List 5d",
+          "List 5e",
+          "List 5f",
+          "List 5g",
+          "List 5h",
+          "List 5i",
+          "List 5j",
+          "List 5k",
+          "List 5l",
+          "List 5m",
+          "List 5n",
+          "List 5o",
+          "List 5p",
+          "List 5q",
+          "List 5r",
+          "List 5s",
+          "List 5t",
+          "List 5u",
+          "List 5v",
+          "List 5w",
+          "List 5x",
+          "List 5y",
+          "List 5z",
+          "List 6a",
+          "consectetur",
+          "tempor",
+          "quis",
+          "List 6b",
+          "mostrud exerci",
+          "aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit.",
+          "Consectetur Adipiscing Elit",
+          "Vestibulum ornare faucibus quis suspendisse potenti aliquam erat volutpat malesuada fringilla ac vehicula dis",
+          "List 6c",
+          "List 6d",
+          "List 6e",
+          "List 6f",
+          "List 6g",
+          "List 6h",
+          "List 6i",
+          "List 6j",
+          "List 6k",
+          "List 6l",
+          "List 6m",
+          "List 6n",
+          "List 6o",
+          "List 6p",
+          "List 6q",
+          "List 6r",
+          "List 6s",
+          "List 6t",
+          "List 6u",
+          "List 6v",
+          "List 6w",
+          "List 6x",
+          "List 6y",
+          "List 6z",
+          "List 7a",
+          "consectetur",
+          "tempor",
+          "quis",
+          "List 7b",
+          "mostrud exerci",
+          "aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit.",
+          "Consectetur Adipiscing Elit",
+          "Vestibulum ornare faucibus quis suspendisse potenti aliquam erat volutpat malesuada fringilla ac vehicula dis",
+          "List 7c",
+          "List 7d",
+          "List 7e",
+          "List 7f",
+          "List 7g",
+          "List 7h",
+          "List 7i",
+          "List 7j",
+          "List 7k",
+          "List 7l",
+          "List 7m",
+          "List 7n",
+          "List 7o",
+          "List 7p",
+          "List 7q",
+          "List 7r",
+          "List 7s",
+          "List 7t",
+          "List 7u",
+          "List 7v",
+          "List 7w",
+          "List 7x",
+          "List 7y",
+          "List 7z",
+          "List 8a",
+          "consectetur",
+          "tempor",
+          "quis",
+          "List 8b",
+          "mostrud exerci",
+          "aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit.",
+          "Consectetur Adipiscing Elit",
+          "Vestibulum ornare faucibus quis suspendisse potenti aliquam erat volutpat malesuada fringilla ac vehicula dis",
+          "List 8c",
+          "List 8d",
+          "List 8e",
+          "List 8f",
+          "List 8g",
+          "List 8h",
+          "List 8i",
+          "List 8j",
+          "List 8k",
+          "List 8l",
+          "List 8m",
+          "List 8n",
+          "List 8o",
+          "List 8p",
+          "List 8q",
+          "List 8r",
+          "List 8s",
+          "List 8t",
+          "List 8u",
+          "List 8v",
+          "List 8w",
+          "List 8x",
+          "List 8y",
+          "List 8z"
+        ],
+        "ui_controls": [
+          {
+            "type": "menu",
+            "label": "Lists"
+          },
+          {
+            "type": "button",
+            "label": "List 5b"
+          }
+        ],
+        "important_element": "Click 'List 5b' to select the second level within a Level 5 list.",
+        "confidence": 0.9
+      },
+      "processed_at": "2026-07-23T19:22:28Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "VxXaSVynrPgOxI0XjdmN7",
+      "vision_error": "list indices must be integers or slices, not str",
+      "processed_at": "2026-07-23T18:47:22Z"
+    },
+    {
+      "step_id": "XtA897y7NxRR6Ywe9ZAZV",
+      "vision": {
+        "alt_text": "A screenshot of BrailleBlaster software with a red circle highlighting the 'Heading 3' option in the formatting menu.",
+        "long_description": "The image shows the BrailleBlaster software interface, where the user is interacting with the formatting options. The 'Heading 3' button is highlighted by a red circle to indicate that it has been clicked as part of the task instructions.",
+        "ocr_text": [
+          "Heading 1",
+          "Heading 2",
+          "Heading 3"
+        ],
+        "ui_controls": [
+          {
+            "type": "button",
+            "label": "Heading 1"
+          },
+          {
+            "type": "button",
+            "label": "Heading 2"
+          },
+          {
+            "type": "button",
+            "label": "Heading 3"
+          }
+        ],
+        "important_element": "Click 'Heading 3'",
+        "confidence": 0.95
+      },
+      "processed_at": "2026-07-23T19:16:01Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "YBEN2oShThNXRhEzWMJbY",
+      "vision": {
+        "alt_text": "LibreOffice Writer document with a Heading Level 3 selected.",
+        "long_description": "The screenshot shows the LibreOffice Writer interface where a Heading Level 3 is highlighted. The document contains various paragraphs and headings, but the focus is on the selected Heading Level 3 text which reads 'This is a Heading Level 3'.",
+        "ocr_text": [
+          "This is a Heading Level 3"
+        ],
+        "ui_controls": [
+          {
+            "type": "text_field",
+            "label": "Heading 3"
+          },
+          {
+            "type": "button",
+            "label": "W"
+          },
+          {
+            "type": "button",
+            "label": "A"
+          }
+        ],
+        "important_element": "This is a Heading Level 3",
+        "confidence": 0.95
+      },
+      "processed_at": "2026-07-23T18:46:11Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "Yvyes-uKdhj-QvcjrQ5o2",
+      "vision": {
+        "alt_text": "BrailleBlaster software interface with text editor and formatting options.",
+        "long_description": "The screenshot shows the BrailleBlaster software interface, focusing on a text editor window. The interface includes various formatting tools such as font size adjustment, paragraph alignment, and style settings. The text in the editor is formatted with different heading levels, including Heading 2 and Body Text styles.",
+        "ocr_text": [
+          "Heading 2",
+          "Body Text",
+          "Ultricies Vehicula Ut Id Elit",
+          "dictum euismod nunc",
+          "vel risus commodo viverra",
+          "maecenas accumsan lacus vel",
+          "aliquam semper nulla facilisi etiam.",
+          "Dictum sit amet justo donec enim diam",
+          "vulputate ut pharetra sit amet aliquam id"
+        ],
+        "ui_controls": [
+          {
+            "type": "button",
+            "label": "Font Size"
+          },
+          {
+            "type": "button",
+            "label": "Paragraph Alignment"
+          },
+          {
+            "type": "button",
+            "label": "Style"
+          }
+        ],
+        "important_element": "Click \"Heading\"",
+        "confidence": 0.95
+      },
+      "processed_at": "2026-07-23T19:16:53Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "ZFKxMYlLQEjyp4EQn8p-v",
+      "vision": {
+        "alt_text": "A screenshot of BrailleBlaster software showing a list with 'List 5a' highlighted.",
+        "long_description": "The image displays the BrailleBlaster interface, focusing on a section where a list labeled as 'List 5a' is visible. The text within this list appears to be formatted correctly for Level 5a.",
+        "ocr_text": [
+          "[OCR Text Array]"
+        ],
+        "ui_controls": [
+          {
+            "type": "button",
+            "label": "File"
+          },
+          {
+            "type": "button",
+            "label": "Edit"
+          },
+          {
+            "type": "button",
+            "label": "Navigate View"
+          },
+          {
+            "type": "button",
+            "label": "Tools Settings"
+          },
+          {
+            "type": "button",
+            "label": "Emphasis Styles"
+          },
+          {
+            "type": "button",
+            "label": "Insert Math Help"
+          }
+        ],
+        "important_element": "The entire block is now a Level 5a list.",
+        "confidence": 0.9
+      },
+      "processed_at": "2026-07-23T19:21:20Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "Zw4CRjrdygHZwbwB4dO3x",
+      "vision": {
+        "alt_text": "LibreOffice Writer document with a red box highlighting the 'Lists' option in the sidebar.",
+        "long_description": "The screenshot shows a LibreOffice Writer document. The 'Lists' option is highlighted within the sidebar, indicating it's ready to be clicked for further action.",
+        "ocr_text": [
+          "[OCR text from image]"
+        ],
+        "important_element": "",
+        "ui_controls": [],
+        "confidence": 0.7
+      },
+      "ui_controls": {
+        "type": "button",
+        "label": "Lists"
+      },
+      "important_element": "Click 'Lists' in the sidebar to proceed with formatting options.",
+      "confidence": 0.95,
+      "processed_at": "2026-07-23T19:18:23Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "_Zg8LlG5MjZd-Lb5zBpaV",
+      "vision": {
+        "alt_text": "Software interface showing a document with text and formatting options.",
+        "long_description": "The screenshot displays the BrailleBlaster software interface, where a user is interacting with a document. The focus is on the 'Heading' button in the toolbar, which allows users to apply heading styles to their text.",
+        "ocr_text": [
+          "Lorem Ipsum Dolor Sit Amet",
+          "Body Text",
+          "Sagittis nunc purus vitae vestibulum:",
+          "• Nunc sagittis purus vitae",
+          "• vestibulum ornare faucibus quis",
+          "• magnis dis parturient montes",
+          "• erat volutpat malesuada",
+          "• fringilla condimentum nisi",
+          "• ac tincidunt nulla",
+          "• nisl in semper justo",
+          "• eget aliquam justo",
+          "Malesuada Fames Ac Turpis Egestas",
+          "Etiam porta sem malesuada magna",
+          "mollis euismod. Nulla id dolor id nibh",
+          "ultricies vehicula ut id elit.",
+          "Cras justo odio",
+          "dapibus ac facilisis in",
+          "egestas eget quam",
+          "Phasellus sit amet",
+          "porta ac consectetur ac",
+          "vestibulum at eros",
+          "Ultricies Vehicula ut id Elit",
+          "Donec ullamcorper nulla non metus",
+          "autor aenean euismod elementum",
+          "vel augue lucteet rutrum faucibus dolor",
+          "author. Cum sociis natoque penatibus et",
+          "magnis dis parturient montes.",
+          "Phasellus Et Maecenas Pharetra",
+          "Nascetur ridiculus mus donec",
+          "quam felis ultricies nulla",
+          "posuere augue vestibulum"
+        ],
+        "important_element": "",
+        "ui_controls": [],
+        "confidence": 0.7
+      },
+      "ui_controls": [
+        {
+          "type": "button",
+          "label": "Heading"
+        }
+      ],
+      "important_element": "Click 'Heading' to apply a heading style.",
+      "confidence": 0.95,
+      "processed_at": "2026-07-23T18:58:55Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "eY_Io58MvDZJoLj1gFdWq",
+      "vision": {
+        "alt_text": "BrailleBlaster software interface with a red arrow pointing to the 'Heading' button.",
+        "long_description": "The screenshot shows the BrailleBlaster software interface. The user is instructed to click on the 'Heading' button, which is highlighted by a red arrow in the image. This action is part of verifying heading levels within LibreOffice documents.",
+        "ocr_text": [
+          "SECTION",
+          "> BLOCK",
+          "Malesuada Fames Ac Turpis",
+          "Etiam porta sem malesuada magna",
+          "mollis euismod.",
+          "Nullam id dolor id nibh",
+          "ultricies vehicula ut id elit.",
+          "• Cras justo odio",
+          "• Donec ullamcorper",
+          "• Etiam porta sem",
+          "• Morbi leo risus",
+          "• Porta ac consectetur ac",
+          "• Vestibulum at eros",
+          "Ultricies Vehicula Ut Id Elit",
+          "Donec ullamcorper nulla non metus",
+          "auctor fringilla.",
+          "Vivamus sagittis lacus",
+          "vel augue luctus nunc faucibus dolor",
+          "ut ante. Cum sociis natoque penatibus et",
+          "magnis dis parturient montes.",
+          "Penatibus Et Magnis Dis Parturien",
+          "• Nascetur ridiculus mus donec",
+          "• Quisque velit egestas dui iaculis",
+          "• Posuere augue vestibulum",
+          "• At eros non enim praesent",
+          "• Commodo quam et lacus",
+          "• Dictum euismod nunc",
+          "• Nulla risus viverra",
+          "• Maecenas accumsan lacus vel",
+          "Facilisis leo vel fringilla est",
+          "ullamcorper eget nulla facilisi etiam",
+          "Donec sit amet justo donec enim diam",
+          "vulputate Etiam auctor sit amet aliquam id",
+          "diam maecenas.",
+          "Print Page: 2 | Braille Page: 2 | Line: 21 | Text Cell Number: 37 | Indent: Cell 3 | Alignment: Left | Style: Body.Text"
+        ],
+        "important_element": "",
+        "ui_controls": [],
+        "confidence": 0.7
+      },
+      "ui_controls": [
+        {
+          "type": "button",
+          "label": "SECTION"
+        },
+        {
+          "type": "button",
+          "label": "> BLOCK"
+        }
+      ],
+      "important_element": "Click 'Heading' button to verify heading levels.",
+      "confidence": 0.95,
+      "processed_at": "2026-07-23T19:17:46Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "errNH9dKt5hKz0EixDfpF",
+      "vision": {
+        "alt_text": "A screenshot of BrailleBlaster software with a dropdown menu showing 'List 5d' selected.",
+        "long_description": "The image shows the BrailleBlaster interface where a user has navigated to select 'List 5d' from a dropdown menu. The current focus is on ensuring that both elements are set as Level 5d, as indicated by the instruction text below.",
+        "ocr_text": [
+          "[OCR Text Array]"
+        ],
+        "important_element": "",
+        "ui_controls": [],
+        "confidence": 0.7
+      },
+      "ui_controls": {
+        "type": "dropdown",
+        "label": "List Levels"
+      },
+      "important_element": "Set both to List 5d",
+      "confidence": 0.9,
+      "processed_at": "2026-07-23T19:31:02Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "flnPcYl1aJj-Ngw5cbD65",
+      "vision": {
+        "alt_text": "A screenshot of BrailleBlaster software showing a list with items labeled 'List 5a' and 'List 5b'.",
+        "long_description": "The image displays the BrailleBlaster interface where a list has been formatted. The left panel shows text content, while the right panel displays braille representation. The focus is on verifying that the list level settings are correctly applied.",
+        "ocr_text": [
+          "Lorem Ipsum Dolor Sit Amet",
+          "List 5a",
+          "Nunc sagittis purus vitae",
+          "vestibulum ornare faucibus quis",
+          "suspendisse potenti aliquam",
+          "erat volutpat malesuada",
+          "fringilla condimentum nisi",
+          "ac tincidunt nunc",
+          "1",
+          "List 5b",
+          "mattis nec turpis",
+          "eget aliquam justo",
+          "Maleuada Fames Ac Turpis",
+          "Egestas",
+          "Etiam porta sem malesuada magna",
+          "mollis euismod Nullam id dolor id nibh",
+          "ultricies vehicula ut id elit.",
+          "Cras justo odio",
+          "dapibus ac facilisis in",
+          "egestas eget quam",
+          "mobil leo risus",
+          "porttitor convectetur ac",
+          "vestibulum at eros",
+          "Ultricies Vehicula Ut Id Elit",
+          "Donec ullamcorper nulla non metus",
+          "auctor fringilla. Vivamus sagittis lacus",
+          "vel augue laoreet rutrum faucibus dolor",
+          "author. Cum sociis natoque penatibus et"
+        ],
+        "important_element": "",
+        "ui_controls": [],
+        "confidence": 0.7
+      },
+      "ui_controls": [
+        {
+          "type": "button",
+          "label": "File"
+        },
+        {
+          "type": "button",
+          "label": "Edit"
+        },
+        {
+          "type": "button",
+          "label": "Navigate View"
+        },
+        {
+          "type": "button",
+          "label": "Tools"
+        },
+        {
+          "type": "button",
+          "label": "Settings"
+        },
+        {
+          "type": "button",
+          "label": "Emphasis"
+        },
+        {
+          "type": "button",
+          "label": "Styles"
+        },
+        {
+          "type": "button",
+          "label": "Insert"
+        },
+        {
+          "type": "button",
+          "label": "Math"
+        },
+        {
+          "type": "button",
+          "label": "Help"
+        }
+      ],
+      "important_element": "Verify List Level is Set",
+      "confidence": 0.95,
+      "processed_at": "2026-07-23T19:22:50Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "il38S5BbtwmRNldAFEHzn",
+      "vision": {
+        "alt_text": "A screenshot of BrailleBlaster software with a red arrow pointing to 'Heading 3' in the left panel.",
+        "long_description": "The image shows the BrailleBlaster interface where a red arrow highlights the 'Heading 3' option within the left sidebar. The main content area displays text formatted under various heading levels, including 'Body Text'.",
+        "ocr_text": [
+          "[OCR_TEXT_ARRAY]"
+        ],
+        "ui_controls": [
+          {
+            "type": "button",
+            "label": "Heading 3"
+          },
+          {
+            "type": "button",
+            "label": "Body Text"
+          }
+        ],
+        "important_element": "Verify Heading Levels",
+        "confidence": 0.95
+      },
+      "processed_at": "2026-07-23T19:17:25Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "mYgrFsXc2Ocxa4bl1IedW",
+      "vision": {
+        "alt_text": "BrailleBlaster software interface with a red circle highlighting the 'Heading 2' button.",
+        "long_description": "The screenshot shows the BrailleBlaster software interface. The user is interacting with the text formatting options, specifically focusing on the 'Heading 2' button which is highlighted by a red circle to indicate where the click should occur.",
+        "ocr_text": [
+          "Heading 1",
+          "Heading 2",
+          "Heading 3"
+        ],
+        "ui_controls": [
+          {
+            "type": "button",
+            "label": "Heading 1"
+          },
+          {
+            "type": "button",
+            "label": "Heading 2"
+          },
+          {
+            "type": "button",
+            "label": "Heading 3"
+          }
+        ],
+        "important_element": "Click 'Heading 2'",
+        "confidence": 0.95
+      },
+      "processed_at": "2026-07-23T19:07:55Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "oRxcCu7uce4oq3G8GV_UX",
+      "vision_error": "Invalid JSON in response: {\n  \"step_id\": \"1\",\n  \"vision\": {\n    \"alt_text\": \"BrailleBlaster software interface with text and Braille display.\",\n    \"long_description\": \"The screenshot shows the main window of BrailleBlaster, a",
+      "processed_at": "2026-07-23T18:58:08Z"
+    },
+    {
+      "step_id": "pioX_TnIcYX3pcdAjlo5k",
+      "vision": {
+        "alt_text": "A screenshot of BrailleBlaster software showing a document with Heading Level 3 applied.",
+        "long_description": "The image displays the BrailleBlaster interface where a document is open. The text 'Malesuada Fames Ac Turpis' is highlighted in red, indicating that it has been formatted as Heading Level 3. The text starts on cell 7 and continues onto the next line starting also from cell 7.",
+        "ocr_text": [
+          "[OCR Text Array]"
+        ],
+        "ui_controls": [
+          {
+            "type": "button",
+            "label": "File"
+          },
+          {
+            "type": "button",
+            "label": "Edit"
+          },
+          {
+            "type": "button",
+            "label": "Navigate"
+          },
+          {
+            "type": "button",
+            "label": "View"
+          },
+          {
+            "type": "button",
+            "label": "Tools"
+          },
+          {
+            "type": "button",
+            "label": "Settings"
+          },
+          {
+            "type": "button",
+            "label": "Emphasis"
+          },
+          {
+            "type": "button",
+            "label": "Styles"
+          },
+          {
+            "type": "button",
+            "label": "Insert"
+          },
+          {
+            "type": "button",
+            "label": "Math"
+          },
+          {
+            "type": "button",
+            "label": "Help"
+          }
+        ],
+        "important_element": "Malesuada Fames Ac Turpis",
+        "confidence": 0.95
+      },
+      "processed_at": "2026-07-23T19:16:40Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "rCqMe1HAWaIyEeSg4k6Gq",
+      "vision": {
+        "alt_text": "A screenshot of BrailleBlaster software with a focus on the 'List 5d' section.",
+        "long_description": "The image shows the BrailleBlaster interface, specifically highlighting the 'List 5d' section. The text in this list is formatted as bullet points and appears to be part of a larger document structure.",
+        "ocr_text": [
+          "[\"Lorem Ipsum Dolor Sit Amet\", \"Nunc sagittis purus vitae\", \"vestibulum ornare faucibus quis\", \"suspendisse potenti aliquam\", \"erat volutpat malesuada\", \"fringilla elementum nisl\"]"
+        ],
+        "important_element": "",
+        "ui_controls": [],
+        "confidence": 0.7
+      },
+      "ui_controls": [
+        {
+          "type": "button",
+          "label": "File"
+        },
+        {
+          "type": "button",
+          "label": "Edit"
+        },
+        {
+          "type": "button",
+          "label": "Navigate View"
+        },
+        {
+          "type": "button",
+          "label": "Tools"
+        },
+        {
+          "type": "button",
+          "label": "Settings"
+        },
+        {
+          "type": "button",
+          "label": "Emphasis"
+        },
+        {
+          "type": "button",
+          "label": "Styles"
+        },
+        {
+          "type": "button",
+          "label": "Insert"
+        },
+        {
+          "type": "button",
+          "label": "Math"
+        },
+        {
+          "type": "button",
+          "label": "Help"
+        }
+      ],
+      "important_element": "List 5d",
+      "confidence": 0.9,
+      "processed_at": "2026-07-23T19:33:07Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "rzbayKcdq6hv72Ws3qbB7",
+      "vision": {
+        "alt_text": "A screenshot of the BrailleBlaster software interface showing a dropdown menu with options for different heading levels.",
+        "long_description": "The image displays the BrailleBlaster software where a user is interacting with a dropdown menu to select 'Heading 1'. The interface includes various formatting tools and text areas, indicating that this step involves changing the style of text in the document. Important controls include the dropdown menu for selecting heading levels.",
+        "ocr_text": [
+          "Lorem Ipsum",
+          "Dolor Sit Amet",
+          "Consectetur Adipiscing Elit",
+          "Volutpat Velit",
+          "Sagittis Nunc",
+          "Purus Vitae Vestibulum"
+        ],
+        "ui_controls": [
+          {
+            "type": "dropdown",
+            "label": "Heading"
+          },
+          {
+            "type": "button",
+            "label": "Body Text"
+          }
+        ],
+        "important_element": "Select 'Heading 1' from the dropdown menu.",
+        "confidence": 0.95
+      },
+      "processed_at": "2026-07-23T18:55:35Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "sOIJPqYRClPk8gF1JgwVR",
+      "vision": {
+        "alt_text": "A screenshot of BrailleBlaster software with a focus on the 'Heading 2' section.",
+        "long_description": "The image shows the BrailleBlaster interface where a user is verifying that the Heading 2 style has been applied correctly. The text starts in cell 5, and there are various formatting options available at the top of the screen.",
+        "ocr_text": [
+          "[Heading 1] Lorem Ipsum Dolor Sit Amet",
+          "Body Text",
+          "Body Text",
+          "[Heading 2] Faucibus Ornare Suspendisse",
+          "Sagittis nunc purus vitae vestibulum:",
+          "Nunc sagittis purus vitae",
+          "vestibulum ante faucibus quis",
+          "suspendisse potenti aliquam",
+          "erat volutpat malesuada",
+          "fringilla condimentum nisi",
+          "et ultrices vehicula",
+          "mattis nec turpis",
+          "* eget aliquam justo",
+          "Maleuada Fames Ac Turpis Egestas",
+          "Itiam porta ac malesuada magna",
+          "malesuada. Nullam id dolor id nibh",
+          "ultricies vehicula.",
+          "Cras justo odio ut id elit.",
+          "dapibus ac facilisis in",
+          "egestas eget quam",
+          "morbi leo risus",
+          "porta ac consectetur ac",
+          "vestibulum at eros",
+          "Ultricies Vehicula Ut Id Elit",
+          "Donec sit amet nulla non metus",
+          "auctor fringilla. Vivamus sagittis lacus",
+          "vel augue lucteet rutrum faucibus dolor",
+          "author. Cum sociis natoque penatibus et",
+          "magnis dis parturient montes, nascetur ridiculus mus donec",
+          "quam felis ultricies nulla"
+        ],
+        "ui_controls": [
+          {
+            "type": "button",
+            "label": "File"
+          },
+          {
+            "type": "button",
+            "label": "Edit"
+          },
+          {
+            "type": "button",
+            "label": "Navigate"
+          },
+          {
+            "type": "button",
+            "label": "View"
+          },
+          {
+            "type": "button",
+            "label": "Tools"
+          },
+          {
+            "type": "button",
+            "label": "Settings"
+          },
+          {
+            "type": "button",
+            "label": "Emphasis"
+          },
+          {
+            "type": "button",
+            "label": "Styles"
+          },
+          {
+            "type": "button",
+            "label": "Insert"
+          },
+          {
+            "type": "button",
+            "label": "Math"
+          },
+          {
+            "type": "button",
+            "label": "Help"
+          }
+        ],
+        "important_element": "[Heading 2] Faucibus Ornare Suspendisse",
+        "confidence": 0.95
+      },
+      "processed_at": "2026-07-23T19:16:25Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "txVO-R2iztU7I0Re5MjgB",
+      "vision": {
+        "alt_text": "A screenshot of BrailleBlaster software with a list of items labeled as 'List 5c'.",
+        "long_description": "The image shows the BrailleBlaster interface where a list of items under 'SECTION > CONTAINER-LIST' is highlighted. The text indicates that Level 5a and 5b list items remain unchanged, while others are set to Level 5c.",
+        "ocr_text": [
+          "[...]",
+          "Lorem Ipsum Dolor Sit Amet",
+          "...",
+          "List 5a",
+          "- nunc sagittis purus vitae",
+          "- vestibulum ornare faucibus quis",
+          "List 5b",
+          "- suspendisse potenti aliquam",
+          "- erat volutpat malesuada",
+          "List 5c",
+          "- fringilla vehicula enim nisi",
+          "- ac tincidunt nulla",
+          "- mattis nec turpis",
+          "...",
+          "Maleuada Fames Ac Turpis",
+          "Egestas",
+          "Ktiam porta sem malesuada magna",
+          "mollis euismod Nullam id dolor id nibh",
+          "ultricies vehicula ut id elit.",
+          "- dapibus ac facilisis in",
+          "- egestas eget quam",
+          "...",
+          "Lists"
+        ],
+        "ui_controls": [
+          {
+            "type": "button",
+            "label": "File"
+          },
+          {
+            "type": "button",
+            "label": "Edit"
+          },
+          {
+            "type": "button",
+            "label": "Navigate"
+          },
+          {
+            "type": "button",
+            "label": "View"
+          },
+          {
+            "type": "button",
+            "label": "Tools"
+          },
+          {
+            "type": "button",
+            "label": "Settings"
+          },
+          {
+            "type": "button",
+            "label": "Emphasis"
+          },
+          {
+            "type": "button",
+            "label": "Styles"
+          },
+          {
+            "type": "button",
+            "label": "Insert"
+          },
+          {
+            "type": "button",
+            "label": "Math"
+          },
+          {
+            "type": "button",
+            "label": "Help"
+          }
+        ],
+        "important_element": "List 5c items are set correctly.",
+        "confidence": 0.9
+      },
+      "processed_at": "2026-07-23T19:27:36Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "voOzoc5vdrn2XOwZrcad_",
+      "vision": {
+        "alt_text": "A screenshot of BrailleBlaster software with a focus on the 'Heading' dropdown menu.",
+        "long_description": "The image shows the BrailleBlaster interface, specifically highlighting the 'Heading' dropdown menu. The user is about to click on 'Heading 3', which has been modified in the guide to represent Heading Levels 4, 5, and 6 as Level 3 Headings.",
+        "ocr_text": [
+          "occaecat cupidatat non proident",
+          "sunt in culpa qui officia deserunt mollit anim id est laborum.",
+          "Faucibus ornare suspendisse",
+          "Sagittis nunc purus vitae vestibulum:",
+          "• Nunc sagittis purus vitae",
+          "• vestibulum ornare faucibus quis",
+          "• suspendisse potenti aliquam",
+          "• etat volutpat malesuada",
+          "• fringilla vehicula nisi",
+          "• as tincidunt nulla",
+          "• mattis nec turpis",
+          "• eget aliquam justo",
+          "Maleuada fames ac turpis egestas",
+          "Etiam porta sem malesuada magna",
+          "mollis euismod. Nullam id dolor id nibh",
+          "ultricies vehicula ut id elit.",
+          "• Cras justo odio",
+          "• dapibus ac facilisis in",
+          "• egestas eget quam",
+          "• phasellus sit amet",
+          "• porta ac consectetur ac",
+          "• vestibulum at eros",
+          "Ultrices Vehicula Ut Id Elit",
+          "Bona massa tempor nulla non metus",
+          "author fringilla, malesuada suspendisse lacus",
+          "vel augue laoreet rutrum faucibus dolor",
+          "auctor. Cum sociis natoque penatibus et",
+          "magnis dis parturient montes.",
+          "Pellentesque Et Maecenas suspendit",
+          "• Nascetur ridiculus mus donec",
+          "• quam felis ultricies nulla",
+          "• posuere augue vestibulum",
+          "• at eros non enim present",
+          "• Commodo malesuada",
+          "• dictum euismod nunc",
+          "• vel risus commodo viverra",
+          "• maeclena accumsan lacus vel",
+          "• facilisis in, suspendisse lacus est",
+          "• ullamcorper eget nulla facilisi etiam.",
+          "• Dictum sit amet justo donec enim diam",
+          "• vulputate ut pharetra sit amet aliquam id"
+        ],
+        "important_element": "",
+        "ui_controls": [],
+        "confidence": 0.7
+      },
+      "ui_controls": [
+        {
+          "type": "dropdown",
+          "label": "Heading"
+        }
+      ],
+      "important_element": "Click 'Heading 3'",
+      "confidence": 0.95,
+      "processed_at": "2026-07-23T19:17:15Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "xe_-KvdL-AXfrnxpMmC2l",
+      "vision_error": "Invalid JSON in response: {\n  \"step_id\": \"verify_heading_level\",\n  \"vision\": {\n    \"alt_text\": \"A screenshot of BrailleBlaster software with a document open, showing the Heading 1 section and centered text.\",\n    \"long_descrip",
+      "processed_at": "2026-07-23T19:07:48Z"
+    },
+    {
+      "step_id": "yq8sfVa4uB1soSZLBv4JR",
+      "vision_error": "list indices must be integers or slices, not str",
+      "processed_at": "2026-07-23T19:28:01Z"
+    },
+    {
+      "step_id": "yt3rlAzD0uPw66kk9c3s-",
+      "vision": {
+        "alt_text": "A screenshot of BrailleBlaster software with a dropdown menu showing 'List 5e' selected.",
+        "long_description": "The image shows the BrailleBlaster interface where a user has navigated to the 'SECTION' tab and is in the process of formatting text. The focus is on selecting the 'List 5e' option from a dropdown menu under the 'Formatting-Demo-Nonformat' section.",
+        "ocr_text": [
+          "[SECTION] CONTAINERS",
+          "Formatting-Demo-Nonformat",
+          "Body Text",
+          "Heading 1",
+          "Body Text",
+          "Heading 2",
+          "Body Text",
+          "List 5a",
+          "List 5b",
+          "List 5c",
+          "List 5d",
+          "List 5e",
+          "mostrud exerci aliquip ex ea commodo consequat",
+          "List 5a",
+          "consectetur adipiscing elit",
+          "List 5b",
+          "tempor incididunt ut labore et dolore magna aliqua",
+          "List 5c",
+          "ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat",
+          "List 5d",
+          "duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+          "Faucibus Ornare Suspendisse",
+          "Sagittis nunc purus vitae vestibulum:",
+          "- Nunc sagittis purus vitae",
+          "- vestibulum ornare faucibus quis",
+          "- suspendisse potenti aliquam",
+          "- erat volutpat malesuada fringilla ac tincidunt null",
+          "- mattis nec turpis egesta aliquam justo",
+          "Maleuada Fames Ac Turpis Egestas",
+          "Etiam porta sem malesuada magna mollis euismod. Nullam id dolor id nibh ultricies vehicula ut id elit.",
+          "- Cras justo odio",
+          "- dapibus ac facilisis in",
+          "- egestas eget quam",
+          "- morbi leo risus",
+          "- porta ac consectetur ac",
+          "Ultricies Vehicula Ut Id Elit",
+          "Donec ullamcorper nulla non metus auctor fringilla. Vivamus sagittis lacus vel augue laoreet rutrum faucibus dolor auctor. Cum sociis natoque penatibus et",
+          "Print Page: 1 | Braille Page: 1 | Line: 24 | Text Cell Number: [35] Indent Cell: [7] Alignment: Left | Style: List 5d"
+        ],
+        "ui_controls": [
+          {
+            "type": "other",
+            "label": "List Levels"
+          },
+          {
+            "type": "button",
+            "label": "SECTION"
+          }
+        ],
+        "important_element": "List 5e",
+        "confidence": 0.9
+      },
+      "processed_at": "2026-07-23T19:32:08Z",
+      "model": "qwen2.5vl-8k:latest"
+    },
+    {
+      "step_id": "zU2-w1jfCpVXtP-aV7rxn",
+      "vision": {
+        "alt_text": "BrailleBlaster software interface with text formatting options and a document open.",
+        "long_description": "The screenshot shows the BrailleBlaster software interface, highlighting the 'Heading' button in the toolbar. The document displayed is formatted with various text styles, including body text and headings. The user appears to be demonstrating how to change text style or format within the document.",
+        "ocr_text": [
+          "[Lorem Ipsum Dolor Sit Amet]",
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit.",
+          "Consectetur Adipiscing Elit",
+          "Voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+        ],
+        "ui_controls": [
+          {
+            "type": "button",
+            "label": "Heading"
+          },
+          {
+            "type": "button",
+            "label": "Body Text"
+          }
+        ],
+        "important_element": "Click 'Heading' to change text style.",
+        "confidence": 0.95
+      },
+      "processed_at": "2026-07-23T18:51:31Z",
+      "model": "qwen2.5vl-8k:latest"
+    }
+  ]
+}
