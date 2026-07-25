@@ -228,3 +228,6 @@ output/*.md
 output/*.json
 output/*.pdf
 output/*.docx
+output/*.pptx
+
+guide.json
