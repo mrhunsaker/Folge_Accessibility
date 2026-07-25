@@ -75,6 +75,9 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (`YYYY.M.
 - **`pdfinfo` path detection** on systems where `pdfinfo` is not at
   `/usr/bin/pdfinfo` (uses `shutil.which`).
 - **`pdfinfo` flag** corrected from `--version` to `-v`.
+- **PyInstaller spec `__file__` error**: replaced `__file__` with `os.getcwd()`
+  in `pyinstaller/folge-cli.spec` — PyInstaller executes spec files via `exec()`
+  without defining `__file__`.
 
 ## [2026.7.18] - 2026-07-18
 

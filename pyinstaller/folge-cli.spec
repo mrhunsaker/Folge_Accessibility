@@ -21,7 +21,7 @@ datas = [
 ]
 
 # Only include schemas/ if it has real files (not just .gitkeep)
-schemas_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "schemas")
+schemas_dir = os.path.join(os.getcwd(), "schemas")
 if os.path.isdir(schemas_dir):
     schema_files = [
         f for f in os.listdir(schemas_dir)
