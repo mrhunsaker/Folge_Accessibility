@@ -1,6 +1,10 @@
 # Configuration
 
-The pipeline is configured through several files.
+The pipeline is configured through several files. Settings follow a strict resolution order:
+
+```
+CLI argument  >  environment variable  >  config.yaml  >  hardcoded default
+```
 
 ## pyproject.toml
 
@@ -9,7 +13,7 @@ Project metadata and Python dependencies managed by `uv`.
 ```toml
 [project]
 name = "folge-vision-pipeline"
-version = "2026.7.18"
+dynamic = ["version"]
 requires-python = ">=3.10"
 dependencies = [
     "jsonschema>=4.17.0",
@@ -17,10 +21,15 @@ dependencies = [
     "requests>=2.28.0",
     "weasyprint>=60.0",
     "pymupdf>=1.23.0",
-    "mkdocs>=1.6",
-    "mkdocs-material>=9.5",
-    "pymdown-extensions>=10.0",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
 ]
+
+[project.scripts]
+folge-cli = "folge_cli.cli:main"
+
+[project.optional-dependencies]
+build = ["pyinstaller>=6.0"]
 ```
 
 To install all dependencies:
@@ -31,26 +40,28 @@ uv sync
 
 ## config.yaml
 
-Pipeline configuration for Ollama, paths, output targets, and validation thresholds.
+Pipeline configuration for providers, paths, output targets, and validation thresholds.
 
 ```yaml
 project:
   name: "Folge Vision Publishing"
-  version: "1.0.0"
+  version: "2026.7.25"
+
+provider: "ollama"  # Default provider
 
 ollama:
   base_url: "http://localhost:11434/v1"
   model: "qwen2.5vl-8k:latest"
-  timeout: 120
-  rate_limit: 0.5
+  timeout: 600
   max_workers: 2
 
-paths:
-  input_dir: "./input"
-  output_dir: "./output"
-  images_dir: "./images"
-  templates_dir: "./templates"
-  scripts_dir: "./scripts"
+openrouter:
+  base_url: "https://openrouter.ai/api/v1"
+  model: "qwen/qwen-2.5-vl-72b-instruct"
+  timeout: 60
+  max_workers: 4
+
+# ... (see full config.yaml for all providers)
 
 targets:
   - name: "pdf"
@@ -63,41 +74,41 @@ targets:
     lua_filter: null
 
 validation:
-  min_confidence: 0.8
+  min_confidence: 0.7
   max_alt_text_length: 150
 ```
 
 ## .env
 
-Environment variables for Ollama connection and project paths.
+Environment variables for provider selection, API keys, and paths.
 
 ```bash
-# Ollama
+# Provider selection (ollama is default)
+PROVIDER=ollama
+
+# Local providers (no API key needed)
 OLLAMA_BASE_URL=http://localhost:11434/v1
 OLLAMA_MODEL=qwen2.5vl-8k:latest
-OLLAMA_TIMEOUT=120
-OLLAMA_RATE_LIMIT=0.5
-OLLAMA_MAX_WORKERS=2
+OLLAMA_TIMEOUT=600
 
-# Paths
-INPUT_DIR=./input
-OUTPUT_DIR=./output
-IMAGES_DIR=./images
+# Cloud providers (set API key)
+OPENROUTER_API_KEY=your-key-here
+OPENAI_API_KEY=your-key-here
+GEMINI_API_KEY=your-key-here
+ANTHROPIC_API_KEY=your-key-here
 
 # Validation
-MIN_CONFIDENCE=0.8
-MAX_ALT_TEXT_LENGTH=150
+MIN_CONFIDENCE=0.7
 ```
 
-## mkdocs.yml
-
-Documentation site configuration for MkDocs with Material theme. Controls navigation, theme, and Markdown extensions.
+!!! warning "Security"
+    Never commit `.env` to version control. It is already in `.gitignore`.
 
 ## Templates
 
 ### templates/prompt.txt
 
-Jinja2 template for the Ollama vision prompt. Defines the schema the vision model should return and the rules for generating accessibility metadata.
+Jinja2 template for the Vision AI prompt. Defines the schema the vision model should return and the rules for generating accessibility metadata.
 
 ### templates/markdown.md
 
@@ -105,12 +116,14 @@ Jinja2 template for rendering the enriched JSON into Markdown. Controls how step
 
 ## Customizing Behavior
 
-### Change Vision Model
+### Change Vision Provider
 
-Edit `.env` or `config.yaml`:
+Edit `.env`:
 
 ```bash
-OLLAMA_MODEL=llava:13b
+PROVIDER=openrouter
+OPENROUTER_API_KEY=your-key-here
+OPENROUTER_MODEL=qwen/qwen-2.5-vl-72b-instruct
 ```
 
 ### Adjust Validation Thresholds
@@ -122,16 +135,18 @@ validation:
   min_confidence: 0.9  # More strict
 ```
 
-Or pass as a command-line argument:
+Or pass as a CLI argument:
 
 ```bash
-uv run python scripts/validate_content.py guide.enriched.json 0.9
+folge-cli validate-content guide.enriched.json 0.9
 ```
 
 ### Change PDF Engine
 
-Edit `scripts/publish.py` or `run_pipeline.py` to modify the engine fallback order. The default order is:
+The publish step tries PDF engines in this fallback order:
 
-1. weasyprint
-2. wkhtmltopdf
-3. xelatex
+1. **weasyprint** (default, best PDF/UA support)
+2. **wkhtmltopdf** (fallback)
+3. **xelatex** (fallback)
+
+All require Pandoc to be installed.

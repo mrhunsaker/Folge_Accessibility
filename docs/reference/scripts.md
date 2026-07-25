@@ -1,41 +1,50 @@
-# Scripts Reference
+# CLI Reference
 
-All scripts live in the `scripts/` directory and are run via `uv run`.
+The `folge-cli` command provides nine subcommands. It can be installed as a
+Python package or used as a pre-built executable.
 
-## run_pipeline.py
-
-**Location:** `run_pipeline.py` (project root)
-
-Master orchestrator that runs the full pipeline.
+## folge-cli (installed)
 
 ```bash
-uv run run_pipeline.py <guide.json> [output-dir] [--targets pdf,docx,html]
+folge-cli <subcommand> [arguments]
+```
+
+## folge-cli (pre-built binary)
+
+Download from [GitHub Releases](https://github.com/mrhunsaker/Folge_Accessibility/releases).
+The binary bundles all Python dependencies. Pandoc and a vision provider are
+still required at runtime.
+
+---
+
+## pipeline
+
+Full end-to-end pipeline with progress tracking (source installation only).
+
+```bash
+folge-cli pipeline <guide.json> [output-dir] [--targets pdf,docx,html] [--provider PROVIDER]
 ```
 
 | Argument | Default | Description |
 |----------|---------|-------------|
 | `guide` | (required) | Path to `guide.json` |
 | `output` | `output/` | Output directory |
-| `--targets` | `pdf,docx,html` | Comma-separated target formats |
+| `--targets` | `pdf,docx,html,pptx` | Comma-separated target formats |
+| `--provider` | `ollama` | Vision AI provider |
 
-**Additional targets:** `github` (generates clean Markdown)
-
-### What It Does
-
-1. Checks prerequisites (Python, uv, Pandoc, Ollama)
-2. Creates required directories (`images/`, `output/`, `schemas/`)
-3. Runs all 6 pipeline stages
-4. Validates the PDF output
-5. Prints a summary with file sizes and timing
+!!! note
+    The `pipeline` subcommand requires `uv` and Python because it spawns
+    subprocess calls. Use the pre-built binary with individual subcommands
+    for a lightweight workflow.
 
 ---
 
-## scripts/batch_process.py
+## batch-process
 
-Processes all images through the Ollama Vision API.
+Process all images through the Vision AI API.
 
 ```bash
-uv run python scripts/batch_process.py <guide.json> <images-dir> <output.json>
+folge-cli batch-process <guide.json> <images-dir> <output.json> [--provider PROVIDER]
 ```
 
 | Argument | Description |
@@ -43,29 +52,31 @@ uv run python scripts/batch_process.py <guide.json> <images-dir> <output.json>
 | `guide.json` | Folge export file |
 | `images-dir` | Directory containing screenshots |
 | `output.json` | Where to save vision results |
+| `--provider` | Vision backend (default: from `.env`) |
+| `--api-key` | API key for cloud providers |
 
 **Key behaviors:**
 
-- Uses `qwen2.5vl-8k:latest` model (configurable via env)
-- Rate-limits requests (0.5s between calls)
-- Parallel workers (default: 2)
+- Configurable model via provider settings
+- Parallel workers (default: 2 for local, 4 for cloud)
 - Handles JSON parse errors gracefully
 - Returns error objects for failed steps instead of crashing
+- Progress counter shows completion status
 
 ---
 
-## scripts/merge.py
+## merge
 
 Merges guide content with vision results using `step_id` as the primary key.
 
 ```bash
-uv run python scripts/merge.py <guide.json> <vision-results.json> <output.json>
+folge-cli merge <guide.json> <vision-results.json> <output.json>
 ```
 
 | Argument | Description |
 |----------|-------------|
 | `guide.json` | Original Folge export |
-| `vision-results.json` | Output from batch_process.py |
+| `vision-results.json` | Output from batch-process |
 | `output.json` | Enriched output file |
 
 **Key behaviors:**
@@ -77,12 +88,12 @@ uv run python scripts/merge.py <guide.json> <vision-results.json> <output.json>
 
 ---
 
-## scripts/render.py
+## render
 
 Renders Markdown from enriched JSON using Jinja2 templates.
 
 ```bash
-uv run python scripts/render.py <guide.enriched.json> [target] <output.md>
+folge-cli render <guide.enriched.json> [target] <output.md>
 ```
 
 | Argument | Description |
@@ -102,36 +113,36 @@ uv run python scripts/render.py <guide.enriched.json> [target] <output.md>
 
 ---
 
-## scripts/validate_schema.py
+## validate-schema
 
 Validates JSON against the canonical enriched guide schema.
 
 ```bash
-uv run python scripts/validate_schema.py <json-file> [json-file2 ...]
+folge-cli validate-schema <json-file> [json-file2 ...] [--warnings-out <file>]
 ```
 
-Validates one or more JSON files. Uses an embedded schema (no external schema file needed).
+Validates one or more JSON files. Uses an embedded schema.
 
 **Checks:**
 
 - Required fields: `schema_version`, `guide_id`, `title`, `steps`
 - Data types and constraints
-- No extra fields (strict mode)
+- Length warnings (non-blocking)
 
 ---
 
-## scripts/validate_content.py
+## validate-content
 
 Validates content quality of enriched JSON.
 
 ```bash
-uv run python scripts/validate_content.py <json-file> [min-confidence]
+folge-cli validate-content <json-file> [min-confidence]
 ```
 
 | Argument | Default | Description |
 |----------|---------|-------------|
 | `json-file` | (required) | Enriched JSON to validate |
-| `min-confidence` | `0.8` | Minimum confidence threshold |
+| `min-confidence` | `0.7` (from env/config) | Minimum confidence threshold |
 
 **Checks:**
 
@@ -143,12 +154,27 @@ uv run python scripts/validate_content.py <json-file> [min-confidence]
 
 ---
 
-## scripts/publish.py
+## validate-pdf
 
-Standalone publish script with PDF/UA guarantee. Runs steps 1-6.
+Validates PDF for PDF/UA compliance and tagging.
 
 ```bash
-uv run python scripts/publish.py <guide.json> <output-dir> [targets]
+folge-cli validate-pdf <pdf-file>
+```
+
+Uses two validation methods:
+
+1. **pdfinfo** (if poppler-utils installed) — checks tagged status, PDF version, metadata
+2. **pymupdf** — checks `is_tagged`, `is_pdf_ua`, `pdf_version`, `has_structure`
+
+---
+
+## publish
+
+Publishes guide to target formats with PDF/UA guarantee.
+
+```bash
+folge-cli publish <guide.json> [output-dir] [targets] [provider]
 ```
 
 | Argument | Default | Description |
@@ -156,18 +182,21 @@ uv run python scripts/publish.py <guide.json> <output-dir> [targets]
 | `guide.json` | (required) | Folge export file |
 | `output-dir` | `output/` | Output directory |
 | `targets` | `pdf,docx,html` | Comma-separated formats |
+| `provider` | `ollama` | Vision provider |
 
 ---
 
-## scripts/validate_pdf.py
+## generate-manual-attention
 
-Validates PDF for PDF/UA compliance and tagging.
+Generates a markdown file listing items that need manual review.
 
 ```bash
-uv run python scripts/validate_pdf.py <pdf-file>
+folge-cli generate-manual-attention <enriched.json> <images-dir> <output.md> [warnings.json]
 ```
 
-Uses two validation methods:
-
-1. **pdfinfo** (if poppler-utils installed) -- checks tagged status, PDF version, metadata
-2. **pymupdf** -- checks `is_tagged`, `is_pdf_ua`, `pdf_version`, `has_structure`
+| Argument | Description |
+|----------|-------------|
+| `enriched.json` | Enriched guide file |
+| `images-dir` | Directory containing screenshots |
+| `output.md` | Output markdown file |
+| `warnings.json` | Optional warnings from schema validation |

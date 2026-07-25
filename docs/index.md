@@ -5,11 +5,11 @@ hide:
 
 # Folge Vision Publishing Pipeline
 
-**Version:** 2026.7.18 | **License:** Apache 2.0 | **Author:** Michael Hunsaker
+**Version:** 2026.7.25 | **License:** Apache 2.0 | **Author:** Michael Hunsaker
 
 ---
 
-An automated documentation publishing pipeline that enriches Folge guide exports with Ollama Vision AI-generated accessibility metadata, then publishes to **PDF/UA-compliant PDFs**, DOCX, HTML, and GitHub Markdown.
+An automated documentation publishing pipeline that enriches Folge guide exports with Vision AI-generated accessibility metadata, then publishes to **PDF/UA-compliant PDFs**, DOCX, HTML, and GitHub Markdown.
 
 ## What It Does
 
@@ -27,7 +27,7 @@ An automated documentation publishing pipeline that enriches Folge guide exports
 
     ---
 
-    AI generates alt text, descriptions, OCR, and UI control detection
+    Vision AI generates alt text, descriptions, OCR, and UI control detection
 
     [:octicons-arrow-right-24: Learn more](pipeline/enrich.md)
 
@@ -67,31 +67,38 @@ An automated documentation publishing pipeline that enriches Folge guide exports
 
 ## Key Features
 
+- **Seven AI providers** -- ollama (default), lmstudio, llamacpp, openrouter, openai, gemini, anthropic
 - **Accessibility-first** -- WCAG 2.1 AA, ARIA, PDF/UA, DOCX accessibility support
 - **Deterministic** -- Same input always produces same output
 - **Separation of concerns** -- Authored content stays separate from AI enrichment
-- **Extensible** -- Versioned schema supports future metadata additions
-- **Multi-format** -- Single source publishes to PDF, DOCX, HTML, GitHub Markdown
-- **Tagged PDF Guarantee** -- All PDFs are PDF/UA compliant with proper structure tags
+- **Pre-built binaries** -- Single-file executables for Windows, macOS, and Linux
 
 ## Quick Start
 
-```bash
-# Clone and install
-git clone https://github.com/mrhunsaker/Folge_Accessibility.git
-cd Folge_Accessibility
-uv sync
+=== "Pre-built Binary"
 
-# Pull the vision model
-ollama pull qwen2.5vl-8k:latest
+    Download from [GitHub Releases](https://github.com/mrhunsaker/Folge_Accessibility/releases):
 
-# Place your Folge export and screenshots
-# (guide.json in root, images in images/)
+    ```bash
+    # Linux
+    unzip folge-cli-linux-amd64.zip
+    ./folge-cli batch-process guide.json images/ vision-results.json
+    ./folge-cli merge guide.json vision-results.json guide.enriched.json
+    ./folge-cli render guide.enriched.json pdf guide.md
+    ```
 
-# Run the full pipeline
-uv run run_pipeline.py guide.json output/
-```
+=== "Source Installation"
 
-Output files appear in `output/`: a tagged PDF/UA-compliant PDF, DOCX, HTML, and Markdown.
+    ```bash
+    git clone https://github.com/mrhunsaker/Folge_Accessibility.git
+    cd Folge_Accessibility
+    uv sync
+
+    # Pull the vision model (if using ollama)
+    ollama pull qwen2.5vl-8k:latest
+
+    # Run the full pipeline
+    folge-cli pipeline guide.json output/
+    ```
 
 [:octicons-arrow-right-24: Full getting started guide](getting-started.md)

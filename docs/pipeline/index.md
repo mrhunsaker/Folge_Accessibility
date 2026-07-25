@@ -1,6 +1,6 @@
 # Pipeline Overview
 
-The Folge Vision Publishing Pipeline transforms Folge guide exports into accessible, multi-format documentation through six stages.
+The Folge Vision Publishing Pipeline transforms Folge guide exports into accessible, multi-format documentation through seven stages.
 
 ## Architecture
 
@@ -15,6 +15,9 @@ guide.json + images/
         |
         v
   [3] Validate           (schema + content quality)
+        |
+        v
+  [3b] Manual Review     (operator review, optional re-verify)
         |
         v
   [4] Render         -->  guide.md
@@ -46,21 +49,26 @@ The enriched JSON uses a versioned schema (`schema_version: "1.0"`). Future vers
 
 ## Running the Pipeline
 
-### One Command
+### Full Pipeline (Source Installation)
 
 ```bash
-uv run run_pipeline.py guide.json output/
+folge-cli pipeline guide.json output/
 ```
 
-The orchestrator handles all stages, checks prerequisites, and validates the output.
+The orchestrator handles all stages with progress tracking, checks prerequisites, and validates the output.
 
-### Standalone Publish Script
+### Individual Steps (Binary or Source)
+
+Chain the individual subcommands for a lightweight workflow:
 
 ```bash
-uv run python scripts/publish.py guide.json output/ pdf,docx,html
+folge-cli batch-process guide.json images/ vision-results.json
+folge-cli merge guide.json vision-results.json guide.enriched.json
+folge-cli validate-schema guide.enriched.json
+folge-cli validate-content guide.enriched.json 0.7
+folge-cli render guide.enriched.json pdf guide.md
+folge-cli publish guide.json output/ pdf,docx,html
 ```
-
-This is an alternative that also runs all stages but with simpler prerequisite checking.
 
 ## Stage Details
 

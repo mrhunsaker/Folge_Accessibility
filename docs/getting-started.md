@@ -2,33 +2,44 @@
 
 This guide walks you through installing the pipeline and running it for the first time.
 
-## Prerequisites
+## Installation Options
 
-### Required Software
+### Option A: Pre-built Binary (No Python Required)
 
-| Tool | Version | Purpose | Install |
-|------|---------|---------|---------|
-| **Python** | 3.10+ | Script execution | [python.org](https://python.org) |
-| **uv** | 0.4+ | Package management | [docs.astral.sh/uv](https://docs.astral.sh/uv) |
-| **Ollama** | 0.3.0+ | Vision model hosting | [ollama.ai](https://ollama.ai) |
-| **Pandoc** | 3.0+ | Document conversion | [pandoc.org](https://pandoc.org) |
-| **Git** | Any | Version control | [git-scm.com](https://git-scm.com) |
+Download the latest release from
+[GitHub Releases](https://github.com/mrhunsaker/Folge_Accessibility/releases):
 
-### Optional but Recommended
-
-| Tool | Purpose | Install |
-|------|---------|---------|
-| **poppler-utils** | PDF validation (`pdfinfo`) | `sudo apt install poppler-utils` / `brew install poppler` |
-
-### Vision Model
-
-Download the recommended vision model:
+| Platform | File |
+|----------|------|
+| **Linux** | `folge-cli-linux-amd64.zip` |
+| **macOS** | `folge-cli-macos-arm64.tar.gz` |
+| **Windows** | `folge-cli-windows-amd64.zip` |
 
 ```bash
-ollama pull qwen2.5vl-8k:latest
+# Linux
+unzip folge-cli-linux-amd64.zip
+chmod +x folge-cli
+./folge-cli --help
+
+# macOS
+tar xzf folge-cli-macos-arm64.tar.gz
+chmod +x folge-cli
+./folge-cli --help
+
+# Windows — extract and run from Command Prompt
+folge-cli.exe --help
 ```
 
-## Installation
+!!! note "External dependencies"
+    You still need:
+
+    - **Pandoc** — for document conversion (PDF, DOCX, HTML publishing)
+    - **A vision provider** — Ollama (local) or a cloud provider API key in `.env`
+    - **poppler-utils** (optional) — `pdfinfo` for enhanced PDF validation
+
+### Option B: Source Installation (Full Pipeline)
+
+Requires Python 3.10+ and [uv](https://docs.astral.sh/uv).
 
 ```bash
 git clone https://github.com/mrhunsaker/Folge_Accessibility.git
@@ -37,6 +48,45 @@ uv sync
 ```
 
 This installs all Python dependencies including `jsonschema`, `jinja2`, `requests`, `weasyprint`, `pymupdf`, and `mkdocs`.
+
+## Prerequisites
+
+### Required Software
+
+| Tool | Version | Purpose | Install |
+|------|---------|---------|---------|
+| **Python** | 3.10+ | Runtime (source install only) | [python.org](https://python.org) |
+| **uv** | 0.4+ | Package management (source install only) | [docs.astral.sh/uv](https://docs.astral.sh/uv) |
+| **Pandoc** | 3.0+ | Document conversion | [pandoc.org](https://pandoc.org) |
+| **Vision provider** | — | Image analysis | See [Providers](#vision-providers) |
+
+### Optional but Recommended
+
+| Tool | Purpose | Install |
+|------|---------|---------|
+| **poppler-utils** | PDF validation (`pdfinfo`) | `sudo apt install poppler-utils` / `brew install poppler` |
+
+### Vision Providers
+
+Seven providers are supported. Ollama is the default (local, free).
+
+| Provider | Type | API Key Required | Default Model |
+|----------|------|------------------|---------------|
+| **ollama** | Local | No | `qwen2.5vl-8k:latest` |
+| **lmstudio** | Local | No | (user configures) |
+| **llamacpp** | Local | No | (user configures) |
+| **openrouter** | Cloud | Yes | `qwen/qwen-2.5-vl-72b-instruct` |
+| **openai** | Cloud | Yes | `gpt-4o` |
+| **gemini** | Cloud | Yes | `gemini-2.5-flash` |
+| **anthropic** | Cloud | Yes | `claude-sonnet-4-20250514` |
+
+Configure in `.env`:
+
+```bash
+PROVIDER=ollama
+# For cloud providers, set the API key:
+OPENAI_API_KEY=your-key-here
+```
 
 ## Preparing Your Guide
 
@@ -57,34 +107,32 @@ This installs all Python dependencies including `jsonschema`, `jinja2`, `request
 
 ## Running the Pipeline
 
-### Full Pipeline (Recommended)
+### Full Pipeline (Source Installation Only)
 
 ```bash
-uv run run_pipeline.py guide.json output/
+folge-cli pipeline guide.json output/
 ```
 
-This runs all six stages automatically: vision processing, merge, validation, rendering, and publishing.
+This runs all seven stages automatically with progress tracking.
 
-### Individual Steps
-
-If you need more control, run each step separately:
+### Individual Steps (Works with Binary or Source)
 
 ```bash
-# Step 2: Process images through Ollama Vision
-uv run python scripts/batch_process.py guide.json images/ vision-results.json
+# Step 1: Process images through Vision AI
+folge-cli batch-process guide.json images/ vision-results.json --provider ollama
 
-# Step 3: Merge guide with vision data
-uv run python scripts/merge.py guide.json vision-results.json guide.enriched.json
+# Step 2: Merge guide with vision data
+folge-cli merge guide.json vision-results.json guide.enriched.json
 
-# Step 4: Validate
-uv run python scripts/validate_schema.py guide.enriched.json
-uv run python scripts/validate_content.py guide.enriched.json 0.8
+# Step 3: Validate
+folge-cli validate-schema guide.enriched.json
+folge-cli validate-content guide.enriched.json 0.7
 
-# Step 5: Render Markdown
-uv run python scripts/render.py guide.enriched.json pdf guide.md
+# Step 4: Render Markdown
+folge-cli render guide.enriched.json pdf guide.md
 
-# Step 6: Publish
-uv run python scripts/publish.py guide.json output/ pdf,docx,html
+# Step 5: Publish (requires Pandoc)
+folge-cli publish guide.json output/ pdf,docx,html
 ```
 
 ## Checking Output
@@ -112,5 +160,5 @@ pdfinfo output/guide.pdf | grep -i tagged
 Or for detailed validation:
 
 ```bash
-uv run python scripts/validate_pdf.py output/guide.pdf
+folge-cli validate-pdf output/guide.pdf
 ```

@@ -1,0 +1,113 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: folge-cli-linux-amd64
+            package_cmd: zip -r folge-cli-linux-amd64.zip folge-cli
+          - os: macos-latest
+            artifact_name: folge-cli-macos-arm64
+            package_cmd: tar czf folge-cli-macos-arm64.tar.gz folge-cli
+          - os: windows-latest
+            artifact_name: folge-cli-windows-amd64
+            package_cmd: 7z a folge-cli-windows-amd64.zip folge-cli.exe
+
+    runs-on: ${{ matrix.os }}
+    name: Build (${{ matrix.os }})
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install Python dependencies
+        run: uv sync
+
+      - name: Install PyInstaller
+        run: uv pip install pyinstaller>=6.0
+
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcairo2-dev libpango1.0-dev libgdk-pixbuf2.0-dev libffi-dev
+
+      - name: Install system dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: brew install cairo pango gdk-pixbuf libffi
+
+      - name: Build executable with PyInstaller
+        run: uv run pyinstaller pyinstaller/folge-cli.spec
+
+      - name: Verify executable
+        run: |
+          uv run ./dist/folge-cli --help
+        shell: bash
+
+      - name: Package artifact (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          cd dist
+          ${{ matrix.package_cmd }}
+        shell: bash
+
+      - name: Package artifact (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cd dist
+          7z a folge-cli-windows-amd64.zip folge-cli.exe
+        shell: pwsh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 5
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+          merge-multiple: true
+
+      - name: List artifacts
+        run: find artifacts/ -type f | sort
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/folge-cli-linux-amd64.zip
+            artifacts/folge-cli-macos-arm64.tar.gz
+            artifacts/folge-cli-windows-amd64.zip
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

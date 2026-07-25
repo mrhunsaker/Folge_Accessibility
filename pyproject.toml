@@ -47,15 +47,32 @@ dependencies = [
     "Pillow>=10.0",
     "pyyaml>=6.0",
     "pypandoc>=1.17",
+    "python-dotenv>=1.0",
 ]
+
+[project.optional-dependencies]
+build = ["pyinstaller>=6.0"]
 
 [project.urls]
 Homepage = "https://github.com/mrhunsaker/Folge_Accessibility"
 Repository = "https://github.com/mrhunsaker/Folge_Accessibility"
 Issues = "https://github.com/mrhunsaker/Folge_Accessibility/issues"
 
-[tool.setuptools.dynamic]
-version = {attr = "_version.__version__"}
+[project.scripts]
+folge-cli = "folge_cli.cli:main"
 
-[tool.setuptools]
-py-modules = ["_version"]
+[tool.setuptools.dynamic]
+version = {attr = "folge_cli._version.__version__"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+folge_cli = ["_version.py"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = ["E501"]
