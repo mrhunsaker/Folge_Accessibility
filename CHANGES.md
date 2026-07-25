@@ -78,6 +78,9 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (`YYYY.M.
 - **PyInstaller spec `__file__` error**: replaced `__file__` with `os.getcwd()`
   in `pyinstaller/folge-cli.spec` — PyInstaller executes spec files via `exec()`
   without defining `__file__`.
+- **MkDocs icon rendering**: added `pymdownx.emoji` extension to
+  `mkdocs.yml` — `:material-*:` and `:octicons-*:` shortcodes now render as
+  inline SVGs instead of broken links.
 
 ## [2026.7.18] - 2026-07-18
 
