@@ -6,33 +6,41 @@ PyInstaller spec for folge-cli.
 
 Build with:
     pyinstaller pyinstaller/folge-cli.spec
+
+Note: PyInstaller changes cwd to the spec file's directory before
+executing this file.  PROJECT_ROOT points one level up to the
+repository root where all source and data files live.
 """
 import os
 
 block_cipher = None
 
+# PyInstaller exec's this file with cwd set to the spec file's
+# directory (pyinstaller/), so go one level up to reach the repo root.
+PROJECT_ROOT = os.path.dirname(os.getcwd())
+
 # Data files to bundle (accessible at runtime via sys._MEIPASS)
 datas = [
-    ("templates", "templates"),
-    ("pdf-accessibility.lua", "."),
-    ("docx-accessibility.lua", "."),
-    ("accessibility.lua", "."),
-    ("config.yaml", "."),
+    (os.path.join(PROJECT_ROOT, "templates"), "templates"),
+    (os.path.join(PROJECT_ROOT, "pdf-accessibility.lua"), "."),
+    (os.path.join(PROJECT_ROOT, "docx-accessibility.lua"), "."),
+    (os.path.join(PROJECT_ROOT, "accessibility.lua"), "."),
+    (os.path.join(PROJECT_ROOT, "config.yaml"), "."),
 ]
 
 # Only include schemas/ if it has real files (not just .gitkeep)
-schemas_dir = os.path.join(os.getcwd(), "schemas")
+schemas_dir = os.path.join(PROJECT_ROOT, "schemas")
 if os.path.isdir(schemas_dir):
     schema_files = [
         f for f in os.listdir(schemas_dir)
         if f != ".gitkeep" and os.path.isfile(os.path.join(schemas_dir, f))
     ]
     if schema_files:
-        datas.append(("schemas", "schemas"))
+        datas.append((schemas_dir, "schemas"))
 
 a = Analysis(
-    [os.path.join("src", "folge_cli", "__main__.py")],
-    pathex=["src"],
+    [os.path.join(PROJECT_ROOT, "src", "folge_cli", "__main__.py")],
+    pathex=[os.path.join(PROJECT_ROOT, "src")],
     binaries=[],
     datas=datas,
     hiddenimports=[
