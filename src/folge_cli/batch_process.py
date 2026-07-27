@@ -682,8 +682,13 @@ def process_guide(guide_path, image_dir, output_path, provider, sequential=False
 
 def main():
     """Entry point for the batch-process CLI command."""
+    from folge_cli import __version__
     parser = argparse.ArgumentParser(
         description="Process guide steps through Vision API"
+    )
+    parser.add_argument(
+        "--version", action="version",
+        version=f"%(prog)s {__version__}",
     )
     parser.add_argument("guide", help="Path to guide.json")
     parser.add_argument("image_dir", help="Path to images directory")

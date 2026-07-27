@@ -9,7 +9,10 @@ hide:
 
 ---
 
-An automated documentation publishing pipeline that enriches Folge guide exports with Vision AI-generated accessibility metadata, then publishes to **PDF/UA-compliant PDFs**, DOCX, HTML, and GitHub Markdown.
+An automated documentation publishing pipeline that enriches
+[Folge](https://folge.me) guide exports with Vision AI-generated accessibility
+metadata, then publishes to **16 output formats** including PDF/UA-compliant
+PDFs, DOCX, HTML, EPUB, LaTeX, Typst, and more.
 
 ## What It Does
 
@@ -19,7 +22,7 @@ An automated documentation publishing pipeline that enriches Folge guide exports
 
     ---
 
-    Take your guide and screenshots from Folge
+    Take your guide and screenshots from [Folge](https://folge.me)
 
     [:octicons-arrow-right-24: Learn more](pipeline/export.md)
 
@@ -59,7 +62,7 @@ An automated documentation publishing pipeline that enriches Folge guide exports
 
     ---
 
-    Convert to tagged PDF, DOCX, HTML with Pandoc and Lua filters
+    Convert to 16 output formats with PDF/UA compliance
 
     [:octicons-arrow-right-24: Learn more](pipeline/publish.md)
 
@@ -68,24 +71,16 @@ An automated documentation publishing pipeline that enriches Folge guide exports
 ## Key Features
 
 - **Seven AI providers** -- ollama (default), lmstudio, llamacpp, openrouter, openai, gemini, anthropic
+- **16 output formats** -- PDF, DOCX, HTML, PPTX, GitHub Markdown, Typst, AsciiDoc, Beamer, CommonMark, GFM, MultiMarkdown, DocBook, EPUB, ODT, RST, LaTeX
 - **Accessibility-first** -- WCAG 2.1 AA, ARIA, PDF/UA, DOCX accessibility support
+- **PDF page orientation** -- Letter portrait (default) or Letter landscape
+- **Self-contained output** -- HTML and EPUB embed all resources
+- **Custom fonts** -- Atkinson Hyperlegible Next (text) and AtkynsonMonoNerdFont (code/monospace)
 - **Deterministic** -- Same input always produces same output
 - **Separation of concerns** -- Authored content stays separate from AI enrichment
-- **Pre-built binaries** -- Single-file executables for Windows, macOS, and Linux
+- **Pre-built binaries** -- Coming Soon (single-file executables for Windows, macOS, and Linux)
 
 ## Quick Start
-
-=== "Pre-built Binary"
-
-    Download from [GitHub Releases](https://github.com/mrhunsaker/Folge_Accessibility/releases):
-
-    ```bash
-    # Linux
-    unzip folge-cli-linux-amd64.zip
-    ./folge-cli batch-process guide.json images/ vision-results.json
-    ./folge-cli merge guide.json vision-results.json guide.enriched.json
-    ./folge-cli render guide.enriched.json pdf guide.md
-    ```
 
 === "Source Installation"
 
@@ -97,8 +92,19 @@ An automated documentation publishing pipeline that enriches Folge guide exports
     # Pull the vision model (if using ollama)
     ollama pull qwen2.5vl-8k:latest
 
-    # Run the full pipeline
+    # Run the full pipeline (all 16 formats)
     folge-cli pipeline guide.json output/
+
+    # Or publish specific formats
+    folge-cli publish guide.json output/ pdf,docx,html,epub,typst
     ```
+
+=== "Pre-built Binary (Coming Soon)"
+
+    !!! note "Not yet available"
+        Pre-built binaries are not yet released. Use the source installation
+        in the meantime. Check
+        [GitHub Releases](https://github.com/mrhunsaker/Folge_Accessibility/releases)
+        for updates.
 
 [:octicons-arrow-right-24: Full getting started guide](getting-started.md)

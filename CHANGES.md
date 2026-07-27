@@ -12,6 +12,45 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (`YYYY.M.
 
 ## [Unreleased]
 
+### Added
+
+- **`--version` flag** on `folge-cli` and all standalone scripts (`pipeline.py`,
+  `batch_process.py`, `publish.py`) — prints version and exits, matching standard
+  Linux CLI conventions.
+- **`--orientation portrait|landscape` flag** for PDF page orientation (default:
+  portrait). Switches between Letter Portrait and Letter Landscape page sizes.
+- **11 new output formats** via Pandoc: typst (`.typ`), asciidoc (`.adoc`),
+  beamer (`_beamer.pdf`), commonmark (`_cm.md`), GitHub-flavored Markdown
+  (`_gh.md`), MultiMarkdown (`_mmd.md`), DocBook (`.xml`), EPUB (`.epub`),
+  ODT (`.odt`), reStructuredText (`.rst`), and LaTeX (`.tex`).
+- **Data-driven `TARGETS` registry** in `pipeline.py` and `publish.py` for
+  output format configuration — replaces repetitive if-blocks and makes adding
+  new formats trivial.
+- **Self-contained HTML output** via `--standalone --embed-resources` Pandoc flags.
+- **Self-contained EPUB output** via `--epub-embed-resources=true` Pandoc flag.
+- **`@font-face` CSS** for Atkinson Hyperlegible Next (text) and
+  AtkynsonMonoNerdFont (code/monospace) in `templates/folge.css`.
+- **Page orientation CSS files**: `templates/letter-portrait.css` and
+  `templates/letter-landscape.css` for PDF page layout control.
+- **Font files bundled** in `fonts/` directory (Atkinson Hyperlegible Next
+  variable weight, AtkinsonHyperlegibleMono static OTF).
+
+### Changed
+
+- **PDF default orientation** is now Letter Portrait (was Letter Landscape).
+- **`config.yaml` `project.version`** is now derived dynamically from
+  `_version.py` via `load_yaml_config()` — removed hardcoded value.
+- **Subprocess output** in `run_cmd()` streams to terminal in real-time
+  (removed `capture_output=True` from `pipeline.py` and `publish.py`).
+- **Publish section refactored** to use `TARGETS` registry loop instead of
+  individual if-blocks for each output format.
+- **CLI help text** updated to list all 16 output formats in `--targets`.
+
+### Removed
+
+- **`templates/landscape.css`** — replaced by `letter-landscape.css` and
+  `letter-portrait.css` for explicit orientation control.
+
 ## [2026.7.25] - 2026-07-25
 
 ### Added

@@ -10,9 +10,9 @@
 [![Release](https://img.shields.io/github/v/release/mrhunsaker/Folge_Accessibility)](https://github.com/mrhunsaker/Folge_Accessibility/releases)
 
 A semi-automated documentation publishing pipeline that enriches
-[Folge](https://folge.app) guide exports with Vision AI-generated accessibility
-metadata, then publishes to **PDF/UA-compliant PDFs**, DOCX, HTML, and GitHub
-Markdown formats.
+[Folge](https://folge.me) guide exports with Vision AI-generated accessibility
+metadata, then publishes to **16 output formats** including PDF/UA-compliant
+PDFs, DOCX, HTML, EPUB, LaTeX, Typst, and more.
 
 **Documentation:** [mrhunsaker.github.io/Folge_Accessibility](https://mrhunsaker.github.io/Folge_Accessibility/)
 
@@ -21,7 +21,101 @@ Markdown formats.
 ## Overview
 
 This pipeline transforms **Folge guide exports** into **accessible,
-multi-format documentation** through seven stages:
+multi-format documentation** through seven stages. It is designed for
+[Folge](https://folge.me) JSON exports, but any JSON file with an associated
+`images/` folder can be processed.
+
+### Input: `guide.json`
+
+The pipeline accepts `guide.json` exports from [Folge](https://folge.me).
+Place the file in the project root with screenshots in `images/`:
+
+```json
+{
+  "guide": {
+    "id": "_RIdkNRShXgDsy9_mhwlR",
+    "title": "BrailleBlaster: Headings, Lists, and Emphasis",
+    "description": ""
+  },
+  "steps": [
+    {
+      "id": "QatJX1vxONIm_nySDUIyv",
+      "index": 1,
+      "parentId": null,
+      "title": "Check Heading Levels in Original Document",
+      "description": "<p>I click by each of my headings just to see what the reported heading level is in LibreOffice.</p>",
+      "screenshotFilename": "step-0.png",
+      "indexString": "1.",
+      "textblocks": [],
+      "includeInToc": true,
+      "settings": {
+        "forceToANewPage": false,
+        "multiImageStep": false,
+        "focusedView": true,
+        "contentBlock": false,
+        "focusedViewSettings": { "scale": 1, "x": 0, "y": 0 },
+        "substepBlocksSettings": [
+          { "id": "title", "show": false },
+          { "id": "image", "show": true },
+          { "id": "description", "show": false }
+        ],
+        "textblocks": []
+      },
+      "nested": 0,
+      "screenshotRelativePath": "images/step-0.png"
+    }
+  ]
+}
+```
+
+### Input: `guide.enriched.json`
+
+After Vision AI processing and merge, the enriched format adds a `vision` object
+to each step with accessibility metadata:
+
+```json
+{
+  "schema_version": "1.0",
+  "guide_id": "_RIdkNRShXgDsy9_mhwlR",
+  "title": "BrailleBlaster: Headings, Lists, and Emphasis",
+  "description": "",
+  "version": "1.0.0",
+  "language": "en",
+  "updated_at": "2026-07-25T12:00:00Z",
+  "steps": [
+    {
+      "step_id": "QatJX1vxONIm_nySDUIyv",
+      "title": "Check Heading Levels in Original Document",
+      "body": "<p>I click by each of my headings just to see what the reported heading level is in LibreOffice.</p>",
+      "image": "step-0.png",
+      "vision": {
+        "alt_text": "LibreOffice heading dropdown showing Heading Level 1",
+        "long_description": "The LibreOffice sidebar displays a heading style panel. The current paragraph style is set to 'Heading 1', which is a centered heading at the top of the document.",
+        "ocr_text": ["Heading 1", "Paragraph Style", "LibreOffice"],
+        "ui_controls": [
+          { "type": "dropdown", "label": "Paragraph Style", "action": "select" },
+          { "type": "button", "label": "Heading 1", "action": "click" }
+        ],
+        "important_element": "Paragraph Style dropdown",
+        "confidence": 0.92,
+        "model": "qwen2.5vl-8k:latest",
+        "generated_at": "2026-07-25T12:00:00Z",
+        "processing_time_ms": 3450
+      }
+    }
+  ],
+  "metadata": {
+    "merge_timestamp": "2026-07-25T12:00:00Z",
+    "source_guide": "guide.json",
+    "source_vision": "vision-results.json",
+    "steps_with_vision": 37,
+    "steps_with_errors": 0,
+    "warnings": []
+  }
+}
+```
+
+### Pipeline Stages
 
 | Stage | Description | Input | Output |
 |-------|-------------|-------|--------|
@@ -31,23 +125,58 @@ multi-format documentation** through seven stages:
 | **4. Validate** | Schema compliance, content quality, PDF/UA checks | `guide.enriched.json` | Validation report |
 | **5. Review** | Manual operator review (optional re-verify) | Validation report | Approved content |
 | **6. Render** | Generate Markdown with embedded accessibility metadata | `guide.enriched.json` | `guide.md` |
-| **7. Publish** | Convert to tagged PDF, DOCX, HTML via Pandoc + Lua filters | `guide.md` | PDF, DOCX, HTML |
+| **7. Publish** | Convert to 16 output formats via Pandoc + Lua filters | `guide.md` | PDF, DOCX, HTML, EPUB, LaTeX, Typst, and more |
+
+### Output Formats
+
+| Format | File Extension | Description |
+|--------|---------------|-------------|
+| **PDF** | `.pdf` | Tagged PDF, PDF/UA compliant (weasyprint/wkhtmltopdf/xelatex) |
+| **DOCX** | `.docx` | Word document with accessibility metadata |
+| **HTML** | `.html` | Self-contained HTML with ARIA attributes |
+| **PPTX** | `.pptx` | PowerPoint presentation |
+| **GitHub Markdown** | `.md` | GitHub-compatible Markdown (minimal, no long descriptions) |
+| **Typst** | `.typ` | Typst typesetting format |
+| **AsciiDoc** | `.adoc` | AsciiDoc documentation format |
+| **Beamer** | `_beamer.pdf` | LaTeX Beamer presentation (PDF) |
+| **CommonMark** | `_cm.md` | CommonMark Markdown |
+| **GitHub Flavored** | `_gh.md` | GitHub Flavored Markdown (with long descriptions) |
+| **MultiMarkdown** | `_mmd.md` | MultiMarkdown format |
+| **DocBook** | `.xml` | DocBook XML |
+| **EPUB** | `.epub` | Electronic publication (self-contained) |
+| **ODT** | `.odt` | OpenDocument Text |
+| **reStructuredText** | `.rst` | reStructuredText format |
+| **LaTeX** | `.tex` | LaTeX source |
 
 ### Key Features
 
 - **Seven AI providers**: ollama (default, local), lmstudio, llamacpp (local),
   openrouter, openai, gemini, anthropic (cloud)
+- **16 output formats**: PDF, DOCX, HTML, PPTX, GitHub Markdown, Typst,
+  AsciiDoc, Beamer, CommonMark, GFM, MultiMarkdown, DocBook, EPUB, ODT, RST,
+  LaTeX
 - **Accessibility-first**: WCAG 2.1 AA, ARIA, PDF/UA, DOCX accessibility
+- **PDF page orientation**: Letter portrait (default) or Letter landscape via
+  `--orientation` flag
+- **Self-contained output**: HTML and EPUB embed all resources
+- **Custom fonts**: Atkinson Hyperlegible Next (text) and AtkynsonMonoNerdFont
+  (code/monospace) bundled for accessible typography
 - **Deterministic**: Same input always produces same output
 - **Separation of concerns**: Authored content stays separate from AI enrichment
 - **Progress tracking**: Real-time step counters throughout the pipeline
 - **Manual review**: Operator can inspect and re-verify before rendering
-- **Pre-built binaries**: Single-file executables for Windows, macOS, and Linux
-  via [GitHub Releases](https://github.com/mrhunsaker/Folge_Accessibility/releases)
+- **Pre-built binaries**: Coming Soon — single-file executables for Windows,
+  macOS, and Linux via
+  [GitHub Releases](https://github.com/mrhunsaker/Folge_Accessibility/releases)
 
 ---
 
 ## Pre-built Binaries
+
+!!! note "Coming Soon"
+    Pre-built binaries are not yet available. The PyInstaller build pipeline is
+    functional but releases have not been published yet. Use the source
+    installation below in the meantime.
 
 Download the latest release from
 [GitHub Releases](https://github.com/mrhunsaker/Folge_Accessibility/releases).
@@ -104,7 +233,7 @@ folge-cli pipeline guide.json output/
 ```
 
 Output files appear in `output/`: a tagged PDF/UA-compliant PDF, DOCX, HTML,
-and Markdown.
+EPUB, LaTeX, Typst, and more — all 16 supported formats.
 
 ---
 
@@ -164,7 +293,7 @@ GEMINI_API_KEY=your-key-here
 ANTHROPIC_API_KEY=your-key-here
 ```
 
-**`config.yaml`** — Detailed provider settings, targets, validation thresholds.
+**`config.yaml`** — Detailed provider settings, targets (16 output formats), validation thresholds.
 
 ---
 
@@ -174,7 +303,10 @@ The `folge-cli` command provides nine subcommands:
 
 ```bash
 # Full pipeline (all stages with progress tracking)
-folge-cli pipeline <guide.json> [output-dir] [--targets pdf,docx,html] [--provider PROVIDER]
+folge-cli pipeline <guide.json> [output-dir] [--targets pdf,docx,html,...] [--provider PROVIDER] [--orientation portrait|landscape]
+
+# Check version
+folge-cli --version
 
 # Individual stages
 folge-cli batch-process <guide.json> <images/> <output.json> [--provider PROVIDER]
@@ -183,8 +315,15 @@ folge-cli validate-schema <json-file> [--warnings-out <file>]
 folge-cli validate-content <json-file> [min-confidence]
 folge-cli validate-pdf <pdf-file>
 folge-cli render <guide.enriched.json> <target> <output.md>
-folge-cli publish <guide.json> [output-dir] [targets] [provider]
+folge-cli publish <guide.json> [output-dir] [--targets pdf,docx,html,...] [--orientation portrait|landscape]
 folge-cli generate-manual-attention <json> <images/> <output.md> [warnings.json]
+```
+
+### Available Targets
+
+```
+pdf  docx  html  pptx  github  typst  asciidoc  beamer
+commonmark  gfm  multimarkdown  docbook  epub  odt  rst  latex
 ```
 
 ### Running Stages Individually
@@ -203,13 +342,17 @@ folge-cli validate-content guide.enriched.json 0.7
 # Render Markdown for a specific target
 folge-cli render guide.enriched.json pdf guide.md
 
-# Publish to multiple formats
-folge-cli publish guide.json output/ pdf,docx,html
+# Publish to multiple formats (all 16 supported)
+folge-cli publish guide.json output/ pdf,docx,html,epub,typst,latex
+
+# Publish with landscape orientation
+folge-cli publish guide.json output/ pdf --orientation landscape
 ```
 
 !!! tip "Pre-built binaries"
-    The pre-built executables (from [GitHub Releases](https://github.com/mrhunsaker/Folge_Accessibility/releases))
-    include all individual subcommands. The `pipeline` subcommand (which chains
+    Pre-built executables (Coming Soon from
+    [GitHub Releases](https://github.com/mrhunsaker/Folge_Accessibility/releases))
+    will include all individual subcommands. The `pipeline` subcommand (which chains
     all steps together) requires the source installation with `uv` because it
     spawns subprocess calls. For the full automated pipeline, use the source
     installation or chain the individual commands manually.
@@ -274,7 +417,15 @@ Folge_Accessibility/
 │   └── folge-cli.spec              # Spec file for building executables
 │
 ├── scripts/                        # Backward-compatible thin shims
-├── templates/                      # Jinja2 templates and Lua filters
+├── templates/                      # Jinja2 templates, Lua filters, CSS
+│   ├── markdown.md                 # Jinja2 Markdown rendering template
+│   ├── prompt.txt                  # Vision AI prompt template
+│   ├── folge.css                   # @font-face declarations and base styles
+│   ├── letter-portrait.css         # PDF @page layout for Letter portrait
+│   └── letter-landscape.css        # PDF @page layout for Letter landscape
+├── fonts/                          # Bundled accessible fonts
+│   ├── Atkinson_Hyperlegible_Next/ # Variable weight text font
+│   └── AtkinsonHyperlegibleMono/   # Static OTF monospace font
 ├── schemas/                        # JSON schemas for validation
 ├── docs/                           # MkDocs documentation source
 ├── images/                         # Screenshots from Folge (user-provided)
@@ -300,10 +451,13 @@ Folge_Accessibility/
 | File | Purpose |
 |------|---------|
 | `pyproject.toml` | Project metadata, dependencies, `folge-cli` entry point |
-| `config.yaml` | Provider settings, output targets, validation thresholds |
+| `config.yaml` | Provider settings, 16 output targets, validation thresholds |
 | `.env` | Environment variables: provider selection, API keys, paths |
 | `templates/prompt.txt` | Vision AI prompt template |
 | `templates/markdown.md` | Jinja2 Markdown rendering template |
+| `templates/folge.css` | Font declarations and base styles (Atkinson Hyperlegible) |
+| `templates/letter-portrait.css` | PDF page layout for Letter portrait |
+| `templates/letter-landscape.css` | PDF page layout for Letter landscape |
 
 ### Validation Settings
 

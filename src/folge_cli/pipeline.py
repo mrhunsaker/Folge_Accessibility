@@ -26,6 +26,29 @@ from pathlib import Path
 from .config import PROJECT_ROOT, get_bundled_path, get_min_confidence, get_env, LOCAL_PROVIDERS, PROVIDERS
 from .progress import StepCounter, info
 
+# ── Target registry ─────────────────────────────────────────────────
+# Maps target name to its pandoc output configuration.  PDF and github
+# are handled with special-case logic and are NOT listed here.
+TARGETS = {
+    "docx":          {"to": None,          "ext": ".docx",  "lua": True,  "css": False},
+    "html":          {"to": None,          "ext": ".html",  "lua": True,  "css": True,
+                      "extra": "--standalone --embed-resources"},
+    "pptx":          {"to": "pptx",        "ext": ".pptx",  "lua": True,  "css": False},
+    "typst":         {"to": "typst",       "ext": ".typ",   "lua": False, "css": False},
+    "asciidoc":      {"to": "asciidoc",    "ext": ".adoc",  "lua": False, "css": False},
+    "beamer":        {"to": "beamer",      "ext": "_beamер.pdf", "lua": True, "css": True,
+                      "engine": "xelatex"},
+    "commonmark":    {"to": "commonmark",  "ext": "_cm.md", "lua": False, "css": False},
+    "gfm":           {"to": "gfm",         "ext": "_gh.md", "lua": False, "css": False},
+    "multimarkdown": {"to": "multimarkdown","ext": "_mmd.md","lua": False, "css": False},
+    "docbook":       {"to": "docbook",     "ext": ".xml",   "lua": False, "css": False},
+    "epub":          {"to": "epub",        "ext": ".epub",  "lua": False, "css": False,
+                      "extra": "--epub-embed-resources=true"},
+    "odt":           {"to": "odt",         "ext": ".odt",   "lua": False, "css": False},
+    "rst":           {"to": "rst",         "ext": ".rst",   "lua": False, "css": False},
+    "latex":         {"to": "latex",       "ext": ".tex",   "lua": False, "css": False},
+}
+
 
 def banner(text, char="=", width=60):
     """Print a decorative banner with a repeating character.
@@ -59,8 +82,14 @@ def step_header(step_num, text):
     print(f"{'=' * 60}")
 
 
-def _pandoc_data_args():
+def _pandoc_data_args(orientation="portrait"):
     """Build ``--lua-filter`` and ``--css`` arguments with resolved paths.
+
+    Parameters
+    ----------
+    orientation : str, optional
+        Page orientation: ``"portrait"`` or ``"landscape"``. Default is
+        ``"portrait"``.
 
     Returns
     -------
@@ -76,9 +105,53 @@ def _pandoc_data_args():
     pagebreak = get_bundled_path("templates", "pagebreak.lua")
     if pagebreak.exists():
         parts.append(f"--lua-filter={pagebreak}")
-    css = get_bundled_path("templates", "landscape.css")
-    if css.exists():
-        parts.append(f"--css={css}")
+    folge_css = get_bundled_path("templates", "folge.css")
+    if folge_css.exists():
+        parts.append(f"--css={folge_css}")
+    page_css_name = "letter-portrait.css" if orientation != "landscape" else "letter-landscape.css"
+    page_css = get_bundled_path("templates", page_css_name)
+    if page_css.exists():
+        parts.append(f"--css={page_css}")
+    return " ".join(parts)
+
+
+def _pandoc_target_args(target_name, orientation="portrait"):
+    """Build pandoc CLI arguments for a target from the ``TARGETS`` registry.
+
+    Parameters
+    ----------
+    target_name : str
+        Key into ``TARGETS`` (e.g. ``"docx"``, ``"epub"``).
+    orientation : str, optional
+        Page orientation for CSS selection. Default is ``"portrait"``.
+
+    Returns
+    -------
+    str
+        A space-separated string of Pandoc arguments.
+    """
+    cfg = TARGETS[target_name]
+    parts = []
+    if cfg["to"]:
+        parts.append(f"--to {cfg['to']}")
+    if cfg.get("lua"):
+        for lua in ("pdf-accessibility.lua", "docx-accessibility.lua", "accessibility.lua"):
+            lua_path = get_bundled_path(lua)
+            if lua_path.exists():
+                parts.append(f"--lua-filter={lua_path}")
+        pagebreak = get_bundled_path("templates", "pagebreak.lua")
+        if pagebreak.exists():
+            parts.append(f"--lua-filter={pagebreak}")
+    if cfg.get("css"):
+        folge_css = get_bundled_path("templates", "folge.css")
+        if folge_css.exists():
+            parts.append(f"--css={folge_css}")
+        page_css_name = "letter-portrait.css" if orientation != "landscape" else "letter-landscape.css"
+        page_css = get_bundled_path("templates", page_css_name)
+        if page_css.exists():
+            parts.append(f"--css={page_css}")
+    if cfg.get("extra"):
+        parts.append(cfg["extra"])
     return " ".join(parts)
 
 
@@ -101,18 +174,10 @@ def run_cmd(cmd, check=True):
     result = subprocess.run(
         cmd,
         shell=True,
-        capture_output=True,
         text=True,
         cwd=str(PROJECT_ROOT),
     )
-    if result.stdout:
-        for line in result.stdout.strip().splitlines():
-            print(f"     {line}")
     if check and result.returncode != 0:
-        stderr = result.stderr.strip()
-        if stderr:
-            for line in stderr.splitlines()[:10]:
-                print(f"     {line}")
         return False
     return True
 
@@ -313,13 +378,14 @@ def run_pipeline(args):
     ----------
     args : argparse.Namespace
         Parsed command-line arguments containing ``guide``, ``output``,
-        ``targets``, ``provider``, and ``api_key``.
+        ``targets``, ``provider``, ``api_key``, and ``orientation``.
     """
     guide_path = Path(args.guide)
     output_dir = Path(args.output)
     targets = args.targets.split(",") if args.targets else ["pdf", "docx", "html", "pptx"]
     provider_name = args.provider or get_env("PROVIDER", default="ollama")
     api_key = args.api_key or get_env("OPENROUTER_API_KEY")
+    orientation = getattr(args, "orientation", None) or "portrait"
 
     if not guide_path.exists():
         print(f"ERROR: Guide file not found: {guide_path}")
@@ -450,7 +516,7 @@ def run_pipeline(args):
         pdf_file = output_dir / "guide.pdf"
         print("\n  -> PDF (weasyprint)...", end=" ", flush=True)
 
-        data_args = _pandoc_data_args()
+        data_args = _pandoc_data_args(orientation)
         result = subprocess.run(
             f"pandoc guide.md {data_args} "
             "--pdf-engine=weasyprint --pdf-engine-opt=--presentational-hints "
@@ -468,7 +534,7 @@ def run_pipeline(args):
 
             # Fallback: wkhtmltopdf
             print("  -> PDF (wkhtmltopdf)...", end=" ", flush=True)
-            data_args = _pandoc_data_args()
+            data_args = _pandoc_data_args(orientation)
             result2 = subprocess.run(
                 f"pandoc guide.md {data_args} "
                 "--pdf-engine=wkhtmltopdf "
@@ -488,7 +554,7 @@ def run_pipeline(args):
 
                 # Fallback: xelatex
                 print("  -> PDF (xelatex)...", end=" ", flush=True)
-                data_args = _pandoc_data_args()
+                data_args = _pandoc_data_args(orientation)
                 result3 = subprocess.run(
                     f"pandoc guide.md {data_args} "
                     "--pdf-engine=xelatex --pdf-engine-opt=-x dvipdfmx "
@@ -511,55 +577,22 @@ def run_pipeline(args):
         elif validate_pdf_tagging(pdf_file):
             print("  -> PDF is TAGGED and PDF/UA compliant!")
 
-    if "docx" in targets:
-        docx_file = output_dir / "guide.docx"
-        print("\n  -> DOCX...", end=" ", flush=True)
-        data_args = _pandoc_data_args()
+    # --- Generic pandoc targets (docx, html, pptx, + new formats) ---
+    for tname, tcfg in TARGETS.items():
+        if tname not in targets:
+            continue
+        out_file = f"guide{tcfg['ext']}"
+        print(f"\n  -> {tname.upper()}...", end=" ", flush=True)
+        args = _pandoc_target_args(tname, orientation)
+        engine = f"--pdf-engine={tcfg['engine']}" if "engine" in tcfg else ""
         result = subprocess.run(
-            f"pandoc guide.md {data_args} -o guide.docx",
+            f"pandoc guide.md {args} {engine} -o {out_file}",
             shell=True, capture_output=True, text=True,
             cwd=str(output_dir),
         )
         if result.returncode == 0:
-            print(f"done ({docx_file.stat().st_size / 1024:.1f} KB)")
-            published.append("docx")
-        else:
-            print("FAILED")
-            if result.stderr:
-                for line in result.stderr.strip().splitlines()[:5]:
-                    print(f"    {line}")
-
-    if "html" in targets:
-        html_file = output_dir / "guide.html"
-        print("\n  -> HTML...", end=" ", flush=True)
-        data_args = _pandoc_data_args()
-        result = subprocess.run(
-            f"pandoc guide.md {data_args} -o guide.html",
-            shell=True, capture_output=True, text=True,
-            cwd=str(output_dir),
-        )
-        if result.returncode == 0:
-            print(f"done ({html_file.stat().st_size / 1024:.1f} KB)")
-            published.append("html")
-        else:
-            print("FAILED")
-            if result.stderr:
-                for line in result.stderr.strip().splitlines()[:5]:
-                    print(f"    {line}")
-
-    if "pptx" in targets:
-        pptx_file = output_dir / "guide.pptx"
-        print("\n  -> PPTX...", end=" ", flush=True)
-        data_args = _pandoc_data_args()
-        result = subprocess.run(
-            f"pandoc guide.md {data_args} "
-            "--to pptx -o guide.pptx",
-            shell=True, capture_output=True, text=True,
-            cwd=str(output_dir),
-        )
-        if result.returncode == 0:
-            print(f"done ({pptx_file.stat().st_size / 1024:.1f} KB)")
-            published.append("pptx")
+            print(f"done ({(output_dir / out_file).stat().st_size / 1024:.1f} KB)")
+            published.append(tname)
         else:
             print("FAILED")
             if result.stderr:
@@ -608,6 +641,7 @@ def run_pipeline(args):
 def main():
     """CLI entry point for the pipeline sub-command."""
     import argparse
+    from folge_cli import __version__
     parser = argparse.ArgumentParser(
         description="Folge Vision Publishing Pipeline",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -619,6 +653,10 @@ def main():
             "  folge-cli pipeline guide.json --provider=openrouter\n"
         ),
     )
+    parser.add_argument(
+        "--version", action="version",
+        version=f"%(prog)s {__version__}",
+    )
     parser.add_argument("guide", help="Path to guide.json (Folge export)")
     parser.add_argument(
         "output",
@@ -629,7 +667,9 @@ def main():
     parser.add_argument(
         "--targets",
         default=None,
-        help="Comma-separated target formats: pdf,docx,html,pptx,github (default: pdf,docx,html,pptx)",
+        help="Comma-separated: pdf,docx,html,pptx,github,typst,asciidoc,beamer,"
+             "commonmark,gfm,multimarkdown,docbook,epub,odt,rst,latex"
+             " (default: all)",
     )
     parser.add_argument(
         "--provider",
@@ -641,6 +681,12 @@ def main():
         "--api-key",
         default=None,
         help="API key for cloud providers (or set *_API_KEY env var)",
+    )
+    parser.add_argument(
+        "--orientation",
+        choices=["portrait", "landscape"],
+        default=None,
+        help="PDF page orientation (default: portrait)",
     )
     args = parser.parse_args()
     run_pipeline(args)

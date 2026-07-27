@@ -19,6 +19,7 @@ Providers: ollama, lmstudio, llamacpp, openrouter, openai, gemini, anthropic
 import sys
 import argparse
 
+from folge_cli import __version__
 from folge_cli.config import PROVIDERS
 
 
@@ -29,15 +30,24 @@ def main():
         description="Folge Vision Publishing Pipeline",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
+    parser.add_argument(
+        "--version", action="version",
+        version=f"%(prog)s {__version__}",
+    )
     sub = parser.add_subparsers(dest="command", help="Available commands")
 
     # pipeline
     p_pipe = sub.add_parser("pipeline", help="Run the full end-to-end pipeline")
     p_pipe.add_argument("guide", help="Path to guide.json")
     p_pipe.add_argument("output", nargs="?", default="output", help="Output directory (default: output/)")
-    p_pipe.add_argument("--targets", default=None, help="Comma-separated: pdf,docx,html,pptx,github")
+    p_pipe.add_argument("--targets", default=None,
+                        help="Comma-separated: pdf,docx,html,pptx,github,typst,asciidoc,"
+                             "beamer,commonmark,gfm,multimarkdown,docbook,epub,odt,rst,latex"
+                             " (default: all)")
     p_pipe.add_argument("--provider", choices=PROVIDERS, default=None)
     p_pipe.add_argument("--api-key", default=None)
+    p_pipe.add_argument("--orientation", choices=["portrait", "landscape"], default=None,
+                        help="PDF page orientation (default: portrait)")
 
     # batch-process
     p_bp = sub.add_parser("batch-process", help="Process images through Vision API")
@@ -83,6 +93,8 @@ def main():
     p_pub.add_argument("output", nargs="?", default="output", help="Output directory")
     p_pub.add_argument("targets", nargs="?", default=None, help="Comma-separated targets")
     p_pub.add_argument("provider", nargs="?", default=None, help="Vision provider")
+    p_pub.add_argument("--orientation", choices=["portrait", "landscape"], default=None,
+                       help="PDF page orientation (default: portrait)")
 
     # generate-manual-attention
     p_ma = sub.add_parser("generate-manual-attention", help="Generate manual attention markdown")
@@ -173,7 +185,8 @@ def main():
         from pathlib import Path
         targets = args.targets.split(",") if args.targets else None
         success = publish_with_pdf_ua(
-            args.guide, args.output, targets, args.provider or "ollama"
+            args.guide, args.output, targets, args.provider or "ollama",
+            orientation=getattr(args, "orientation", None) or "portrait",
         )
         sys.exit(0 if success else 1)
 

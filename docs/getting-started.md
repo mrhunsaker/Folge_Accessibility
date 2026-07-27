@@ -4,7 +4,12 @@ This guide walks you through installing the pipeline and running it for the firs
 
 ## Installation Options
 
-### Option A: Pre-built Binary (No Python Required)
+### Option A: Pre-built Binary (Coming Soon)
+
+!!! note "Not yet available"
+    Pre-built binaries are not yet released. The PyInstaller build pipeline is
+    functional but releases have not been published yet. Use the source
+    installation below in the meantime.
 
 Download the latest release from
 [GitHub Releases](https://github.com/mrhunsaker/Folge_Accessibility/releases):
@@ -92,7 +97,7 @@ OPENAI_API_KEY=your-key-here
 
 ### 1. Export from Folge
 
-- Open your guide in Folge
+- Open your guide in [Folge](https://folge.me)
 - Click **Export** > **JSON**
 - Save the file as `guide.json` in the project root
 
@@ -100,7 +105,7 @@ OPENAI_API_KEY=your-key-here
 
 - Export all screenshots from Folge
 - Save them to the `images/` directory
-- Use consistent naming: `001.png`, `002.png`, etc.
+- Fолge exports use names like `step-0.png`, `step-1.png`, etc.
 
 !!! warning "Important"
     Do **not** modify `guide.json` after export. It is your source of truth.
@@ -135,19 +140,53 @@ folge-cli render guide.enriched.json pdf guide.md
 folge-cli publish guide.json output/ pdf,docx,html
 ```
 
+### Output Formats
+
+All 16 formats are available:
+
+```bash
+# Publish to all formats
+folge-cli publish guide.json output/ pdf,docx,html,pptx,github,typst,asciidoc,beamer,commonmark,gfm,multimarkdown,docbook,epub,odt,rst,latex
+
+# Or select specific formats
+folge-cli publish guide.json output/ pdf,docx,epub,typst
+```
+
+| Format | Target Name | File Extension |
+|--------|-------------|---------------|
+| PDF (tagged, PDF/UA) | `pdf` | `.pdf` |
+| Word Document | `docx` | `.docx` |
+| HTML (self-contained) | `html` | `.html` |
+| PowerPoint | `pptx` | `.pptx` |
+| GitHub Markdown | `github` | `.md` |
+| Typst | `typst` | `.typ` |
+| AsciiDoc | `asciidoc` | `.adoc` |
+| Beamer (PDF) | `beamer` | `_beamer.pdf` |
+| CommonMark | `commonmark` | `_cm.md` |
+| GitHub Flavored MD | `gfm` | `_gh.md` |
+| MultiMarkdown | `multimarkdown` | `_mmd.md` |
+| DocBook XML | `docbook` | `.xml` |
+| EPUB | `epub` | `.epub` |
+| OpenDocument | `odt` | `.odt` |
+| reStructuredText | `rst` | `.rst` |
+| LaTeX | `latex` | `.tex` |
+
 ## Checking Output
 
 ```bash
 ls -la output/
 ```
 
-You should see:
+You should see files for each target you specified, e.g.:
 
 | File | Description |
 |------|-------------|
 | `guide.pdf` | Tagged PDF, PDF/UA compliant |
 | `guide.docx` | Word document with accessibility metadata |
-| `guide.html` | HTML with ARIA attributes |
+| `guide.html` | Self-contained HTML with ARIA attributes |
+| `guide.typ` | Typst typesetting source |
+| `guide.epub` | Electronic publication |
+| `guide.tex` | LaTeX source |
 | `guide.md` | GitHub-compatible Markdown |
 
 ### Verify PDF Tagging

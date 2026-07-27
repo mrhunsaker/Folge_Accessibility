@@ -13,6 +13,60 @@ from pathlib import Path
 
 from .config import PROJECT_ROOT, get_min_confidence
 
+# ── Target registry ─────────────────────────────────────────────────
+# Maps target name to its pandoc output configuration.  PDF and github
+# are handled with special-case logic and are NOT listed here.
+TARGETS = {
+    "docx":          {"to": None,          "ext": ".docx",  "lua": True,  "css": False},
+    "html":          {"to": None,          "ext": ".html",  "lua": True,  "css": True,
+                      "extra": "--standalone --embed-resources"},
+    "pptx":          {"to": "pptx",        "ext": ".pptx",  "lua": True,  "css": False},
+    "typst":         {"to": "typst",       "ext": ".typ",   "lua": False, "css": False},
+    "asciidoc":      {"to": "asciidoc",    "ext": ".adoc",  "lua": False, "css": False},
+    "beamer":        {"to": "beamer",      "ext": "_beamер.pdf", "lua": True, "css": True,
+                      "engine": "xelatex"},
+    "commonmark":    {"to": "commonmark",  "ext": "_cm.md", "lua": False, "css": False},
+    "gfm":           {"to": "gfm",         "ext": "_gh.md", "lua": False, "css": False},
+    "multimarkdown": {"to": "multimarkdown","ext": "_mmd.md","lua": False, "css": False},
+    "docbook":       {"to": "docbook",     "ext": ".xml",   "lua": False, "css": False},
+    "epub":          {"to": "epub",        "ext": ".epub",  "lua": False, "css": False,
+                      "extra": "--epub-embed-resources=true"},
+    "odt":           {"to": "odt",         "ext": ".odt",   "lua": False, "css": False},
+    "rst":           {"to": "rst",         "ext": ".rst",   "lua": False, "css": False},
+    "latex":         {"to": "latex",       "ext": ".tex",   "lua": False, "css": False},
+}
+
+
+def _pandoc_target_args(target_name, orientation="portrait"):
+    """Build pandoc CLI arguments for a target from the ``TARGETS`` registry.
+
+    Parameters
+    ----------
+    target_name : str
+        Key into ``TARGETS`` (e.g. ``"docx"``, ``"epub"``).
+    orientation : str, optional
+        Page orientation for CSS selection. Default is ``"portrait"``.
+
+    Returns
+    -------
+    str
+        A space-separated string of Pandoc arguments.
+    """
+    cfg = TARGETS[target_name]
+    parts = []
+    if cfg["to"]:
+        parts.append(f"--to {cfg['to']}")
+    if cfg.get("lua"):
+        parts.append("--lua-filter=templates/pagebreak.lua")
+        for lua in ("pdf-accessibility.lua", "docx-accessibility.lua", "accessibility.lua"):
+            parts.append(f"--lua-filter={lua}")
+    if cfg.get("css"):
+        page_css_name = "letter-portrait.css" if orientation != "landscape" else "letter-landscape.css"
+        parts.append(f"--css=templates/folge.css --css=templates/{page_css_name}")
+    if cfg.get("extra"):
+        parts.append(cfg["extra"])
+    return " ".join(parts)
+
 
 def banner(text, char="=", width=60):
     """Print a decorative banner with a repeating character.
@@ -67,18 +121,10 @@ def run_cmd(cmd, check=True, cwd=None):
     result = subprocess.run(
         cmd,
         shell=True,
-        capture_output=True,
         text=True,
         cwd=cwd
     )
-    if result.stdout:
-        for line in result.stdout.strip().splitlines():
-            print(f"     {line}")
     if check and result.returncode != 0:
-        stderr = result.stderr.strip()
-        if stderr:
-            for line in stderr.splitlines()[:5]:
-                print(f"     {line}")
         return False
     return True
 
@@ -108,7 +154,8 @@ def validate_pdf_tagging(pdf_path):
         return False
 
 
-def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama"):
+def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama",
+                        orientation="portrait"):
     """Run the full publishing pipeline with PDF/UA compliance.
 
     Parameters
@@ -123,6 +170,9 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama")
         ``["pdf", "docx", "html", "pptx"]``.
     provider : str, optional
         Vision backend name. Default is ``"ollama"``.
+    orientation : str, optional
+        Page orientation: ``"portrait"`` or ``"landscape"``. Default is
+        ``"portrait"``.
 
     Returns
     -------
@@ -176,6 +226,8 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama")
 
     step_header("6", "Publishing to target formats")
     published = []
+    page_css_name = "letter-portrait.css" if orientation != "landscape" else "letter-landscape.css"
+    css_args = f"--css=templates/folge.css --css=templates/{page_css_name}"
 
     if "pdf" in targets:
         pdf_file = output_dir / "guide.pdf"
@@ -183,7 +235,7 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama")
         result = subprocess.run(
             f"pandoc {md_file} --lua-filter=templates/pagebreak.lua "
             f"--lua-filter=pdf-accessibility.lua "
-            f"--css=templates/landscape.css "
+            f"{css_args} "
             f"--pdf-engine=weasyprint --pdf-engine-opt=--presentational-hints "
             f"--metadata=tagged-pdf:true -o {pdf_file}",
             shell=True, capture_output=True, text=True,
@@ -201,6 +253,7 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama")
                 print(f"  -> PDF ({engine})...", end=" ", flush=True)
                 result2 = subprocess.run(
                     f"pandoc {md_file} --lua-filter=pdf-accessibility.lua "
+                    f"{css_args} "
                     f"--pdf-engine={engine} {opts} "
                     f"--metadata=tagged-pdf:true -o {pdf_file}",
                     shell=True, capture_output=True, text=True,
@@ -216,48 +269,22 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama")
         if "pdf" in published and validate_pdf_tagging(pdf_file):
             print("  -> PDF is TAGGED and PDF/UA compliant!")
 
-    if "docx" in targets:
-        docx_file = output_dir / "guide.docx"
-        print("\n  -> DOCX...", end=" ", flush=True)
+    # --- Generic pandoc targets (docx, html, pptx, + new formats) ---
+    for tname, tcfg in TARGETS.items():
+        if tname not in targets:
+            continue
+        out_file = f"guide{tcfg['ext']}"
+        print(f"\n  -> {tname.upper()}...", end=" ", flush=True)
+        args = _pandoc_target_args(tname, orientation)
+        engine = f"--pdf-engine={tcfg['engine']}" if "engine" in tcfg else ""
         result = subprocess.run(
-            f"pandoc {md_file} --lua-filter=templates/pagebreak.lua "
-            f"--lua-filter=docx-accessibility.lua -o {docx_file}",
+            f"pandoc {md_file} {args} {engine} -o {out_file}",
             shell=True, capture_output=True, text=True,
             cwd=str(PROJECT_ROOT),
         )
         if result.returncode == 0:
-            print(f"done ({docx_file.stat().st_size / 1024:.1f} KB)")
-            published.append("docx")
-        else:
-            print("FAILED")
-
-    if "html" in targets:
-        html_file = output_dir / "guide.html"
-        print("\n  -> HTML...", end=" ", flush=True)
-        result = subprocess.run(
-            f"pandoc {md_file} --lua-filter=accessibility.lua -o {html_file}",
-            shell=True, capture_output=True, text=True,
-            cwd=str(PROJECT_ROOT),
-        )
-        if result.returncode == 0:
-            print(f"done ({html_file.stat().st_size / 1024:.1f} KB)")
-            published.append("html")
-        else:
-            print("FAILED")
-
-    if "pptx" in targets:
-        pptx_file = output_dir / "guide.pptx"
-        print("\n  -> PPTX...", end=" ", flush=True)
-        result = subprocess.run(
-            f"pandoc {md_file} --lua-filter=templates/pagebreak.lua "
-            f"--lua-filter=docx-accessibility.lua "
-            f"--to pptx -o {pptx_file}",
-            shell=True, capture_output=True, text=True,
-            cwd=str(PROJECT_ROOT),
-        )
-        if result.returncode == 0:
-            print(f"done ({pptx_file.stat().st_size / 1024:.1f} KB)")
-            published.append("pptx")
+            print(f"done ({(output_dir / out_file).stat().st_size / 1024:.1f} KB)")
+            published.append(tname)
         else:
             print("FAILED")
 
@@ -296,12 +323,24 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama")
 
 def main():
     """CLI entry point for the publish sub-command."""
+    if "--version" in sys.argv:
+        from folge_cli import __version__
+        print(f"publish {__version__}")
+        sys.exit(0)
+
     if len(sys.argv) < 2:
-        print("Usage: folge-cli publish <guide.json> <output-dir> [targets] [provider]")
+        print("Usage: folge-cli publish <guide.json> <output-dir> [targets] [provider] [--orientation portrait|landscape]")
         print("Example: folge-cli publish guide.json output/ pdf,docx,html,pptx openrouter")
         print("Targets: pdf, docx, html, pptx, github (default: pdf,docx,html,pptx)")
         print("Provider: ollama, lmstudio, llamacpp, openrouter, openai, gemini, anthropic (default: ollama)")
+        print("Orientation: portrait (default), landscape")
         sys.exit(1)
+
+    orientation = "portrait"
+    if "--orientation" in sys.argv:
+        idx = sys.argv.index("--orientation")
+        if idx + 1 < len(sys.argv):
+            orientation = sys.argv[idx + 1]
 
     guide_path = sys.argv[1]
     output_dir = sys.argv[2] if len(sys.argv) > 2 else "output"
@@ -309,7 +348,8 @@ def main():
     provider = sys.argv[4] if len(sys.argv) > 4 else "ollama"
 
     start_time = time.time()
-    success = publish_with_pdf_ua(guide_path, output_dir, targets, provider)
+    success = publish_with_pdf_ua(guide_path, output_dir, targets, provider,
+                                  orientation=orientation)
     elapsed = time.time() - start_time
 
     if success:

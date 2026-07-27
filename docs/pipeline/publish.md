@@ -1,25 +1,44 @@
-# Step 6: Publish
+# Step 7: Publish
 
-**What it does:** Converts Markdown to final formats (PDF, DOCX, HTML) with PDF/UA compliance and accessibility metadata injected by Lua filters.
+**What it does:** Converts Markdown to 16 output formats via Pandoc with Lua filter accessibility metadata injection.
 
 **Why it matters:**
 
 - **PDF**: Tagged PDF with page breaks, PDF/UA compliance from enhanced filter
-- **DOCX**: Accessibility metadata in OpenXML format
-- **HTML**: `aria-description` and other ARIA attributes
+- **DOCX/PPTX**: Accessibility metadata in OpenXML format
+- **HTML**: Self-contained with ARIA attributes, embedded resources
+- **EPUB**: Electronic publication with embedded resources
+- **Typst, AsciiDoc, LaTeX, RST, DocBook**: Typesetting and documentation formats
+- **Markdown variants**: CommonMark, GitHub Flavored, MultiMarkdown
 
 ## Running
 
 ### Via the Pipeline Orchestrator
 
 ```bash
-uv run run_pipeline.py guide.json output/ --targets pdf,docx,html
+folge-cli pipeline guide.json output/ --targets pdf,docx,html
 ```
 
 ### Via the Standalone Publish Script
 
 ```bash
-uv run python scripts/publish.py guide.json output/ pdf,docx,html
+folge-cli publish guide.json output/ --targets pdf,docx,html
+```
+
+### With Orientation Flag
+
+```bash
+# Letter portrait (default)
+folge-cli publish guide.json output/ --targets pdf
+
+# Letter landscape
+folge-cli publish guide.json output/ --targets pdf --orientation landscape
+```
+
+### All 16 Targets
+
+```bash
+folge-cli publish guide.json output/ --targets pdf,docx,html,pptx,github,typst,asciidoc,beamer,commonmark,gfm,multimarkdown,docbook,epub,odt,rst,latex
 ```
 
 ### Via Pandoc Directly
@@ -36,9 +55,51 @@ pandoc guide.md \
 # DOCX
 pandoc guide.md --lua-filter=docx-accessibility.lua -o guide.docx
 
-# HTML
-pandoc guide.md --lua-filter=accessibility.lua -o guide.html
+# HTML (self-contained)
+pandoc guide.md --lua-filter=accessibility.lua --standalone --embed-resources -o guide.html
+
+# EPUB (self-contained)
+pandoc guide.md --epub-embed-resources=true -o guide.epub
+
+# Typst
+pandoc guide.md -t typst -o guide.typ
+
+# LaTeX
+pandoc guide.md -t latex -o guide.tex
 ```
+
+## Output Formats
+
+### Primary Formats (with Lua Filters)
+
+| Format | Target | `--to` Value | Lua Filter | Extension | Notes |
+|--------|--------|-------------|------------|-----------|-------|
+| PDF | `pdf` | `pdf` (weasyprint engine) | `pdf-accessibility.lua` | `.pdf` | Tagged PDF/UA compliant |
+| DOCX | `docx` | `docx` | `docx-accessibility.lua` | `.docx` | Accessibility metadata |
+| HTML | `html` | `html` | `accessibility.lua` | `.html` | Self-contained, ARIA |
+| PPTX | `pptx` | `pptx` | `docx-accessibility.lua` | `.pptx` | Accessibility metadata |
+| GitHub | `github` | `gfm` | none | `.md` | Minimal, no long descriptions |
+
+### Markdown Variants
+
+| Format | Target | `--to` Value | Extension | Notes |
+|--------|--------|-------------|-----------|-------|
+| CommonMark | `commonmark` | `commonmark` | `_cm.md` | Standard CommonMark |
+| GitHub Flavored | `gfm` | `gfm` | `_gh.md` | With long descriptions |
+| MultiMarkdown | `multimarkdown` | `multimarkdown` | `_mmd.md` | MultiMarkdown extensions |
+
+### Typesetting and Document Formats
+
+| Format | Target | `--to` Value | Extension | Notes |
+|--------|--------|-------------|-----------|-------|
+| Typst | `typst` | `typst` | `.typ` | Modern typesetting |
+| LaTeX | `latex` | `latex` | `.tex` | LaTeX source |
+| AsciiDoc | `asciidoc` | `asciidoc` | `.adoc` | Documentation format |
+| reStructuredText | `rst` | `rst` | `.rst` | Python docs format |
+| DocBook XML | `docbook` | `docbook` | `.xml` | Structured documentation |
+| Beamer | `beamer` | `beamer` | `_beamer.pdf` | LaTeX presentations |
+| ODT | `odt` | `odt` | `.odt` | OpenDocument Text |
+| EPUB | `epub` | `epub` | `.epub` | Electronic publication |
 
 ## PDF Engine Fallback Order
 
@@ -54,15 +115,31 @@ If one engine fails, the next is tried automatically.
 
 ## Lua Filters
 
-Each output format uses a specific Lua filter that injects accessibility metadata:
+Each primary output format uses a specific Lua filter that injects accessibility metadata:
 
 | Filter | Target | Adds | PDF/UA Support |
 |--------|--------|------|----------------|
 | `pdf-accessibility.lua` | PDF | `/Alt`, `/E`, explicit tags | Full PDF/UA |
-| `docx-accessibility.lua` | DOCX | `description` field, alt text | Full |
+| `docx-accessibility.lua` | DOCX, PPTX | `description` field, alt text | Full |
 | `accessibility.lua` | HTML | `aria-description`, `aria-label` | Full |
 
+Markdown variants (commonmark, gfm, multimarkdown), Typst, AsciiDoc, LaTeX, RST, DocBook, ODT, and EPUB do not use Lua filters — Pandoc handles the conversion natively.
+
 See [Lua Filters Reference](../reference/lua-filters.md) for detailed documentation.
+
+## Self-Contained Output
+
+HTML and EPUB outputs are self-contained by default:
+
+- **HTML**: Uses `--standalone --embed-resources` to embed all CSS, fonts, and images
+- **EPUB**: Uses `--epub-embed-resources=true` to embed all resources
+
+## Custom Fonts
+
+PDF and HTML outputs use accessible fonts via `templates/folge.css`:
+
+- **Atkinson Hyperlegible Next** (variable weight) — optimized for low vision
+- **AtkynsonMonoNerdFont** (static OTF) — monospace font for code blocks
 
 ## Output Validation
 
@@ -74,7 +151,7 @@ pdfinfo output/guide.pdf | grep -i tagged
 # Expected: Tagged: yes
 
 # Detailed validation
-uv run python scripts/validate_pdf.py output/guide.pdf
+folge-cli validate-pdf output/guide.pdf
 ```
 
 See [PDF/UA Guarantee](../pdf-ua.md) for full details on the compliance approach.

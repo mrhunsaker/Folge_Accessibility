@@ -1,6 +1,6 @@
 # Pipeline Overview
 
-The Folge Vision Publishing Pipeline transforms Folge guide exports into accessible, multi-format documentation through seven stages.
+The Folge Vision Publishing Pipeline transforms [Folge](https://folge.me) guide exports into accessible, multi-format documentation through seven stages.
 
 ## Architecture
 
@@ -23,8 +23,24 @@ guide.json + images/
   [4] Render         -->  guide.md
         |
         v
-  [5] Publish        -->  guide.pdf / guide.docx / guide.html
-        |
+  [5] Publish        -->  16 output formats
+        |                    |
+        |                    +--> guide.pdf       (PDF/UA tagged PDF)
+        |                    +--> guide.docx      (Word document)
+        |                    +--> guide.html      (self-contained HTML)
+        |                    +--> guide.pptx      (PowerPoint)
+        |                    +--> guide.md        (GitHub Markdown)
+        |                    +--> guide.typ       (Typst)
+        |                    +--> guide.adoc      (AsciiDoc)
+        |                    +--> guide_beamer.pdf (Beamer)
+        |                    +--> guide_cm.md     (CommonMark)
+        |                    +--> guide_gh.md     (GFM)
+        |                    +--> guide_mmd.md    (MultiMarkdown)
+        |                    +--> guide.xml       (DocBook)
+        |                    +--> guide.epub      (EPUB)
+        |                    +--> guide.odt       (OpenDocument)
+        |                    +--> guide.rst       (reStructuredText)
+        |                    +--> guide.tex       (LaTeX)
         v
   [6] Validate PDF       (PDF/UA compliance check)
 ```
@@ -45,7 +61,7 @@ Authored content (`guide.json`) and AI-generated enrichment (`vision-results.jso
 
 ### Extensible
 
-The enriched JSON uses a versioned schema (`schema_version: "1.0"`). Future versions can add new fields without breaking existing tools.
+The enriched JSON uses a versioned schema (`schema_version: "1.0"`). Future versions can add new fields without breaking existing tools. The `TARGETS` registry makes adding new output formats trivial.
 
 ## Running the Pipeline
 
@@ -67,7 +83,23 @@ folge-cli merge guide.json vision-results.json guide.enriched.json
 folge-cli validate-schema guide.enriched.json
 folge-cli validate-content guide.enriched.json 0.7
 folge-cli render guide.enriched.json pdf guide.md
-folge-cli publish guide.json output/ pdf,docx,html
+folge-cli publish guide.json output/ pdf,docx,html,epub,typst
+```
+
+### Check Version
+
+```bash
+folge-cli --version
+```
+
+### Orientation Control
+
+```bash
+# Letter portrait (default)
+folge-cli publish guide.json output/ pdf
+
+# Letter landscape
+folge-cli publish guide.json output/ pdf --orientation landscape
 ```
 
 ## Stage Details
@@ -79,4 +111,4 @@ Each stage is documented in detail in its own page:
 3. [Deterministic Merge](merge.md) -- Combine content with enrichment
 4. [Validate](validate.md) -- Ensure data quality
 5. [Render Markdown](render.md) -- Generate intermediate Markdown
-6. [Publish](publish.md) -- Convert to final formats with PDF/UA guarantee
+6. [Publish](publish.md) -- Convert to 16 output formats with PDF/UA guarantee

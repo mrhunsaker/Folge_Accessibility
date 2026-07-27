@@ -110,7 +110,51 @@ def render_for_target(guide_path, target, output_path):
         "github": {
             "include_long_descriptions": False,
             "newpage_enabled": False
-        }
+        },
+        "typst": {
+            "include_long_descriptions": True,
+            "newpage_enabled": True
+        },
+        "asciidoc": {
+            "include_long_descriptions": True,
+            "newpage_enabled": True
+        },
+        "beamer": {
+            "include_long_descriptions": True,
+            "newpage_enabled": True
+        },
+        "commonmark": {
+            "include_long_descriptions": True,
+            "newpage_enabled": False
+        },
+        "gfm": {
+            "include_long_descriptions": True,
+            "newpage_enabled": False
+        },
+        "multimarkdown": {
+            "include_long_descriptions": True,
+            "newpage_enabled": False
+        },
+        "docbook": {
+            "include_long_descriptions": True,
+            "newpage_enabled": True
+        },
+        "epub": {
+            "include_long_descriptions": True,
+            "newpage_enabled": True
+        },
+        "odt": {
+            "include_long_descriptions": True,
+            "newpage_enabled": True
+        },
+        "rst": {
+            "include_long_descriptions": True,
+            "newpage_enabled": True
+        },
+        "latex": {
+            "include_long_descriptions": True,
+            "newpage_enabled": True
+        },
     }
 
     config = configs.get(target, configs["pdf"])
@@ -122,7 +166,8 @@ def main():
     import sys
     if len(sys.argv) < 3:
         print("Usage: folge-cli render <guide.enriched.json> <target> <output.md>")
-        print("  Target: pdf, docx, pptx, html, github")
+        print("  Target: pdf, docx, pptx, html, github, typst, asciidoc, beamer,"
+              " commonmark, gfm, multimarkdown, docbook, epub, odt, rst, latex")
         sys.exit(1)
 
     guide_path = Path(sys.argv[1])

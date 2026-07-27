@@ -91,16 +91,25 @@ def get_env(key, default=None, cast=None):
 def load_yaml_config():
     """Load ``config.yaml`` from the project root.
 
+    The ``project.version`` key is always populated from the package's
+    ``__version__`` attribute so it stays in sync with the CalVer
+    defined in ``_version.py``.
+
     Returns
     -------
     dict
         Parsed YAML content, or an empty dict when the file is missing.
     """
+    from folge_cli._version import __version__
     config_path = PROJECT_ROOT / "config.yaml"
     if config_path.exists():
         with open(config_path, "r", encoding="utf-8") as f:
-            return yaml.safe_load(f) or {}
-    return {}
+            config = yaml.safe_load(f) or {}
+    else:
+        config = {}
+    config.setdefault("project", {})
+    config["project"]["version"] = __version__
+    return config
 
 
 def get_min_confidence(override=None):

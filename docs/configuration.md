@@ -40,12 +40,14 @@ uv sync
 
 ## config.yaml
 
-Pipeline configuration for providers, paths, output targets, and validation thresholds.
+Pipeline configuration for providers, paths, output targets (16 formats), and validation thresholds.
+
+The `project.version` field is injected dynamically from `_version.py` — you do not need to set it manually.
 
 ```yaml
 project:
   name: "Folge Vision Publishing"
-  version: "2026.7.25"
+  description: "Automated documentation publishing with vision enrichment"
 
 provider: "ollama"  # Default provider
 
@@ -54,28 +56,122 @@ ollama:
   model: "qwen2.5vl-8k:latest"
   timeout: 600
   max_workers: 2
+  retries: 3
+  retry_delay: 5
+  image_max_width: 1024
+  warmup: true
 
 openrouter:
   base_url: "https://openrouter.ai/api/v1"
   model: "qwen/qwen-2.5-vl-72b-instruct"
   timeout: 60
   max_workers: 4
+  retries: 2
+  retry_delay: 2
+  image_max_width: 1024
 
-# ... (see full config.yaml for all providers)
+# ... (see full config.yaml for all 7 providers)
 
 targets:
   - name: "pdf"
+    enabled: true
+    include_long_descriptions: true
     lua_filter: "pdf-accessibility.lua"
+    output_extension: ".pdf"
+    orientation: "portrait"         # portrait or landscape
+
   - name: "docx"
+    enabled: true
+    include_long_descriptions: true
     lua_filter: "docx-accessibility.lua"
+    output_extension: ".docx"
+
   - name: "html"
+    enabled: true
+    include_long_descriptions: true
+    include_ocr: true
+    include_ui_controls: true
     lua_filter: "accessibility.lua"
+    output_extension: ".html"
+
+  - name: "pptx"
+    enabled: true
+    include_long_descriptions: true
+    lua_filter: "docx-accessibility.lua"
+    output_extension: ".pptx"
+
   - name: "github"
+    enabled: true
+    include_long_descriptions: false
     lua_filter: null
+    output_extension: ".md"
+
+  - name: "typst"
+    enabled: true
+    include_long_descriptions: true
+    output_extension: ".typ"
+
+  - name: "asciidoc"
+    enabled: true
+    include_long_descriptions: true
+    output_extension: ".adoc"
+
+  - name: "beamer"
+    enabled: true
+    include_long_descriptions: true
+    output_extension: "_beamer.pdf"
+
+  - name: "commonmark"
+    enabled: true
+    include_long_descriptions: true
+    output_extension: "_cm.md"
+
+  - name: "gfm"
+    enabled: true
+    include_long_descriptions: true
+    output_extension: "_gh.md"
+
+  - name: "multimarkdown"
+    enabled: true
+    include_long_descriptions: true
+    output_extension: "_mmd.md"
+
+  - name: "docbook"
+    enabled: true
+    include_long_descriptions: true
+    output_extension: ".xml"
+
+  - name: "epub"
+    enabled: true
+    include_long_descriptions: true
+    output_extension: ".epub"
+
+  - name: "odt"
+    enabled: true
+    include_long_descriptions: true
+    output_extension: ".odt"
+
+  - name: "rst"
+    enabled: true
+    include_long_descriptions: true
+    output_extension: ".rst"
+
+  - name: "latex"
+    enabled: true
+    include_long_descriptions: true
+    output_extension: ".tex"
 
 validation:
   min_confidence: 0.7
+  require_alt_text: true
+  require_long_description: true
   max_alt_text_length: 150
+
+qa:
+  flag_low_confidence: true
+  low_confidence_threshold: 0.7
+  flag_missing_ui_elements: true
+  required_ui_types: ["button", "text_field", "dropdown"]
 ```
 
 ## .env
@@ -114,6 +210,21 @@ Jinja2 template for the Vision AI prompt. Defines the schema the vision model sh
 
 Jinja2 template for rendering the enriched JSON into Markdown. Controls how steps, images, long descriptions, and page breaks are formatted.
 
+### templates/folge.css
+
+Base CSS with `@font-face` declarations for accessible typography:
+
+- **Atkinson Hyperlegible Next** (variable weight) — body text
+- **AtkynsonMonoNerdFont** (static OTF) — code blocks and monospace
+
+### templates/letter-portrait.css
+
+PDF `@page` rules for Letter Portrait layout (default).
+
+### templates/letter-landscape.css
+
+PDF `@page` rules for Letter Landscape layout (used with `--orientation landscape`).
+
 ## Customizing Behavior
 
 ### Change Vision Provider
@@ -130,7 +241,7 @@ OPENROUTER_MODEL=qwen/qwen-2.5-vl-72b-instruct
 
 Edit `config.yaml`:
 
-```yaml
+```bash
 validation:
   min_confidence: 0.9  # More strict
 ```
@@ -139,6 +250,23 @@ Or pass as a CLI argument:
 
 ```bash
 folge-cli validate-content guide.enriched.json 0.9
+```
+
+### Change PDF Orientation
+
+Use the `--orientation` flag:
+
+```bash
+# Letter portrait (default)
+folge-cli publish guide.json output/ pdf
+
+# Letter landscape
+folge-cli publish guide.json output/ pdf --orientation landscape
+
+# Or set in config.yaml per target
+targets:
+  - name: "pdf"
+    orientation: "landscape"
 ```
 
 ### Change PDF Engine
