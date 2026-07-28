@@ -173,11 +173,6 @@ to each step with accessibility metadata:
 
 ## Pre-built Binaries
 
-!!! note "Coming Soon"
-    Pre-built binaries are not yet available. The PyInstaller build pipeline is
-    functional but releases have not been published yet. Use the source
-    installation below in the meantime.
-
 Download the latest release from
 [GitHub Releases](https://github.com/mrhunsaker/Folge_Accessibility/releases).
 Each release includes single-file executables — no Python installation required:
