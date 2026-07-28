@@ -171,7 +171,7 @@ to each step with accessibility metadata:
 - **Separation of concerns**: Authored content stays separate from AI enrichment
 - **Progress tracking**: Real-time step counters throughout the pipeline
 - **Manual review**: Operator can inspect and re-verify before rendering
-- **Pre-built binaries**: Coming Soon — single-file executables for Windows,
+- **Pre-built binaries**: single-file executables for Windows,
   macOS, and Linux via
   [GitHub Releases](https://github.com/mrhunsaker/Folge_Accessibility/releases)
 
