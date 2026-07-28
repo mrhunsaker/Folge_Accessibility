@@ -8,6 +8,12 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Release](https://img.shields.io/github/v/release/mrhunsaker/Folge_Accessibility)](https://github.com/mrhunsaker/Folge_Accessibility/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/mrhunsaker/Folge_Accessibility/release.yml?label=build)](https://github.com/mrhunsaker/Folge_Accessibility/actions/workflows/release.yml)
+[![Docs](https://img.shields.io/github/actions/workflow/status/mrhunsaker/Folge_Accessibility/deploy-docs.yml?label=docs)](https://mrhunsaker.github.io/Folge_Accessibility/)
+[![Last commit](https://img.shields.io/github/last-commit/mrhunsaker/Folge_Accessibility)](https://github.com/mrhunsaker/Folge_Accessibility/commits/main)
+[![Contributors](https://img.shields.io/github/contributors/mrhunsaker/Folge_Accessibility)](https://github.com/mrhunsaker/Folge_Accessibility/graphs/contributors)
+[![Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://docs.astral.sh/ruff)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 A semi-automated documentation publishing pipeline that enriches
 [Folge](https://folge.me) guide exports with Vision AI-generated accessibility
