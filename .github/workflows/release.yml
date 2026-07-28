@@ -42,7 +42,11 @@ jobs:
         run: uv sync
 
       - name: Install PyInstaller
-        run: uv pip install pyinstaller>=6.0
+        # NOTE: the version spec must be quoted -- unquoted, ">=6.0" is parsed
+        # as shell redirection (both bash and pwsh treat a bare '>' as an
+        # output-redirect operator), which silently drops the version pin
+        # and writes a stray file named "=6.0" into the checkout.
+        run: uv pip install "pyinstaller>=6.0"
 
       - name: Install system dependencies (Linux)
         if: runner.os == 'Linux'
@@ -58,8 +62,17 @@ jobs:
         run: uv run pyinstaller pyinstaller/folge-cli.spec
 
       - name: Verify executable
+        # Run the binary directly (no "uv run") -- this is the actual
+        # contract we're shipping: a standalone artifact that needs
+        # neither uv nor a Python install to run.
         run: |
-          uv run ./dist/folge-cli --help
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            BIN="dist/folge-cli.exe"
+          else
+            BIN="dist/folge-cli"
+          fi
+          "$BIN" --version
+          "$BIN" --help
         shell: bash
 
       - name: Package artifact (Linux/macOS)
@@ -80,7 +93,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
-          path: dist/*
+          # Only the packaged archive -- not the raw dist/folge-cli binary,
+          # which has the identical name on Linux and macOS and would
+          # collide when the release job merges all matrix artifacts
+          # into one directory.
+          path: dist/${{ matrix.artifact_name }}.*
           if-no-files-found: error
           retention-days: 5
 

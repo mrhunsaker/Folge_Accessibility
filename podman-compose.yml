@@ -1,0 +1,81 @@
+# Podman Compose file for folge-cli. Works with both the `podman-compose`
+# Python tool and the `podman compose` built-in (Docker Compose v2 under
+# a Podman-provided socket).
+#
+# Quick start:
+#   1. mkdir -p images output && cp /path/to/your/guide.json .
+#   2. podman-compose run --rm folge-cli pipeline guide.json output
+#      (or: podman compose run --rm folge-cli pipeline guide.json output)
+#
+# folge-cli looks for guide.json and images/ relative to its own install
+# root (see the note at the top of Containerfile), so this file mounts
+# your working files *into /app* alongside the baked-in application
+# code, rather than into a separate /data directory.
+#
+# Podman-specific notes:
+#   - `:Z` on the bind mounts relabels them for SELinux-enforcing hosts
+#     (Fedora/RHEL/CentOS). It's a harmless no-op on non-SELinux hosts.
+#   - `userns_mode: "keep-id"` maps your host UID/GID straight into the
+#     container (matching the image's uid 1000 "folge" user), so files
+#     written to ./output come out owned by you, not a subordinate-UID
+#     stranger. If your podman-compose errors with "--userns and --pod
+#     cannot be set together", re-run with `podman-compose --in-pod=false
+#     up` (a known interaction between keep-id and podman-compose's
+#     default pod-per-project behavior on some versions).
+services:
+  folge-cli:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: folge-cli:latest
+    container_name: folge-cli
+    userns_mode: "keep-id"
+
+    volumes:
+      - ./guide.json:/app/guide.json:ro,Z
+      - ./images:/app/images:ro,Z
+      - ./output:/app/output:Z
+      # Optional overrides:
+      # - ./config.yaml:/app/config.yaml:ro,Z
+      # - ./.env:/app/.env:ro,Z
+
+    environment:
+      PROVIDER: ${PROVIDER:-ollama}
+      # host.containers.internal is Podman's equivalent of Docker's
+      # host.docker.internal, available automatically on Podman 5.x's
+      # default rootless (pasta) networking. On older Podman (slirp4netns)
+      # you may need: podman-compose run --network
+      # slirp4netns:allow_host_loopback=true folge-cli ...
+      # Point this at http://ollama:11434/v1 instead if you enable the
+      # bundled service below.
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.containers.internal:11434/v1}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5vl-8k:latest}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+
+    # podman-compose run --rm folge-cli <subcommand> ... is the normal
+    # way to use this -- e.g.:
+    #   podman-compose run --rm folge-cli pipeline guide.json output
+    #   podman-compose run --rm folge-cli validate-pdf output/guide.pdf
+    command: ["--help"]
+
+  # Optional: run Ollama itself as part of the stack. Enable with:
+  #   podman-compose --profile with-ollama up -d ollama
+  # ...and then set OLLAMA_BASE_URL=http://ollama:11434/v1 above.
+  ollama:
+    image: docker.io/ollama/ollama:latest
+    profiles: ["with-ollama"]
+    container_name: folge-ollama
+    volumes:
+      - ollama-data:/root/.ollama
+    ports:
+      - "11434:11434"
+    # Uncomment for NVIDIA GPU access via CDI (requires the NVIDIA
+    # Container Toolkit + CDI configured on the host):
+    # devices:
+    #   - nvidia.com/gpu=all
+
+volumes:
+  ollama-data:

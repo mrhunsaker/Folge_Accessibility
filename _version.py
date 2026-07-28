@@ -3,4 +3,5 @@
 
 from datetime import date
 
-__version__ = date.today().strftime("%Y.%-m.%-d")
+_today = date.today()
+__version__ = f"{_today.year}.{_today.month}.{_today.day}"

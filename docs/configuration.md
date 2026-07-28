@@ -269,6 +269,18 @@ targets:
     orientation: "landscape"
 ```
 
+### Selecting Specific Targets
+
+By default, all 16 formats are produced. To build only specific formats:
+
+```bash
+# Only PDF and DOCX
+folge-cli pipeline guide.json output/ --targets pdf,docx
+
+# All formats (explicit)
+folge-cli pipeline guide.json output/ --targets pdf,docx,html,pptx,github,typst,asciidoc,beamer,commonmark,gfm,multimarkdown,docbook,epub,odt,rst,latex
+```
+
 ### Change PDF Engine
 
 The publish step tries PDF engines in this fallback order:

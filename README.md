@@ -319,6 +319,8 @@ folge-cli publish <guide.json> [output-dir] [--targets pdf,docx,html,...] [--ori
 folge-cli generate-manual-attention <json> <images/> <output.md> [warnings.json]
 ```
 
+When `--targets` is not specified, **all 16 formats** are produced by default.
+
 ### Available Targets
 
 ```

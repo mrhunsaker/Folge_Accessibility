@@ -118,7 +118,7 @@ OPENAI_API_KEY=your-key-here
 folge-cli pipeline guide.json output/
 ```
 
-This runs all seven stages automatically with progress tracking.
+This runs all seven stages automatically with progress tracking and produces **all 16 output formats** by default.
 
 ### Individual Steps (Works with Binary or Source)
 

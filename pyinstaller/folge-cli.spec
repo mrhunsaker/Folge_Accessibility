@@ -4,20 +4,27 @@
 """
 PyInstaller spec for folge-cli.
 
-Build with:
+Build with (from anywhere, cwd does not matter):
     pyinstaller pyinstaller/folge-cli.spec
+    # or
+    cd pyinstaller && pyinstaller folge-cli.spec
 
-Note: PyInstaller changes cwd to the spec file's directory before
-executing this file.  PROJECT_ROOT points one level up to the
-repository root where all source and data files live.
+Note: PyInstaller does NOT change the process cwd to the spec file's
+directory -- cwd remains whatever it was when the `pyinstaller` command
+was invoked. What PyInstaller *does* provide is the `SPECPATH` global
+(injected into this file's namespace before exec), which is always the
+absolute path of the directory containing this .spec file, regardless
+of the invocation cwd. That's what we use to reliably locate the repo
+root one level up.
 """
 import os
 
 block_cipher = None
 
-# PyInstaller exec's this file with cwd set to the spec file's
-# directory (pyinstaller/), so go one level up to reach the repo root.
-PROJECT_ROOT = os.path.dirname(os.getcwd())
+# SPECPATH is provided by PyInstaller itself (not a normal Python
+# global) and is always the absolute directory containing this spec
+# file (i.e. <repo>/pyinstaller), independent of the caller's cwd.
+PROJECT_ROOT = os.path.dirname(SPECPATH)  # noqa: F821
 
 # Data files to bundle (accessible at runtime via sys._MEIPASS)
 datas = [
@@ -45,7 +52,6 @@ a = Analysis(
     datas=datas,
     hiddenimports=[
         "jsonschema",
-        "jsonschema._validators",
         "jinja2",
         "jinja2.ext",
         "yaml",

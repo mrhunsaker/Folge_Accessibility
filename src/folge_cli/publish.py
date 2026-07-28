@@ -23,7 +23,7 @@ TARGETS = {
     "pptx":          {"to": "pptx",        "ext": ".pptx",  "lua": True,  "css": False},
     "typst":         {"to": "typst",       "ext": ".typ",   "lua": False, "css": False},
     "asciidoc":      {"to": "asciidoc",    "ext": ".adoc",  "lua": False, "css": False},
-    "beamer":        {"to": "beamer",      "ext": "_beamер.pdf", "lua": True, "css": True,
+    "beamer":        {"to": "beamer",      "ext": "_beamer.pdf", "lua": True, "css": True,
                       "engine": "xelatex"},
     "commonmark":    {"to": "commonmark",  "ext": "_cm.md", "lua": False, "css": False},
     "gfm":           {"to": "gfm",         "ext": "_gh.md", "lua": False, "css": False},
@@ -184,7 +184,11 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama",
     output_dir.mkdir(parents=True, exist_ok=True)
 
     if targets is None:
-        targets = ["pdf", "docx", "html", "pptx"]
+        targets = [
+            "pdf", "docx", "html", "pptx", "github",
+            "typst", "asciidoc", "beamer", "commonmark", "gfm",
+            "multimarkdown", "docbook", "epub", "odt", "rst", "latex",
+        ]
 
     md_file = output_dir / "guide.md"
     min_conf = get_min_confidence()
@@ -329,9 +333,10 @@ def main():
         sys.exit(0)
 
     if len(sys.argv) < 2:
-        print("Usage: folge-cli publish <guide.json> <output-dir> [targets] [provider] [--orientation portrait|landscape]")
-        print("Example: folge-cli publish guide.json output/ pdf,docx,html,pptx openrouter")
-        print("Targets: pdf, docx, html, pptx, github (default: pdf,docx,html,pptx)")
+        print("Usage: folge-cli publish <guide.json> <output-dir> [--targets pdf,docx,html,...] [--orientation portrait|landscape]")
+        print("Example: folge-cli publish guide.json output/ --targets pdf,docx,html,epub,typst")
+        print("Targets: pdf, docx, html, pptx, github, typst, asciidoc, beamer, commonmark, gfm,")
+        print("         multimarkdown, docbook, epub, odt, rst, latex (default: all)")
         print("Provider: ollama, lmstudio, llamacpp, openrouter, openai, gemini, anthropic (default: ollama)")
         print("Orientation: portrait (default), landscape")
         sys.exit(1)

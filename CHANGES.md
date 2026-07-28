@@ -12,6 +12,8 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (`YYYY.M.
 
 ## [Unreleased]
 
+## [2026.7.28] - 2026-07-28
+
 ### Added
 
 - **`--version` flag** on `folge-cli` and all standalone scripts (`pipeline.py`,
@@ -45,6 +47,13 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (`YYYY.M.
 - **Publish section refactored** to use `TARGETS` registry loop instead of
   individual if-blocks for each output format.
 - **CLI help text** updated to list all 16 output formats in `--targets`.
+- **Default targets** now include all 16 output formats when `--targets` is
+  not specified (was `pdf,docx,html,pptx`).
+
+### Fixed
+
+- **Beamer output extension** corrected from Cyrillic characters
+  (`_beamер.pdf`) to ASCII (`_beamer.pdf`) in TARGETS registry and config.yaml.
 
 ### Removed
 
@@ -132,6 +141,7 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (`YYYY.M.
 - Multi-format publishing (PDF, DOCX, HTML) via Pandoc with Lua filters.
 - MkDocs documentation site.
 
-[Unreleased]: https://github.com/mrhunsaker/Folge_Accessibility/compare/v2026.7.25...HEAD
+[Unreleased]: https://github.com/mrhunsaker/Folge_Accessibility/compare/v2026.7.28...HEAD
+[2026.7.28]: https://github.com/mrhunsaker/Folge_Accessibility/compare/v2026.7.25...v2026.7.28
 [2026.7.25]: https://github.com/mrhunsaker/Folge_Accessibility/compare/v2026.7.18...v2026.7.25
 [2026.7.18]: https://github.com/mrhunsaker/Folge_Accessibility/releases/tag/v2026.7.18

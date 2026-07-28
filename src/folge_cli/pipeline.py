@@ -36,7 +36,7 @@ TARGETS = {
     "pptx":          {"to": "pptx",        "ext": ".pptx",  "lua": True,  "css": False},
     "typst":         {"to": "typst",       "ext": ".typ",   "lua": False, "css": False},
     "asciidoc":      {"to": "asciidoc",    "ext": ".adoc",  "lua": False, "css": False},
-    "beamer":        {"to": "beamer",      "ext": "_beamер.pdf", "lua": True, "css": True,
+    "beamer":        {"to": "beamer",      "ext": "_beamer.pdf", "lua": True, "css": True,
                       "engine": "xelatex"},
     "commonmark":    {"to": "commonmark",  "ext": "_cm.md", "lua": False, "css": False},
     "gfm":           {"to": "gfm",         "ext": "_gh.md", "lua": False, "css": False},
@@ -382,7 +382,11 @@ def run_pipeline(args):
     """
     guide_path = Path(args.guide)
     output_dir = Path(args.output)
-    targets = args.targets.split(",") if args.targets else ["pdf", "docx", "html", "pptx"]
+    targets = args.targets.split(",") if args.targets else [
+        "pdf", "docx", "html", "pptx", "github",
+        "typst", "asciidoc", "beamer", "commonmark", "gfm",
+        "multimarkdown", "docbook", "epub", "odt", "rst", "latex",
+    ]
     provider_name = args.provider or get_env("PROVIDER", default="ollama")
     api_key = args.api_key or get_env("OPENROUTER_API_KEY")
     orientation = getattr(args, "orientation", None) or "portrait"

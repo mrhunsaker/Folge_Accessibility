@@ -122,7 +122,7 @@ targets:
   - name: "beamer"
     enabled: true
     include_long_descriptions: true
-    output_extension: "_beamер.pdf"
+    output_extension: "_beamer.pdf"
 
   - name: "commonmark"
     enabled: true
