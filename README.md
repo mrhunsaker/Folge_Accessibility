@@ -390,7 +390,83 @@ runtime.
 
 ---
 
-## Project Structure
+## Container Usage
+
+Pre-built images are not yet published. Use the files in the repository to
+build and run locally with Docker or Podman.
+
+### Docker
+
+```bash
+# Build the image
+docker build -t folge-cli .
+
+# Run CLI commands directly
+docker run --rm folge-cli --help
+docker run --rm folge-cli --version
+
+# Full pipeline with host Ollama
+mkdir -p images output
+cp /path/to/guide.json .
+docker compose run --rm folge-cli pipeline guide.json output
+
+# Validate the PDF output
+docker compose run --rm folge-cli validate-pdf output/guide.pdf
+```
+
+The `docker-compose.yml` mounts `guide.json`, `images/`, and `output/` from
+the current directory. Set API keys or provider via environment variables or
+a `.env` file:
+
+```bash
+PROVIDER=openai OPENAI_API_KEY=sk-... \
+  docker compose run --rm folge-cli pipeline guide.json output
+```
+
+Run Ollama as a companion service instead of pointing at the host:
+
+```bash
+docker compose --profile with-ollama up -d ollama
+# Then set OLLAMA_BASE_URL=http://ollama:11434/v1 in the compose file
+```
+
+### Podman
+
+Podman builds from `Containerfile` automatically. The `podman-compose.yml`
+mirrors `docker-compose.yml` with Podman-specific adjustments (`:Z` SELinux
+labels, `userns_mode: keep-id` for rootless file ownership).
+
+```bash
+# Build the image
+podman build -t folge-cli
+
+# Run CLI commands
+podman run --rm folge-cli --help
+podman run --rm folge-cli --version
+
+# Full pipeline with host Ollama
+mkdir -p images output
+cp /path/to/guide.json .
+podman-compose run --rm folge-cli pipeline guide.json output
+# or with Podman's built-in compose:
+podman compose run --rm folge-cli pipeline guide.json output
+
+# Validate the PDF output
+podman-compose run --rm folge-cli validate-pdf output/guide.pdf
+```
+
+Run Ollama as a companion service:
+
+```bash
+podman-compose --profile with-ollama up -d ollama
+```
+
+> **Note:** If `podman-compose` errors with `--userns and --pod cannot be
+> set together`, re-run with `podman-compose --in-pod=false up`. This is a
+> known interaction between `userns_mode: keep-id` and podman-compose's
+> default pod-per-project behavior on some versions.
+
+---
 
 ```
 Folge_Accessibility/
