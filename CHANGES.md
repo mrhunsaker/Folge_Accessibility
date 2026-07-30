@@ -12,6 +12,30 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (`YYYY.M.
 
 ## [Unreleased]
 
+## [2026.7.30] - 2026-07-30
+
+### Added
+
+- **HTML cleaning** — `_clean_html()` strips HTML tags and decodes entities from
+  step body text in exported guides.
+- **Robust JSON parsing** — `parse_json_response()` now handles markdown fences,
+  wrapped arrays, trailing commas, unquoted keys, single-quoted strings, and
+  truncated JSON with missing closing delimiters.
+- **Debug logging** of failed API responses to
+  `output/debug_responses/failed_{step_id}_attempt{N}.txt`.
+- **Temperature cycling** across retries (0.1 → 0.5 → 0.7) to improve parsing
+  success on subsequent attempts.
+- **`finish_reason` tracking** in step results.
+- **Warn logging** on retry attempts for visible feedback during processing.
+
+### Changed
+
+- **`config.yaml` Ollama timeout** increased from 600s to 1800s.
+- **`max_tokens`** increased from 8192 to 16384 for richer model output.
+- **`num_predict`** set to 16384 for local providers.
+- **Vision prompt** rewritten with explicit JSON structure example, clearer
+  rules, and instruction to return a single JSON object without code fences.
+
 ## [2026.7.28] - 2026-07-28
 
 ### Added
@@ -141,7 +165,8 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (`YYYY.M.
 - Multi-format publishing (PDF, DOCX, HTML) via Pandoc with Lua filters.
 - MkDocs documentation site.
 
-[Unreleased]: https://github.com/mrhunsaker/Folge_Accessibility/compare/v2026.7.28...HEAD
+[Unreleased]: https://github.com/mrhunsaker/Folge_Accessibility/compare/v2026.7.30...HEAD
+[2026.7.30]: https://github.com/mrhunsaker/Folge_Accessibility/compare/v2026.7.28...v2026.7.30
 [2026.7.28]: https://github.com/mrhunsaker/Folge_Accessibility/compare/v2026.7.25...v2026.7.28
 [2026.7.25]: https://github.com/mrhunsaker/Folge_Accessibility/compare/v2026.7.18...v2026.7.25
 [2026.7.18]: https://github.com/mrhunsaker/Folge_Accessibility/releases/tag/v2026.7.18
