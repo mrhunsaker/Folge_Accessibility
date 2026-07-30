@@ -8,6 +8,7 @@ openai, gemini, anthropic.  Configuration is resolved from .env with
 config.yaml as a secondary fallback.  See config.py for resolution order.
 """
 import argparse
+import html as html_module
 import json
 import re
 import sys
@@ -20,6 +21,27 @@ from PIL import Image
 
 from .progress import error, info, ok, step_error, step_ok, step_start, summary, warn, StepCounter
 from .config import resolve_provider, PROVIDERS, LOCAL_PROVIDERS
+
+
+def _clean_html(text):
+    """Strip HTML tags and decode HTML entities from text.
+
+    Parameters
+    ----------
+    text : str
+        Raw text possibly containing HTML markup.
+
+    Returns
+    -------
+    str
+        Clean plain text.
+    """
+    if not isinstance(text, str) or not text:
+        return text
+    text = html_module.unescape(text)
+    text = re.sub(r"<[^>]+>", "", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
 
 
 def normalize_guide(guide):
@@ -48,7 +70,7 @@ def normalize_guide(guide):
     normalized_steps = []
     for i, step in enumerate(guide.get("steps", [])):
         step_id = step.get("step_id") or step.get("id") or (i + 1)
-        body = step.get("body") or step.get("description") or ""
+        body = _clean_html(step.get("body") or step.get("description") or "")
         image = step.get("image") or step.get("screenshotFilename") or ""
         title = step.get("title") or ""
         order = step.get("order") or step.get("index") or i
@@ -112,8 +134,59 @@ def encode_image(image_path, max_width=1024):
         return base64.b64encode(f.read()).decode("utf-8")
 
 
+def _fix_trailing_commas(text):
+    """Remove trailing commas before closing brackets/braces."""
+    return re.sub(r",\s*([\]}])", r"\1", text)
+
+
+def _fix_unquoted_keys(text):
+    """Add double quotes to unquoted object keys (conservative)."""
+    return re.sub(r"(\{|,)\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:", r'\1"\2":', text)
+
+
+def _try_parse_lenient(text):
+    """Attempt to parse JSON with common structural fixes."""
+    for fixer in (_fix_trailing_commas, _fix_unquoted_keys):
+        fixed = fixer(text)
+        if fixed != text:
+            try:
+                return json.loads(fixed)
+            except json.JSONDecodeError:
+                pass
+    # bare single-quoted strings (unescaped inside)
+    fixed = re.sub(r"(?<=:)\s*'([^']*)'\s*(?=[,}\]])", r'"\1"', text)
+    try:
+        return json.loads(fixed)
+    except json.JSONDecodeError:
+        raise ValueError(f"Invalid JSON in response: {text[:200]}")
+
+
+def _close_incomplete_json(text):
+    """Append missing closing braces/brackets to truncated JSON.
+
+    Parameters
+    ----------
+    text : str
+        Potentially truncated JSON string missing closing delimiters.
+
+    Returns
+    -------
+    str
+        Text with balanced closing braces/brackets appended.
+    """
+    open_braces = text.count("{") - text.count("}")
+    open_brackets = text.count("[") - text.count("]")
+    if open_braces > 0 or open_brackets > 0:
+        text += "}" * open_braces + "]" * open_brackets
+    return text
+
+
 def parse_json_response(content):
-    """Extract and parse JSON from model response, handling markdown fences.
+    """Extract and parse JSON from model response.
+
+    Handles markdown fences, arrays, misplaced string ``vision``,
+    common JSON syntax issues (trailing commas, unquoted keys),
+    and truncated output (missing closing braces/brackets).
 
     Parameters
     ----------
@@ -134,13 +207,58 @@ def parse_json_response(content):
     content = re.sub(r"^```(?:json)?\s*\n?", "", content)
     content = re.sub(r"\n?```\s*$", "", content)
     content = content.strip()
+    if not content:
+        raise ValueError("Empty response from model")
+
+    # Try direct parse (unwrap array if needed)
     try:
-        return json.loads(content)
+        parsed = json.loads(content)
+        if isinstance(parsed, list) and len(parsed) > 0:
+            return parsed[0]
+        return parsed
     except json.JSONDecodeError:
-        match = re.search(r"\{[\s\S]*\}", content)
-        if match:
-            return json.loads(match.group())
-        raise ValueError(f"Invalid JSON in response: {content[:200]}")
+        pass
+
+    # Try extracting a {…} object
+    obj_match = re.search(r"\{[\s\S]*\}", content)
+    if obj_match:
+        candidate = obj_match.group()
+        try:
+            return json.loads(candidate)
+        except json.JSONDecodeError:
+            try:
+                return _try_parse_lenient(candidate)
+            except ValueError:
+                pass
+
+    # Try extracting a […] array and taking the first element
+    arr_match = re.search(r"\[[\s\S]*\]", content)
+    if arr_match:
+        candidate = arr_match.group()
+        try:
+            parsed = json.loads(candidate)
+            if isinstance(parsed, list) and len(parsed) > 0:
+                return parsed[0]
+        except json.JSONDecodeError:
+            try:
+                parsed = _try_parse_lenient(candidate)
+                if isinstance(parsed, list) and len(parsed) > 0:
+                    return parsed[0]
+            except ValueError:
+                pass
+
+    # Attempt to close incomplete JSON (truncated output)
+    closed = _close_incomplete_json(content)
+    if closed != content:
+        try:
+            return json.loads(closed)
+        except json.JSONDecodeError:
+            try:
+                return _try_parse_lenient(closed)
+            except ValueError:
+                pass
+
+    raise ValueError(f"Invalid JSON in response: {content[:200]}")
 
 
 VALID_UI_TYPES = {
@@ -419,7 +537,19 @@ def generate_prompt(step, guide_title, previous_step=None, next_step=None):
     next_title = next_step["title"] if next_step else ""
     prompt = f"""You are documenting software screenshots for accessibility.
 
-RETURN ONLY VALID JSON with schema: step_id, vision(alt_text, long_description, ocr_text, ui_controls, important_element, confidence).
+Return ONLY a single JSON object (NOT an array). Use this exact structure:
+
+{{
+  "step_id": "{step['step_id']}",
+  "vision": {{
+    "alt_text": "string (max 150 chars)",
+    "long_description": "string (1-2 sentences)",
+    "ocr_text": ["array of visible text strings"],
+    "ui_controls": [{{"type": "button|text_field|dropdown|...", "label": "string"}}],
+    "important_element": "plain text, NOT an object (max 200 chars)",
+    "confidence": 0.95
+  }}
+}}
 
 Guide: {guide_title}
 Previous: {prev_title}
@@ -427,17 +557,15 @@ Current: {step['title']}
 Instruction: {step['body']}
 Next: {next_title}
 
-Image: The screenshot is provided as an attachment.
-
 RULES:
-- alt_text: Max 150 chars, describe ONLY visible content
-- long_description: 2-4 sentences, mention important controls
-- ocr_text: Only visible text as array
-- ui_controls: Objects with type and label
-- important_element: Plain text string (NOT an object), max 200 chars, single most important element
-- confidence: 0.0-1.0
+- alt_text: Describe ONLY visible on-screen content, max 150 chars
+- long_description: 1-2 sentences, mention important interactive controls
+- ocr_text: Only visible text as an array of strings
+- ui_controls: Array of {{type, label}} objects for interactive controls
+- important_element: Plain text string (NOT an object), max 200 chars
+- confidence: 0.0-1.0 reflecting certainty
 
-RETURN ONLY JSON."""
+CRITICAL: Return a single JSON object. NOT an array. Do NOT include any text before or after the JSON. Do NOT wrap in markdown code fences."""
     return prompt
 
 
@@ -516,25 +644,39 @@ def process_single_step(step, guide_title, previous_step, next_step,
                 ],
             }
         ],
-        "max_tokens": 8192,
+        "max_tokens": 16384,
         "temperature": 0.1,
         "top_p": 0.9,
         "stream": False,
     }
 
+    if provider["name"] in LOCAL_PROVIDERS:
+        payload_template.setdefault("options", {})["num_predict"] = 16384
+
     headers = _build_auth_headers(provider)
+    temperatures = [0.1, 0.5, 0.7]
     last_error = None
+    raw_content = ""
+    finish_reason = ""
     for attempt in range(1, provider["retries"] + 1):
         try:
+            payload = payload_template.copy()
+            temp_idx = min(attempt - 1, len(temperatures) - 1)
+            payload["temperature"] = temperatures[temp_idx]
+
             response = requests.post(
                 f"{provider['base_url']}/chat/completions",
                 headers=headers,
-                json=payload_template,
+                json=payload,
                 timeout=provider["timeout"],
             )
             response.raise_for_status()
 
-            content = response.json()["choices"][0]["message"]["content"]
+            data = response.json()
+            choice = data["choices"][0]
+            finish_reason = choice.get("finish_reason", "unknown")
+            raw_content = choice["message"]["content"]
+            content = raw_content
 
             result = parse_json_response(content)
             result["step_id"] = step["step_id"]
@@ -542,12 +684,29 @@ def process_single_step(step, guide_title, previous_step, next_step,
                 "%Y-%m-%dT%H:%M:%SZ", time.gmtime()
             )
             result["model"] = provider["model"]
+            result["finish_reason"] = finish_reason
             return normalize_vision_result(result)
 
         except Exception as e:
             last_error = str(e)
+            log_dir = Path("output") / "debug_responses"
+            log_dir.mkdir(parents=True, exist_ok=True)
+            log_file = log_dir / f"failed_{step['step_id']}_attempt{attempt}.txt"
+            try:
+                with open(log_file, "w", encoding="utf-8") as lf:
+                    lf.write(f"step_id: {step['step_id']}\n")
+                    lf.write(f"finish_reason: {finish_reason}\n")
+                    lf.write(f"error: {last_error}\n")
+                    lf.write("--- raw response ---\n")
+                    lf.write(raw_content if raw_content else "(no content captured)")
+            except Exception:
+                pass
             if attempt < provider["retries"]:
                 wait = provider["retry_delay"] * attempt
+                warn(
+                    f"Attempt {attempt}/{provider['retries']} failed"
+                    f" (temp={payload.get('temperature', 0.1)}): {e}"
+                )
                 time.sleep(wait)
 
     return {
