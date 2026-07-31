@@ -12,6 +12,7 @@ Usage:
     folge-cli validate-pdf <pdf-file>
     folge-cli render <json-file> <target> <output.md>
     folge-cli publish <guide.json> <output-dir> [targets] [provider]
+    folge-cli metadata <guide.json> [-o metadata.yaml] [--apply-pdf guide.pdf] [--check]
     folge-cli generate-manual-attention <json> <images/> <output.md> [warnings.json]
 
 Providers: ollama, lmstudio, llamacpp, openrouter, openai, gemini, anthropic
@@ -95,6 +96,23 @@ def main():
     p_pub.add_argument("provider", nargs="?", default=None, help="Vision provider")
     p_pub.add_argument("--orientation", choices=["portrait", "landscape"], default=None,
                        help="PDF page orientation (default: portrait)")
+
+    # metadata
+    p_meta = sub.add_parser("metadata", help="Generate accessible-document metadata for all formats")
+    p_meta.add_argument("guide", help="Path to guide.json or guide.enriched.json")
+    p_meta.add_argument("-o", "--out", default=None,
+                        help="Write Pandoc-compatible metadata YAML to this path")
+    p_meta.add_argument("--apply-pdf", default=None,
+                        help="Embed metadata into this PDF and allow text copying")
+    p_meta.add_argument("--check", action="store_true",
+                        help="Check metadata against accessibility best practices")
+    p_meta.add_argument("--strict", action="store_true",
+                        help="Exit 1 when --check finds issues")
+    p_meta.add_argument("--author", default=None, help="Override the document author")
+    p_meta.add_argument("--subject", default=None, help="Override the document subject")
+    p_meta.add_argument("--language", default=None, help="Override the primary document language")
+    p_meta.add_argument("--keywords", default=None,
+                        help="Override keywords (comma/semicolon separated)")
 
     # generate-manual-attention
     p_ma = sub.add_parser("generate-manual-attention", help="Generate manual attention markdown")
@@ -189,6 +207,23 @@ def main():
             orientation=getattr(args, "orientation", None) or "portrait",
         )
         sys.exit(0 if success else 1)
+
+    elif args.command == "metadata":
+        from folge_cli.metadata import run as run_metadata
+        from pathlib import Path
+        result = run_metadata(
+            args.guide,
+            out=args.out,
+            apply_pdf=args.apply_pdf,
+            check=args.check,
+            strict=args.strict,
+            author=args.author,
+            subject=args.subject,
+            language=args.language,
+            keywords=args.keywords,
+        )
+        if args.strict and result.get("issues"):
+            sys.exit(1)
 
     elif args.command == "generate-manual-attention":
         from folge_cli.generate_manual_attention import generate

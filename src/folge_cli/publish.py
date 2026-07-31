@@ -228,10 +228,18 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama",
     ):
         return False
 
+    step_header("5b", "Generating accessible document metadata")
+    from folge_cli.metadata import build_metadata, write_metadata_file, apply_pdf_metadata
+    metadata = build_metadata(enriched)
+    metadata_yaml = output_dir / "metadata.yaml"
+    write_metadata_file(metadata, metadata_yaml)
+    print(f"  Metadata YAML written to {metadata_yaml}")
+
     step_header("6", "Publishing to target formats")
     published = []
     page_css_name = "letter-portrait.css" if orientation != "landscape" else "letter-landscape.css"
     css_args = f"--css=templates/folge.css --css=templates/{page_css_name}"
+    metadata_args = f"--metadata-file={metadata_yaml}"
 
     if "pdf" in targets:
         pdf_file = output_dir / "guide.pdf"
@@ -241,12 +249,15 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama",
             f"--lua-filter=pdf-accessibility.lua "
             f"{css_args} "
             f"--pdf-engine=weasyprint --pdf-engine-opt=--presentational-hints "
+            f"{metadata_args} "
             f"--metadata=tagged-pdf:true -o {pdf_file}",
             shell=True, capture_output=True, text=True,
             cwd=str(PROJECT_ROOT),
         )
         if result.returncode == 0:
             print(f"done ({pdf_file.stat().st_size / 1024:.1f} KB)")
+            apply_pdf_metadata(pdf_file, metadata)
+            print("  -> PDF metadata embedded; text copying allowed")
             published.append("pdf")
         else:
             print("FAILED")
@@ -259,12 +270,15 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama",
                     f"pandoc {md_file} --lua-filter=pdf-accessibility.lua "
                     f"{css_args} "
                     f"--pdf-engine={engine} {opts} "
+                    f"{metadata_args} "
                     f"--metadata=tagged-pdf:true -o {pdf_file}",
                     shell=True, capture_output=True, text=True,
                     cwd=str(PROJECT_ROOT),
                 )
                 if result2.returncode == 0:
                     print(f"done ({pdf_file.stat().st_size / 1024:.1f} KB)")
+                    apply_pdf_metadata(pdf_file, metadata)
+                    print("  -> PDF metadata embedded; text copying allowed")
                     published.append("pdf")
                     break
                 else:
@@ -282,13 +296,15 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama",
         args = _pandoc_target_args(tname, orientation)
         engine = f"--pdf-engine={tcfg['engine']}" if "engine" in tcfg else ""
         result = subprocess.run(
-            f"pandoc {md_file} {args} {engine} -o {out_file}",
+            f"pandoc {md_file} {args} {engine} {metadata_args} -o {out_file}",
             shell=True, capture_output=True, text=True,
             cwd=str(PROJECT_ROOT),
         )
         if result.returncode == 0:
             print(f"done ({(output_dir / out_file).stat().st_size / 1024:.1f} KB)")
             published.append(tname)
+            if out_file.endswith(".pdf") and (output_dir / out_file).exists():
+                apply_pdf_metadata(output_dir / out_file, metadata)
         else:
             print("FAILED")
 

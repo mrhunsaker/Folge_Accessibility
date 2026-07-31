@@ -48,6 +48,8 @@ The `project.version` field is injected dynamically from `_version.py` — you d
 project:
   name: "Folge Vision Publishing"
   description: "Automated documentation publishing with vision enrichment"
+  author: "Michael Ryan Hunsaker, M.Ed., Ph.D."   # Used by folge-cli metadata
+  keywords: ["accessibility", "documentation", "publishing", "pipeline"]  # Used by folge-cli metadata
 
 provider: "ollama"  # Default provider
 

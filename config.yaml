@@ -1,6 +1,8 @@
 project:
   name: "Folge Vision Publishing"
   description: "Automated documentation publishing with vision enrichment"
+  author: "Michael Ryan Hunsaker, M.Ed., Ph.D."
+  keywords: ["accessibility", "documentation", "publishing", "pipeline"]
 
 provider: "ollama"
 
@@ -34,8 +36,8 @@ llamacpp:
 
 openrouter:
   base_url: "https://openrouter.ai/api/v1"
-  model: "qwen/qwen-2.5-vl-72b-instruct"
-  timeout: 60
+  model: "moonshotai/kimi-k3"
+  timeout: 300
   max_workers: 4
   retries: 2
   retry_delay: 2

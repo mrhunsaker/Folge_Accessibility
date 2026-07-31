@@ -72,6 +72,7 @@ nav:
       - "Step 5: Render": pipeline/render.md
       - "Step 6: Publish": pipeline/publish.md
   - PDF/UA Guarantee: pdf-ua.md
+  - Accessible Document Metadata: accessibility-metadata.md
   - Configuration: configuration.md
   - Reference:
       - Scripts: reference/scripts.md

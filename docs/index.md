@@ -58,6 +58,14 @@ PDFs, DOCX, HTML, EPUB, LaTeX, Typst, and more.
 
     [:octicons-arrow-right-24: Learn more](pipeline/render.md)
 
+- :material-tag-text-outline:{ .lg .middle } **Metadata**
+
+    ---
+
+    Embed title, author, subject, keywords, language, and security settings into every format
+
+    [:octicons-arrow-right-24: Learn more](accessibility-metadata.md)
+
 - :material-file-document-outline:{ .lg .middle } **Publish**
 
     ---
@@ -73,6 +81,7 @@ PDFs, DOCX, HTML, EPUB, LaTeX, Typst, and more.
 - **Seven AI providers** -- ollama (default), lmstudio, llamacpp, openrouter, openai, gemini, anthropic
 - **16 output formats** -- PDF, DOCX, HTML, PPTX, GitHub Markdown, Typst, AsciiDoc, Beamer, CommonMark, GFM, MultiMarkdown, DocBook, EPUB, ODT, RST, LaTeX
 - **Accessibility-first** -- WCAG 2.1 AA, ARIA, PDF/UA, DOCX accessibility support
+- **Accessible document metadata** -- auto-generated title, author, subject, keywords, language, tags, bookmarks, and copy-permissive security embedded into all formats
 - **PDF page orientation** -- Letter portrait (default) or Letter landscape
 - **Self-contained output** -- HTML and EPUB embed all resources
 - **Custom fonts** -- Atkinson Hyperlegible Next (text) and AtkynsonMonoNerdFont (code/monospace)

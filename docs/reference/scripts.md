@@ -1,6 +1,6 @@
 # CLI Reference
 
-The `folge-cli` command provides nine subcommands. It can be installed as a
+The `folge-cli` command provides ten subcommands. It can be installed as a
 Python package or used as a pre-built executable.
 
 ## folge-cli (installed)
@@ -183,6 +183,43 @@ folge-cli publish <guide.json> [output-dir] [targets] [provider]
 | `output-dir` | `output/` | Output directory |
 | `targets` | `pdf,docx,html` | Comma-separated formats |
 | `provider` | `ollama` | Vision provider |
+
+---
+
+## metadata
+
+Generates accessible-document metadata (title, author, subject, keywords,
+language, structure tags, bookmarks, and security) for all output formats.
+
+```bash
+folge-cli metadata <guide.json> [-o metadata.yaml] [--apply-pdf guide.pdf] [--check] [--strict]
+```
+
+| Argument | Description |
+|----------|-------------|
+| `guide.json` | Folge export or enriched guide file |
+| `-o, --out` | Write a Pandoc-compatible `metadata.yaml` to this path |
+| `--apply-pdf` | Embed metadata into this PDF and allow text copying |
+| `--check` | Check metadata against accessibility best practices |
+| `--strict` | Exit 1 when `--check` finds issues |
+| `--author` | Override the document author |
+| `--subject` | Override the document subject |
+| `--language` | Override the primary document language |
+| `--keywords` | Override keywords (comma/semicolon separated) |
+
+**Key behaviors:**
+
+- Emits a Pandoc-compatible `metadata.yaml` that is embedded into every
+  output format via `--metadata-file` (DOCX/ODT core properties, HTML
+  `<meta>` and `<html lang>`, EPUB OPF, and more)
+- `--apply-pdf` writes the PDF Info dictionary and `/Lang` entry with
+  PyMuPDF, generates an outline from headings, and strips restrictive
+  security handlers so text copying is always allowed
+- `--check --strict` flags violations such as generic titles ("Document 1"),
+  missing author/subject/keywords, and unset language
+
+See [Accessible Document Metadata](../accessibility-metadata.md) for the full
+standard and examples.
 
 ---
 

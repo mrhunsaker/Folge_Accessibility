@@ -193,7 +193,7 @@ _PROVIDER_DEFS = {
         "auth_style": "bearer",
         "defaults": {
             "base_url": "https://openrouter.ai/api/v1",
-            "model": "qwen/qwen-2.5-vl-72b-instruct",
+            "model": "qwen/qwen3-vl-32b-instruct",
             "workers": 4,
             "timeout": 60,
             "retries": 2,

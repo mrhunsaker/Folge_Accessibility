@@ -12,6 +12,30 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (`YYYY.M.
 
 ## [Unreleased]
 
+### Added
+
+- **`metadata` subcommand** — `folge-cli metadata` derives accessible-document
+  metadata (title, author, subject, keywords, language, structure tags,
+  bookmarks, and security settings) from the guide JSON and writes a
+  Pandoc-compatible `metadata.yaml` that is embedded into every output format
+  via `--metadata-file`.
+- **PDF metadata and security hardening** — `--apply-pdf` embeds the PDF Info
+  dictionary (title, author, subject, keywords, creator) and document language
+  with PyMuPDF, and strips restrictive security handlers so text copying and
+  extraction are always allowed for assistive technology.
+- **Metadata compliance check** — `--check --strict` validates metadata against
+  accessible-PDF best practices (no generic titles, author, subject, keywords,
+  language, bookmarks for 10+ page documents) and exits with status 1 on
+  violations.
+- **New `config.yaml` defaults** — `project.author` and `project.keywords`
+  provide the author and keyword fallbacks used by `folge-cli metadata`.
+
+### Changed
+
+- **`publish`** now generates `metadata.yaml` during the pipeline and passes it
+  to every Pandoc target; generated PDFs are post-processed to embed the
+  metadata and guarantee text copying is allowed.
+
 ## [2026.7.30] - 2026-07-30
 
 ### Added

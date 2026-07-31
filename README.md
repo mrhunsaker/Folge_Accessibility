@@ -162,6 +162,9 @@ to each step with accessibility metadata:
   AsciiDoc, Beamer, CommonMark, GFM, MultiMarkdown, DocBook, EPUB, ODT, RST,
   LaTeX
 - **Accessibility-first**: WCAG 2.1 AA, ARIA, PDF/UA, DOCX accessibility
+- **Accessible document metadata**: auto-generated title, author, subject,
+  keywords, language, structure tags, bookmarks, and copy-permissive security
+  settings embedded into every format via `folge-cli metadata`
 - **PDF page orientation**: Letter portrait (default) or Letter landscape via
   `--orientation` flag
 - **Self-contained output**: HTML and EPUB embed all resources
@@ -300,7 +303,7 @@ ANTHROPIC_API_KEY=your-key-here
 
 ## CLI Reference
 
-The `folge-cli` command provides nine subcommands:
+The `folge-cli` command provides ten subcommands:
 
 ```bash
 # Full pipeline (all stages with progress tracking)
@@ -317,6 +320,7 @@ folge-cli validate-content <json-file> [min-confidence]
 folge-cli validate-pdf <pdf-file>
 folge-cli render <guide.enriched.json> <target> <output.md>
 folge-cli publish <guide.json> [output-dir] [--targets pdf,docx,html,...] [--orientation portrait|landscape]
+folge-cli metadata <guide.json> [-o metadata.yaml] [--apply-pdf guide.pdf] [--check] [--strict]
 folge-cli generate-manual-attention <json> <images/> <output.md> [warnings.json]
 ```
 
@@ -350,7 +354,42 @@ folge-cli publish guide.json output/ pdf,docx,html,epub,typst,latex
 
 # Publish with landscape orientation
 folge-cli publish guide.json output/ pdf --orientation landscape
+
+# Generate accessible-document metadata for all formats
+folge-cli metadata guide.json -o metadata.yaml
+
+# Embed metadata into a PDF and allow text copying
+folge-cli metadata guide.json --apply-pdf output/guide.pdf
+
+# Verify metadata against accessibility best practices
+folge-cli metadata guide.json --check --strict
 ```
+
+### Accessible Document Metadata
+
+`folge-cli metadata` generates the metadata required for accessible PDFs and
+embeds it into **every** output format. It derives values from the guide JSON
+and `config.yaml`, and writes a Pandoc-compatible `metadata.yaml`
+(`--metadata-file`) so formats like DOCX, ODT, EPUB, and HTML carry the same
+title, author, subject, keywords, and language.
+
+| Element | Source | Why it matters |
+|---------|--------|----------------|
+| **Title** | Guide title (`project.name` fallback) | Screen readers announce it to identify the document |
+| **Author** | `project.author`, `--author`, or guide metadata | Names the responsible person, department, or organization |
+| **Subject** | Guide description (`project.description` fallback) | Concise summary of the document content |
+| **Keywords** | `project.keywords` + terms derived from step titles | Improves searchability |
+| **Language** | Guide `language` (default `en`) | Correct pronunciation and intonation in screen readers |
+| **Tags** | Pandoc Lua filters + WeasyPrint | Structural tagging for headings, lists, tables, figures |
+| **Bookmarks** | Headings (outline) | Interactive navigation for documents of 10+ pages |
+| **Security** | `--apply-pdf` (PyMuPDF) | Text copying is always allowed for assistive technology |
+
+With `--apply-pdf`, the PDF Info dictionary (title, author, subject, keywords)
+and the document `/Lang` entry are written directly with PyMuPDF, an outline is
+generated from headings, and any restrictive security handler is stripped so
+text copying is allowed. `--check --strict` exits with status 1 when a
+best-practice violation is found (for example, a generic title like
+"Document 1").
 
 !!! tip "Pre-built binaries"
     Pre-built executables (Coming Soon from
@@ -479,13 +518,14 @@ Folge_Accessibility/
 │   ├── __init__.py                 # Package metadata
 │   ├── __main__.py                 # python -m folge_cli
 │   ├── _version.py                 # Dynamic version (CalVer)
-│   ├── cli.py                      # folge-cli entry point (9 subcommands)
+│   ├── cli.py                      # folge-cli entry point (10 subcommands)
 │   ├── config.py                   # Centralized configuration loading
 │   ├── pipeline.py                 # Full pipeline orchestrator
 │   ├── batch_process.py            # Vision API image processing
 │   ├── merge.py                    # Deterministic merge (guide + vision)
 │   ├── render.py                   # Markdown rendering via Jinja2
 │   ├── publish.py                  # Standalone publisher with PDF/UA
+│   ├── metadata.py                 # Accessible document metadata generator
 │   ├── validate_schema.py          # JSON schema validation
 │   ├── validate_content.py         # Content quality validation
 │   ├── validate_pdf.py             # PDF/UA compliance validation
@@ -530,13 +570,20 @@ Folge_Accessibility/
 | File | Purpose |
 |------|---------|
 | `pyproject.toml` | Project metadata, dependencies, `folge-cli` entry point |
-| `config.yaml` | Provider settings, 16 output targets, validation thresholds |
+| `config.yaml` | Provider settings, 16 output targets, validation thresholds, `project.author` and `project.keywords` metadata defaults |
 | `.env` | Environment variables: provider selection, API keys, paths |
 | `templates/prompt.txt` | Vision AI prompt template |
 | `templates/markdown.md` | Jinja2 Markdown rendering template |
 | `templates/folge.css` | Font declarations and base styles (Atkinson Hyperlegible) |
 | `templates/letter-portrait.css` | PDF page layout for Letter portrait |
 | `templates/letter-landscape.css` | PDF page layout for Letter landscape |
+
+### Metadata Defaults
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `project.author` | `Michael Ryan Hunsaker, M.Ed., Ph.D.` | Author fallback used by `folge-cli metadata` |
+| `project.keywords` | `accessibility, documentation, ...` | Keyword fallbacks used by `folge-cli metadata` |
 
 ### Validation Settings
 
