@@ -12,6 +12,8 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (`YYYY.M.
 
 ## [Unreleased]
 
+## [2026.7.31] - 2026-07-31
+
 ### Added
 
 - **`jan` provider** — Jan (local, OpenAI-compatible) is now supported as a
@@ -38,6 +40,11 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (`YYYY.M.
 - **`publish`** now generates `metadata.yaml` during the pipeline and passes it
   to every Pandoc target; generated PDFs are post-processed to embed the
   metadata and guarantee text copying is allowed.
+- **Local LLM API key handling** — `lmstudio`, `jan`, and `llamacpp` are probed
+  through their OpenAI-compatible `/v1` endpoints (`/chat/completions`,
+  `/v1/models`) instead of Ollama-only routes, so they run with no API key. An
+  optional `*_API_KEY` is sent only when configured, for servers that have API
+  auth enabled.
 
 ## [2026.7.30] - 2026-07-30
 
@@ -192,7 +199,8 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (`YYYY.M.
 - Multi-format publishing (PDF, DOCX, HTML) via Pandoc with Lua filters.
 - MkDocs documentation site.
 
-[Unreleased]: https://github.com/mrhunsaker/Folge_Accessibility/compare/v2026.7.30...HEAD
+[Unreleased]: https://github.com/mrhunsaker/Folge_Accessibility/compare/v2026.7.31...HEAD
+[2026.7.31]: https://github.com/mrhunsaker/Folge_Accessibility/compare/v2026.7.30...v2026.7.31
 [2026.7.30]: https://github.com/mrhunsaker/Folge_Accessibility/compare/v2026.7.28...v2026.7.30
 [2026.7.28]: https://github.com/mrhunsaker/Folge_Accessibility/compare/v2026.7.25...v2026.7.28
 [2026.7.25]: https://github.com/mrhunsaker/Folge_Accessibility/compare/v2026.7.18...v2026.7.25
