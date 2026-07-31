@@ -14,6 +14,9 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (`YYYY.M.
 
 ### Added
 
+- **`jan` provider** — Jan (local, OpenAI-compatible) is now supported as a
+  local LLM provider, using the same settings shape as `lmstudio` and serving
+  at `http://localhost:1337/v1`.
 - **`metadata` subcommand** — `folge-cli metadata` derives accessible-document
   metadata (title, author, subject, keywords, language, structure tags,
   bookmarks, and security settings) from the guide JSON and writes a

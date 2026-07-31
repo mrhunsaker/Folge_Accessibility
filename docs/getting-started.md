@@ -73,12 +73,13 @@ This installs all Python dependencies including `jsonschema`, `jinja2`, `request
 
 ### Vision Providers
 
-Seven providers are supported. Ollama is the default (local, free).
+Eight providers are supported. Ollama is the default (local, free).
 
 | Provider | Type | API Key Required | Default Model |
 |----------|------|------------------|---------------|
 | **ollama** | Local | No | `qwen2.5vl-8k:latest` |
 | **lmstudio** | Local | No | (user configures) |
+| **jan** | Local | No | (user configures) |
 | **llamacpp** | Local | No | (user configures) |
 | **openrouter** | Cloud | Yes | `qwen/qwen-2.5-vl-72b-instruct` |
 | **openai** | Cloud | Yes | `gpt-4o` |

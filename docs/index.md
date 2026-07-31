@@ -78,7 +78,7 @@ PDFs, DOCX, HTML, EPUB, LaTeX, Typst, and more.
 
 ## Key Features
 
-- **Seven AI providers** -- ollama (default), lmstudio, llamacpp, openrouter, openai, gemini, anthropic
+- **Eight AI providers** -- ollama (default), lmstudio, jan, llamacpp, openrouter, openai, gemini, anthropic
 - **16 output formats** -- PDF, DOCX, HTML, PPTX, GitHub Markdown, Typst, AsciiDoc, Beamer, CommonMark, GFM, MultiMarkdown, DocBook, EPUB, ODT, RST, LaTeX
 - **Accessibility-first** -- WCAG 2.1 AA, ARIA, PDF/UA, DOCX accessibility support
 - **Accessible document metadata** -- auto-generated title, author, subject, keywords, language, tags, bookmarks, and copy-permissive security embedded into all formats

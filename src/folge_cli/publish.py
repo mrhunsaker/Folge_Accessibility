@@ -353,7 +353,7 @@ def main():
         print("Example: folge-cli publish guide.json output/ --targets pdf,docx,html,epub,typst")
         print("Targets: pdf, docx, html, pptx, github, typst, asciidoc, beamer, commonmark, gfm,")
         print("         multimarkdown, docbook, epub, odt, rst, latex (default: all)")
-        print("Provider: ollama, lmstudio, llamacpp, openrouter, openai, gemini, anthropic (default: ollama)")
+        print("Provider: ollama, lmstudio, jan, llamacpp, openrouter, openai, gemini, anthropic (default: ollama)")
         print("Orientation: portrait (default), landscape")
         sys.exit(1)
 

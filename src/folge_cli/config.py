@@ -26,8 +26,8 @@ else:
     BUNDLED_DIR = PROJECT_ROOT
 
 # All supported providers (ollama is always the default)
-PROVIDERS = ["ollama", "lmstudio", "llamacpp", "openrouter", "openai", "gemini", "anthropic"]
-LOCAL_PROVIDERS = {"ollama", "lmstudio", "llamacpp"}
+PROVIDERS = ["ollama", "lmstudio", "jan", "llamacpp", "openrouter", "openai", "gemini", "anthropic"]
+LOCAL_PROVIDERS = {"ollama", "lmstudio", "jan", "llamacpp"}
 
 def get_bundled_path(*parts):
     """Resolve a path relative to the bundled data directory.
@@ -149,7 +149,7 @@ _PROVIDER_DEFS = {
             "base_url": "http://localhost:11434/v1",
             "model": "qwen2.5vl-8k:latest",
             "workers": 2,
-            "timeout": 600,
+            "timeout": 1800,
             "retries": 3,
             "retry_delay": 5,
             "image_max_width": 1024,
@@ -164,7 +164,22 @@ _PROVIDER_DEFS = {
             "base_url": "http://localhost:1234/v1",
             "model": "",
             "workers": 2,
-            "timeout": 600,
+            "timeout": 1800,
+            "retries": 3,
+            "retry_delay": 5,
+            "image_max_width": 1024,
+        },
+    },
+    "jan": {
+        "env_prefix": "JAN",
+        "yaml_section": "jan",
+        "needs_api_key": False,
+        "needs_auth_header": False,
+        "defaults": {
+            "base_url": "http://localhost:1337/v1",
+            "model": "",
+            "workers": 2,
+            "timeout": 1800,
             "retries": 3,
             "retry_delay": 5,
             "image_max_width": 1024,
@@ -179,7 +194,7 @@ _PROVIDER_DEFS = {
             "base_url": "http://localhost:8080/v1",
             "model": "",
             "workers": 2,
-            "timeout": 600,
+            "timeout": 1800,
             "retries": 3,
             "retry_delay": 5,
             "image_max_width": 1024,
@@ -195,7 +210,7 @@ _PROVIDER_DEFS = {
             "base_url": "https://openrouter.ai/api/v1",
             "model": "qwen/qwen3-vl-32b-instruct",
             "workers": 4,
-            "timeout": 60,
+            "timeout": 300,
             "retries": 2,
             "retry_delay": 2,
             "image_max_width": 1024,
@@ -282,9 +297,7 @@ def _resolve_one_provider(provider_key, args=None):
     # CLI --api-key override
     cli_api_key = (getattr(args, "api_key", None) if args else None)
 
-    api_key = None
-    if defn["needs_api_key"]:
-        api_key = cli_api_key or get_env(f"{prefix}_API_KEY") or yaml_cfg.get("api_key")
+    api_key = cli_api_key or get_env(f"{prefix}_API_KEY") or yaml_cfg.get("api_key")
 
     return {
         "name": provider_key,

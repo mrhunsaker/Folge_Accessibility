@@ -156,8 +156,8 @@ to each step with accessibility metadata:
 
 ### Key Features
 
-- **Seven AI providers**: ollama (default, local), lmstudio, llamacpp (local),
-  openrouter, openai, gemini, anthropic (cloud)
+- **Eight AI providers**: ollama (default, local), lmstudio, jan, llamacpp
+  (local), openrouter, openai, gemini, anthropic (cloud)
 - **16 output formats**: PDF, DOCX, HTML, PPTX, GitHub Markdown, Typst,
   AsciiDoc, Beamer, CommonMark, GFM, MultiMarkdown, DocBook, EPUB, ODT, RST,
   LaTeX
@@ -256,7 +256,7 @@ EPUB, LaTeX, Typst, and more — all 16 supported formats.
 
 ## Providers
 
-Seven Vision AI providers are supported. Ollama is the default (local, free).
+Eight Vision AI providers are supported. Ollama is the default (local, free).
 Cloud providers require an API key set in `.env`.
 
 ### Provider Table
@@ -265,6 +265,7 @@ Cloud providers require an API key set in `.env`.
 |----------|------|---------|---------------|------------|
 | **ollama** | Local | No | `qwen2.5vl-8k:latest` | None |
 | **lmstudio** | Local | No | (user configures) | None |
+| **jan** | Local | No | (user configures) | None |
 | **llamacpp** | Local | No | (user configures) | None |
 | **openrouter** | Cloud | Yes | `qwen/qwen-2.5-vl-72b-instruct` | Bearer token |
 | **openai** | Cloud | Yes | `gpt-4o` | Bearer token |
@@ -282,7 +283,7 @@ CLI argument  >  environment variable  >  config.yaml  >  hardcoded default
 **`.env`** — Provider selection and API keys:
 
 ```bash
-PROVIDER=ollama              # ollama (default), lmstudio, llamacpp,
+PROVIDER=ollama              # ollama (default), lmstudio, jan, llamacpp,
                              # openrouter, openai, gemini, anthropic
 
 # Local providers (no API key needed)

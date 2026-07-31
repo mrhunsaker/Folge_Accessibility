@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Process all steps through Vision API with retry, resize, and error handling.
 
-Supports providers: ollama (default), lmstudio, llamacpp, openrouter,
+Supports providers: ollama (default), lmstudio, jan, llamacpp, openrouter,
 openai, gemini, anthropic.  Configuration is resolved from .env with
 config.yaml as a secondary fallback.  See config.py for resolution order.
 """
@@ -448,15 +448,46 @@ def normalize_vision_result(result):
     return result
 
 
-def warmup_model(base_url, model, timeout=60):
+def _local_probe(provider):
+    """Probe an OpenAI-compatible local server with a minimal chat request.
+
+    LM Studio, Jan, and llama.cpp expose the OpenAI-style ``/chat/completions``
+    endpoint and do not implement Ollama's native ``/api/generate``, so they
+    are probed differently from Ollama.
+
+    Parameters
+    ----------
+    provider : dict
+        Provider configuration dict.
+
+    Returns
+    -------
+    bool
+        True if the server responded successfully.
+    """
+    url = f"{provider['base_url']}/chat/completions"
+    headers = _build_auth_headers(provider)
+    payload = {
+        "model": provider["model"],
+        "messages": [{"role": "user", "content": "Say OK"}],
+        "max_tokens": 16,
+        "temperature": 0.1,
+        "stream": False,
+    }
+    try:
+        resp = requests.post(url, headers=headers, json=payload, timeout=30)
+        return resp.status_code == 200
+    except Exception:
+        return False
+
+
+def warmup_model(provider, timeout=60):
     """Send a warmup request to load the model into memory.
 
     Parameters
     ----------
-    base_url : str
-        Base URL of the model server.
-    model : str
-        Model identifier to warm up.
+    provider : dict
+        Provider configuration dict.
     timeout : int, optional
         Request timeout in seconds. Default is 60.
 
@@ -467,11 +498,25 @@ def warmup_model(base_url, model, timeout=60):
     """
     info("Warming up model...")
     try:
-        resp = requests.post(
-            f"{base_url.rstrip('/v1')}/api/generate",
-            json={"model": model, "prompt": "hello", "stream": False},
-            timeout=timeout,
-        )
+        if provider["name"] == "ollama":
+            resp = requests.post(
+                f"{provider['base_url'].rstrip('/v1')}/api/generate",
+                json={"model": provider["model"], "prompt": "hello", "stream": False},
+                timeout=timeout,
+            )
+        else:
+            resp = requests.post(
+                f"{provider['base_url']}/chat/completions",
+                headers=_build_auth_headers(provider),
+                json={
+                    "model": provider["model"],
+                    "messages": [{"role": "user", "content": "hello"}],
+                    "max_tokens": 16,
+                    "temperature": 0.1,
+                    "stream": False,
+                },
+                timeout=timeout,
+            )
         if resp.status_code == 200:
             ok("Model warmed up")
             return True
@@ -482,15 +527,13 @@ def warmup_model(base_url, model, timeout=60):
         return False
 
 
-def check_model_loadable(base_url, model, timeout=30):
+def check_model_loadable(provider, timeout=30):
     """Check if the model can actually generate (detect load failures).
 
     Parameters
     ----------
-    base_url : str
-        Base URL of the model server.
-    model : str
-        Model identifier to test.
+    provider : dict
+        Provider configuration dict.
     timeout : int, optional
         Request timeout in seconds. Default is 30.
 
@@ -500,16 +543,18 @@ def check_model_loadable(base_url, model, timeout=30):
         True if the model responded successfully, False otherwise.
     """
     try:
-        resp = requests.post(
-            f"{base_url.rstrip('/v1')}/api/generate",
-            json={"model": model, "prompt": "Say OK", "stream": False},
-            timeout=timeout,
-        )
-        if resp.status_code == 200:
-            data = resp.json()
-            if "response" in data:
-                return True
-        return False
+        if provider["name"] == "ollama":
+            resp = requests.post(
+                f"{provider['base_url'].rstrip('/v1')}/api/generate",
+                json={"model": provider["model"], "prompt": "Say OK", "stream": False},
+                timeout=timeout,
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                if "response" in data:
+                    return True
+            return False
+        return _local_probe(provider)
     except Exception:
         return False
 
@@ -584,13 +629,14 @@ def _build_auth_headers(provider):
         Headers dict ready for use in requests.
     """
     headers = {"Content-Type": "application/json"}
-    if provider.get("needs_auth_header") and provider.get("api_key"):
+    api_key = provider.get("api_key")
+    if api_key:
         style = provider.get("auth_style", "bearer")
         if style == "x-api-key":
-            headers["x-api-key"] = provider["api_key"]
+            headers["x-api-key"] = api_key
             headers["anthropic-version"] = "2023-06-01"
         else:
-            headers["Authorization"] = f"Bearer {provider['api_key']}"
+            headers["Authorization"] = f"Bearer {api_key}"
     return headers
 
 
@@ -870,11 +916,11 @@ def main():
         provider["model"] = args.model
 
     if provider["name"] in LOCAL_PROVIDERS:
-        if not check_model_loadable(provider["base_url"], provider["model"]):
+        if not check_model_loadable(provider):
             error(f"Model '{provider['model']}' is not loadable. Check server logs.")
             info(f"  provider={provider['name']}  base_url={provider['base_url']}")
             sys.exit(1)
-        warmup_model(provider["base_url"], provider["model"])
+        warmup_model(provider)
     else:
         if provider.get("needs_auth_header") and not provider.get("api_key"):
             error(f"{provider['name'].upper()}_API_KEY is not set.")

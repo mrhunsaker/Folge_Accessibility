@@ -6,7 +6,7 @@ Folge Vision Publishing Pipeline - Master Orchestrator
 
 Runs the full pipeline end-to-end using uv for dependency management:
   1. Check prerequisites
-  2. Batch process images through Vision API (ollama, lmstudio, llamacpp, openrouter, openai, gemini, anthropic)
+  2. Batch process images through Vision API (ollama, lmstudio, jan, llamacpp, openrouter, openai, gemini, anthropic)
   3. Merge guide + vision results
   4. Validate schema + content quality
   4b. Manual review pause (C)ontinue / (R)eVerify
@@ -268,10 +268,13 @@ def check_provider(provider_name, api_key=None):
     if provider_name in LOCAL_PROVIDERS:
         prefix = provider_name.upper()
         base_url = get_env(f"{prefix}_BASE_URL", default="http://localhost:11434/v1")
-        tags_url = base_url.rstrip("/v1") + "/api/tags"
+        if provider_name == "ollama":
+            probe_url = base_url.rstrip("/v1") + "/api/tags"
+        else:
+            probe_url = base_url.rstrip("/") + "/models"
         try:
             result = subprocess.run(
-                f"curl -s {tags_url}",
+                f"curl -s {probe_url}",
                 shell=True, capture_output=True, text=True, timeout=5,
             )
             if result.returncode == 0 and result.stdout.strip():

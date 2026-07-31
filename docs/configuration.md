@@ -72,7 +72,7 @@ openrouter:
   retry_delay: 2
   image_max_width: 1024
 
-# ... (see full config.yaml for all 7 providers)
+# ... (see full config.yaml for all 8 providers)
 
 targets:
   - name: "pdf"
@@ -188,6 +188,8 @@ PROVIDER=ollama
 OLLAMA_BASE_URL=http://localhost:11434/v1
 OLLAMA_MODEL=qwen2.5vl-8k:latest
 OLLAMA_TIMEOUT=600
+JAN_BASE_URL=http://localhost:1337/v1
+JAN_MODEL=
 
 # Cloud providers (set API key)
 OPENROUTER_API_KEY=your-key-here

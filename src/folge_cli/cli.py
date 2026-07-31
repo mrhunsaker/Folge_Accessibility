@@ -15,7 +15,7 @@ Usage:
     folge-cli metadata <guide.json> [-o metadata.yaml] [--apply-pdf guide.pdf] [--check]
     folge-cli generate-manual-attention <json> <images/> <output.md> [warnings.json]
 
-Providers: ollama, lmstudio, llamacpp, openrouter, openai, gemini, anthropic
+Providers: ollama, lmstudio, jan, llamacpp, openrouter, openai, gemini, anthropic
 """
 import sys
 import argparse
