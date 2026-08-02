@@ -12,6 +12,35 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (`YYYY.M.
 
 ## [Unreleased]
 
+## [2026.8.2] - 2026-08-02
+
+### Added
+
+- **`folge_gui`** — an accessible, browser-based front end for the pipeline,
+  built with [NiceGUI](https://nicegui.io) in a Catppuccin Latte color scheme,
+  living in `src/folge_gui` alongside `src/folge_cli`. It is a *parallel,
+  additive companion* to `folge-cli`: every command it runs is launched as a
+  real subprocess (the same `folge-cli` you'd run at a terminal) and
+  `src/folge_cli` is never imported for execution and never modified.
+  Three pages: **Setup** (prerequisite/provider checks, `.env` and
+  `config.yaml` editors), **Steps** (one card per `folge-cli` sub-command with
+  a post-run quality gate), and **Full Pipeline** (8-stage progress tracker
+  that swaps the CLI's two terminal prompts for accessible dialogs).
+- **`uv run folge-gui`** — new `folge-gui` console script entry point in
+  `src/folge_gui/pyproject.toml`, alongside the existing `folge_gui` script.
+  Both now launch `folge_gui.app:main` on port 8765.
+- **uv workspace member** — `src/folge_gui` is registered in
+  `[tool.uv.workspace]` in the repository root `pyproject.toml`, so it shares
+  one `uv.lock` and one `.venv` with `folge-cli` (install with
+  `uv sync --all-packages`).
+- **GUI documentation** — `docs/gui.md` (MkDocs page), `src/folge_gui/README.md`,
+  and a "Graphical Interface" section in the top-level `README.md`.
+- **WCAG 2.2 AA accessibility** — real heading levels, skip link, labeled
+  form controls, ARIA live status announcements, `role="log"` command output,
+  visible focus indicators, `prefers-reduced-motion` support, and
+  non-dismissible modal dialogs for interactive prompts. Contrast-safe "ink"
+  variants of the Catppuccin Latte accents that fall short of 4.5:1.
+
 ## [2026.7.31] - 2026-07-31
 
 ### Added
@@ -199,7 +228,8 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (`YYYY.M.
 - Multi-format publishing (PDF, DOCX, HTML) via Pandoc with Lua filters.
 - MkDocs documentation site.
 
-[Unreleased]: https://github.com/mrhunsaker/Folge_Accessibility/compare/v2026.7.31...HEAD
+[Unreleased]: https://github.com/mrhunsaker/Folge_Accessibility/compare/v2026.8.2...HEAD
+[2026.8.2]: https://github.com/mrhunsaker/Folge_Accessibility/compare/v2026.7.31...v2026.8.2
 [2026.7.31]: https://github.com/mrhunsaker/Folge_Accessibility/compare/v2026.7.30...v2026.7.31
 [2026.7.30]: https://github.com/mrhunsaker/Folge_Accessibility/compare/v2026.7.28...v2026.7.30
 [2026.7.28]: https://github.com/mrhunsaker/Folge_Accessibility/compare/v2026.7.25...v2026.7.28

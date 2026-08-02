@@ -1,0 +1,12 @@
+# Additional dependencies for folge_gui, on top of folge_cli's own
+# dependencies (installed via `uv sync` / `pip install -e .` at the
+# repository root — see ../../pyproject.toml).
+#
+#   uv sync
+#   uv pip install -r src/folge_gui/requirements.txt
+#   uv run python -m folge_gui
+#
+# nicegui>=3.13 is required: this app uses ui.skip_link, added in that release.
+nicegui>=3.13
+pyyaml>=6.0
+python-dotenv>=1.0

@@ -158,6 +158,8 @@ to each step with accessibility metadata:
 
 - **Eight AI providers**: ollama (default, local), lmstudio, jan, llamacpp
   (local), openrouter, openai, gemini, anthropic (cloud)
+- **Accessible GUI**: `folge_gui` — a WCAG 2.2 AA NiceGUI front end
+  (`uv run folge-gui`) for setup, individual steps, and the full pipeline
 - **16 output formats**: PDF, DOCX, HTML, PPTX, GitHub Markdown, Typst,
   AsciiDoc, Beamer, CommonMark, GFM, MultiMarkdown, DocBook, EPUB, ODT, RST,
   LaTeX
@@ -508,6 +510,45 @@ podman-compose --profile with-ollama up -d ollama
 
 ---
 
+## Graphical Interface (folge_gui)
+
+`folge_gui` is an accessible, browser-based front end for the pipeline, built
+with [NiceGUI](https://nicegui.io). It lives in `src/folge_gui` and is a
+*parallel, additive companion* to `folge-cli` — every command it runs is
+launched as a real subprocess (the same `folge-cli` you'd run from a
+terminal), and `src/folge_cli` is never modified or imported for execution.
+It targets **WCAG 2.2 AA**: real heading levels, skip links, labeled form
+controls, ARIA live status announcements, visible focus indicators, and
+non-dismissible dialogs for interactive prompts.
+
+### Install and run
+
+```bash
+git clone https://github.com/mrhunsaker/Folge_Accessibility.git
+cd Folge_Accessibility
+uv sync --all-packages   # one-time: pulls in NiceGUI as a workspace member
+uv run folge-gui         # opens http://localhost:8765
+```
+
+`folge-gui` is registered as a
+[uv workspace](https://docs.astral.sh/uv/concepts/projects/workspaces/)
+member, so it shares one `uv.lock` and one `.venv` with `folge-cli`. The
+`folge_gui` console script is kept as an alias — `uv run folge_gui` works
+identically. `folge-cli` itself is completely unaffected.
+
+### What it does
+
+| Page | Purpose |
+|------|---------|
+| **Setup** | Check `uv`, Pandoc, `pdfinfo`, and `pymupdf`; review every provider's resolved settings; edit `.env` and `config.yaml` from the browser |
+| **Steps** | Run any `folge-cli` sub-command with its own form, live status, streamed output, and a post-run quality-gate dialog |
+| **Full Pipeline** | Run `folge-cli pipeline` end to end behind an 8-stage tracker, swapping the CLI's two terminal prompts for accessible dialogs |
+
+See [docs/gui.md](docs/gui.md) and `src/folge_gui/README.md` for the full
+details, including the contrast-ratio table for the Catppuccin Latte theme.
+
+---
+
 ```
 Folge_Accessibility/
 ├── pyproject.toml                  # Project metadata, dependencies, entry point
@@ -532,6 +573,22 @@ Folge_Accessibility/
 │   ├── validate_pdf.py             # PDF/UA compliance validation
 │   ├── generate_manual_attention.py # Manual attention markdown generation
 │   └── progress.py                 # Step counters and progress display
+│
+├── src/folge_gui/                  # Accessible NiceGUI front end (workspace member)
+│   ├── pyproject.toml              # folge-gui package + folge-gui/folge_gui scripts
+│   ├── app.py                      # Route registration + ui.run()
+│   ├── theme.py                    # Catppuccin Latte tokens, WCAG-safe "ink" variants
+│   ├── a11y.py                     # headings, live regions, skip-link landmarks
+│   ├── process_runner.py           # async subprocess runner, prompt detection
+│   ├── prereqs.py                  # structured prerequisite / provider checks
+│   ├── config_io.py                # .env / config.yaml read + write
+│   ├── steps.py                    # form <-> argv mapping for each folge-cli command
+│   ├── components.py               # step cards, console, status tracker, dialogs
+│   └── pages/
+│       ├── home.py                 # Landing page
+│       ├── setup.py                # Prerequisites, provider settings, config editors
+│       ├── steps_page.py           # Individual sub-command runner
+│       └── pipeline_page.py        # Full pipeline with 8-stage tracker
 │
 ├── pyinstaller/                    # PyInstaller build configuration
 │   └── folge-cli.spec              # Spec file for building executables
@@ -570,7 +627,7 @@ Folge_Accessibility/
 
 | File | Purpose |
 |------|---------|
-| `pyproject.toml` | Project metadata, dependencies, `folge-cli` entry point |
+| `pyproject.toml` | Project metadata, dependencies, `folge-cli` entry point, `[tool.uv.workspace]` members (`src/folge_gui`) |
 | `config.yaml` | Provider settings, 16 output targets, validation thresholds, `project.author` and `project.keywords` metadata defaults |
 | `.env` | Environment variables: provider selection, API keys, paths |
 | `templates/prompt.txt` | Vision AI prompt template |

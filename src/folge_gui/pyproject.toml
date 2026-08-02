@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "folge-gui"
+version = "0.1.0"
+description = "Accessible NiceGUI front end for the Folge Vision Publishing Pipeline (folge-cli)"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+authors = [
+    { name = "Michael Ryan Hunsaker, M.Ed., Ph.D." },
+]
+keywords = ["accessibility", "gui", "nicegui", "wcag", "aria"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Documentation",
+]
+dependencies = [
+    # The folge-cli package this GUI drives. Resolved via the uv workspace
+    # (see [tool.uv.workspace] in the repository root pyproject.toml) —
+    # not fetched from PyPI.
+    "folge-vision-pipeline",
+    "nicegui>=3.13",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+]
+
+[project.scripts]
+folge-gui = "folge_gui.app:main"
+folge_gui = "folge_gui.app:main"
+
+[tool.uv.sources]
+folge-vision-pipeline = { workspace = true }
+
+[tool.setuptools.packages.find]
+where = ["."]

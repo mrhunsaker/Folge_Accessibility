@@ -172,6 +172,23 @@ folge-cli publish guide.json output/ pdf,docx,epub,typst
 | reStructuredText | `rst` | `.rst` |
 | LaTeX | `latex` | `.tex` |
 
+## Running the GUI
+
+Instead of (or alongside) the terminal, you can drive the pipeline from an
+accessible, browser-based interface:
+
+```bash
+uv sync --all-packages   # one-time: installs NiceGUI as a workspace member
+uv run folge-gui         # opens http://localhost:8765
+```
+
+`folge-gui` is a WCAG 2.2 AA [NiceGUI](https://nicegui.io) front end with
+pages for Setup (prerequisites, provider settings, `.env`/`config.yaml`
+editors), Steps (each `folge-cli` sub-command with a quality gate), and the
+Full Pipeline (8-stage progress tracker). It launches the exact same
+`folge-cli` commands you'd type at a terminal — see the
+[Graphical Interface guide](gui.md) for details.
+
 ## Checking Output
 
 ```bash

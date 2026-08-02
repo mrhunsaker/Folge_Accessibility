@@ -5,7 +5,7 @@ hide:
 
 # Folge Vision Publishing Pipeline
 
-**Version:** 2026.7.25 | **License:** Apache 2.0 | **Author:** Michael Hunsaker
+**Version:** 2026.8.2 | **License:** Apache 2.0 | **Author:** Michael Hunsaker
 
 ---
 
@@ -74,11 +74,20 @@ PDFs, DOCX, HTML, EPUB, LaTeX, Typst, and more.
 
     [:octicons-arrow-right-24: Learn more](pipeline/publish.md)
 
+- :material-monitor:{ .lg .middle } **GUI**
+
+    ---
+
+    An accessible, browser-based NiceGUI front end for the whole pipeline
+
+    [:octicons-arrow-right-24: Learn more](gui.md)
+
 </div>
 
 ## Key Features
 
 - **Eight AI providers** -- ollama (default), lmstudio, jan, llamacpp, openrouter, openai, gemini, anthropic
+- **Accessible GUI** -- a WCAG 2.2 AA NiceGUI front end (`uv run folge-gui`) for setup, individual steps, and the full pipeline
 - **16 output formats** -- PDF, DOCX, HTML, PPTX, GitHub Markdown, Typst, AsciiDoc, Beamer, CommonMark, GFM, MultiMarkdown, DocBook, EPUB, ODT, RST, LaTeX
 - **Accessibility-first** -- WCAG 2.1 AA, ARIA, PDF/UA, DOCX accessibility support
 - **Accessible document metadata** -- auto-generated title, author, subject, keywords, language, tags, bookmarks, and copy-permissive security embedded into all formats
