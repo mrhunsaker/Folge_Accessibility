@@ -12,15 +12,40 @@ requires-python = ">=3.10"
 authors = [
     { name = "Michael Ryan Hunsaker, M.Ed., Ph.D." },
 ]
-keywords = ["accessibility", "gui", "nicegui", "wcag", "aria"]
+keywords = [
+    "accessibility",
+    "aria",
+    "gui",
+    "nicegui",
+    "wcag",
+    "wcag-2.2",
+    "screen-reader",
+    "web-ui",
+    "local-llm",
+    "vision-ai",
+    "documentation",
+    "pipeline",
+]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Information Technology",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Documentation",
+    "Topic :: Software Development :: User Interfaces",
+    "Topic :: Text Processing :: Markup :: Markdown",
+    "Topic :: Utilities",
 ]
 dependencies = [
     # The folge-cli package this GUI drives. Resolved via the uv workspace
