@@ -6,8 +6,18 @@
 
 ## Running
 
+Using a project folder (recommended):
+
+```bash
+folge-cli batch-process --project my-guide
+```
+
+Or with explicit paths (paths default to `<project>/images` and
+`<project>/output/vision-results.json` when using `--project`):
+
 ```bash
 uv run python scripts/batch_process.py guide.json images/ vision-results.json
+folge-cli batch-process guide.json images/ vision-results.json
 ```
 
 ## What It Generates
@@ -54,7 +64,7 @@ The vision processing is configured in `.env` and `config.yaml`:
 
 ## Output
 
-**File created:** `vision-results.json`
+**File created:** `vision-results.json` (in `<project>/output/`)
 
 ```json
 {

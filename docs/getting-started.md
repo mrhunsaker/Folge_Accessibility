@@ -96,61 +96,104 @@ OPENAI_API_KEY=your-key-here
 
 ## Preparing Your Guide
 
-### 1. Export from Folge
+Each guide lives in its own **project folder** under `~/Documents/FolgeProjects/`.
+The folder holds the guide JSON (any file name — it must be the **only**
+top-level JSON file), the screenshots in `images/`, and all generated files in
+`output/`:
+
+```text
+~/Documents/FolgeProjects/
+└── my-first-guide/
+    ├── braille-blaster-export.json   # any name; the only JSON at this level
+    ├── images/                      # screenshots (step-0.png, step-1.png, ...)
+    └── output/                      # created automatically (all generated files)
+```
+
+### 1. Create a project folder
+
+```bash
+mkdir -p ~/Documents/FolgeProjects/my-first-guide/images
+```
+
+!!! tip "Where is this folder?"
+    The default is `~/Documents/FolgeProjects`, but you can point the pipeline
+    anywhere with the `FOLGE_PROJECTS_DIR` environment variable or
+    `paths.projects_dir` in `config.yaml` (see
+    [Configuration](configuration.md)).
+
+### 2. Export from Folge
 
 - Open your guide in [Folge](https://folge.me)
 - Click **Export** > **JSON**
-- Save the file as `guide.json` in the project root
+- Save the file into `~/Documents/FolgeProjects/my-first-guide/` — it can keep
+  any name (e.g. `braille-blaster-export.json`). Just make sure it is the only
+  JSON file at the top level of the project folder.
 
-### 2. Export Screenshots
+### 3. Export Screenshots
 
 - Export all screenshots from Folge
-- Save them to the `images/` directory
-- Fолge exports use names like `step-0.png`, `step-1.png`, etc.
+- Save them to the project's `images/` directory
+- Folge exports use names like `step-0.png`, `step-1.png`, etc.
 
 !!! warning "Important"
-    Do **not** modify `guide.json` after export. It is your source of truth.
+    Do **not** modify the exported guide JSON after saving it. It is your
+    source of truth.
 
 ## Running the Pipeline
 
 ### Full Pipeline (Source Installation Only)
 
 ```bash
-folge-cli pipeline guide.json output/
+folge-cli pipeline --project my-first-guide
 ```
 
-This runs all seven stages automatically with progress tracking and produces **all 16 output formats** by default.
+`--project` finds the guide JSON automatically. This runs all seven stages
+automatically with progress tracking and produces **all 16 output formats** by
+default into `~/Documents/FolgeProjects/my-first-guide/output/`.
+
+You can also pass explicit paths instead of `--project` (useful outside the
+default layout):
+
+```bash
+folge-cli pipeline /path/to/any-export.json /some/output-dir
+```
 
 ### Individual Steps (Works with Binary or Source)
 
 ```bash
 # Step 1: Process images through Vision AI
-folge-cli batch-process guide.json images/ vision-results.json --provider ollama
+folge-cli batch-process --project my-first-guide --provider ollama
+# or: folge-cli batch-process guide.json images/ vision-results.json --provider ollama
 
 # Step 2: Merge guide with vision data
-folge-cli merge guide.json vision-results.json guide.enriched.json
+folge-cli merge ~/Documents/FolgeProjects/my-first-guide/any-export.json \
+  ~/Documents/FolgeProjects/my-first-guide/output/vision-results.json \
+  ~/Documents/FolgeProjects/my-first-guide/output/guide.enriched.json
 
 # Step 3: Validate
-folge-cli validate-schema guide.enriched.json
-folge-cli validate-content guide.enriched.json 0.7
+folge-cli validate-schema ~/Documents/FolgeProjects/my-first-guide/output/guide.enriched.json
+folge-cli validate-content ~/Documents/FolgeProjects/my-first-guide/output/guide.enriched.json 0.7
 
 # Step 4: Render Markdown
-folge-cli render guide.enriched.json pdf guide.md
+folge-cli render ~/Documents/FolgeProjects/my-first-guide/output/guide.enriched.json pdf guide.md
 
 # Step 5: Publish (requires Pandoc)
-folge-cli publish guide.json output/ pdf,docx,html
+folge-cli publish --project my-first-guide pdf,docx,html
 ```
 
 ### Output Formats
 
-All 16 formats are available:
+Every format the installed pandoc supports is produced by default
+(`--targets` narrows the list; writers missing from that pandoc version are
+skipped with a warning).  The full registry lives in
+`src/folge_cli/formats.py`.
 
 ```bash
-# Publish to all formats
-folge-cli publish guide.json output/ pdf,docx,html,pptx,github,typst,asciidoc,beamer,commonmark,gfm,multimarkdown,docbook,epub,odt,rst,latex
+# Publish to all supported formats
+folge-cli publish --project my-first-guide
 
 # Or select specific formats
-folge-cli publish guide.json output/ pdf,docx,epub,typst
+folge-cli publish --project my-first-guide pdf,docx,epub,typst
 ```
 
 | Format | Target Name | File Extension |
@@ -165,12 +208,19 @@ folge-cli publish guide.json output/ pdf,docx,epub,typst
 | Beamer (PDF) | `beamer` | `_beamer.pdf` |
 | CommonMark | `commonmark` | `_cm.md` |
 | GitHub Flavored MD | `gfm` | `_gh.md` |
-| MultiMarkdown | `multimarkdown` | `_mmd.md` |
+| MultiMarkdown | `markdown_mmd` | `_mmd.md` |
 | DocBook XML | `docbook` | `.xml` |
 | EPUB | `epub` | `.epub` |
 | OpenDocument | `odt` | `.odt` |
 | reStructuredText | `rst` | `.rst` |
 | LaTeX | `latex` | `.tex` |
+
+The rest (markdown dialects, HTML4/5, slides, XML variants, EPUB2/3, FB2,
+ICML, IPYNB, RTF, OPML, JSON, ConTeXt, BibTeX/BibLaTeX, AsciiDoc Legacy,
+Asciidoctor, BBCode, and more) are named `guide_<abbrev>.<ext>` following the
+same convention.  All pandoc conversions run with `--standalone` (document
+metadata from `metadata.yaml`) and `--verbose`, with output appended to
+`<output>/pandoc.log`.
 
 ## Running the GUI
 
@@ -192,7 +242,7 @@ Full Pipeline (8-stage progress tracker). It launches the exact same
 ## Checking Output
 
 ```bash
-ls -la output/
+ls -la ~/Documents/FolgeProjects/my-first-guide/output/
 ```
 
 You should see files for each target you specified, e.g.:
@@ -210,12 +260,12 @@ You should see files for each target you specified, e.g.:
 ### Verify PDF Tagging
 
 ```bash
-pdfinfo output/guide.pdf | grep -i tagged
+pdfinfo ~/Documents/FolgeProjects/my-first-guide/output/guide.pdf | grep -i tagged
 # Expected: Tagged: yes
 ```
 
 Or for detailed validation:
 
 ```bash
-folge-cli validate-pdf output/guide.pdf
+folge-cli validate-pdf ~/Documents/FolgeProjects/my-first-guide/output/guide.pdf
 ```

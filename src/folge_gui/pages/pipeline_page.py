@@ -12,13 +12,23 @@ terminal, just with a browser-native way to answer it.
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from nicegui import ui
 
 from folge_cli.config import PROJECT_ROOT, PROVIDERS
 from folge_gui.a11y import LiveRegion, heading
-from folge_gui.components import confirm_dialog, console, ordered_status_list, page_shell, render_field
+from folge_gui.components import (
+    active_project,
+    confirm_dialog,
+    console,
+    ordered_status_list,
+    page_shell,
+    project_selector,
+    render_field,
+)
 from folge_gui.process_runner import PROVIDER_CONFIRM_PROMPT, REVIEW_PROMPT, ProcessRun, StepStatus
-from folge_gui.steps import ORIENTATIONS, TARGET_FORMATS, FieldSpec
+from folge_gui.steps import ORIENTATIONS, TARGET_FORMATS, FieldSpec, project_defaults
 from folge_gui.theme import COLOR
 
 STAGE_LABELS: list[str] = [
@@ -46,8 +56,10 @@ _TICK_LABELS: list[str] = [
 ]
 
 _FIELDS: list[FieldSpec] = [
-    FieldSpec("guide", "Guide JSON", default="guide.json", required=True),
-    FieldSpec("output", "Output directory", default="output", required=True),
+    FieldSpec("guide", "Guide JSON", default="guide.json", required=True,
+              project_key="guide"),
+    FieldSpec("output", "Output directory", default="output", required=True,
+              project_key="output"),
     FieldSpec(
         "targets", "Target formats", kind="multiselect", options=TARGET_FORMATS,
         default=",".join(TARGET_FORMATS), required=True,
@@ -66,6 +78,7 @@ _FIELDS: list[FieldSpec] = [
 def build() -> None:
     main = page_shell("/pipeline")
     live = LiveRegion()
+    defaults = project_defaults(active_project())
 
     with main:
         heading("Full Pipeline", level=1, classes="text-2xl font-bold m-0")
@@ -75,11 +88,14 @@ def build() -> None:
             "publishing. Requires uv and Pandoc — check Setup first."
         ).classes("text-base").style(f"color:{COLOR['text_muted']}")
 
+        project_selector("/pipeline")
+
         values: dict = {}
         with ui.column().classes("fg-card w-full p-5 gap-2"):
             heading("Run settings", level=2, classes="text-lg font-semibold m-0")
             for f in _FIELDS:
-                render_field(f, values)
+                f_default = defaults.get(f.project_key, f.default) if f.project_key else f.default
+                render_field(replace(f, default=f_default), values)
 
         with ui.column().classes("fg-card w-full p-5 gap-3"):
             heading("Progress", level=2, classes="text-lg font-semibold m-0")

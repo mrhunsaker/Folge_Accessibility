@@ -11,7 +11,10 @@
 ## Running
 
 ```bash
-uv run python scripts/merge.py guide.json vision-results.json guide.enriched.json
+folge-cli merge ~/Documents/FolgeProjects/my-guide/my-export.json \
+  ~/Documents/FolgeProjects/my-guide/output/vision-results.json \
+  ~/Documents/FolgeProjects/my-guide/output/guide.enriched.json
+# or: uv run python scripts/merge.py guide.json vision-results.json guide.enriched.json
 ```
 
 ## How It Works
@@ -37,7 +40,7 @@ uv run python scripts/merge.py guide.json vision-results.json guide.enriched.jso
 
 ## Output
 
-**File created:** `guide.enriched.json`
+**File created:** `guide.enriched.json` (in `<project>/output/`)
 
 This is your **source of truth for publishing**. It contains the original guide content plus the vision enrichment data, ready for validation and rendering.
 

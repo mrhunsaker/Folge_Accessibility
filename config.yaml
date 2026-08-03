@@ -85,8 +85,14 @@ paths:
   images_dir: "./images"
   templates_dir: "./templates"
   scripts_dir: "./scripts"
+  # Where Folge project folders live (guide JSON + images/ + output/).
+  # Defaults to ~/Documents/FolgeProjects; overridable with FOLGE_PROJECTS_DIR.
+  projects_dir: ""
 
 targets:
+  # NOTE: the runtime target registry now lives in
+  # src/folge_cli/formats.py (single source of truth).  This list is
+  # informational only and is not read by the code.
   - name: "pdf"
     enabled: true
     include_long_descriptions: true
@@ -145,7 +151,7 @@ targets:
     include_long_descriptions: true
     output_extension: "_gh.md"
 
-  - name: "multimarkdown"
+  - name: "markdown_mmd"
     enabled: true
     include_long_descriptions: true
     output_extension: "_mmd.md"

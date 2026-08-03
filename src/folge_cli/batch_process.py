@@ -10,6 +10,7 @@ config.yaml as a secondary fallback.  See config.py for resolution order.
 import argparse
 import html as html_module
 import json
+import os
 import re
 import sys
 import time
@@ -641,7 +642,7 @@ def _build_auth_headers(provider):
 
 
 def process_single_step(step, guide_title, previous_step, next_step,
-                        image_dir, provider):
+                        image_dir, provider, debug_dir=None):
     """Process a single step through vision API with retry.
 
     Parameters
@@ -658,6 +659,9 @@ def process_single_step(step, guide_title, previous_step, next_step,
         Directory containing step screenshot images.
     provider : dict
         Provider configuration dict.
+    debug_dir : Path or None, optional
+        Directory for failed-request debug logs. Defaults to
+        ``<output>/debug_responses`` when None.
 
     Returns
     -------
@@ -735,7 +739,7 @@ def process_single_step(step, guide_title, previous_step, next_step,
 
         except Exception as e:
             last_error = str(e)
-            log_dir = Path("output") / "debug_responses"
+            log_dir = Path(debug_dir) if debug_dir else Path("output") / "debug_responses"
             log_dir.mkdir(parents=True, exist_ok=True)
             log_file = log_dir / f"failed_{step['step_id']}_attempt{attempt}.txt"
             try:
@@ -799,6 +803,7 @@ def process_guide(guide_path, image_dir, output_path, provider, sequential=False
 
     results = []
     start = time.monotonic()
+    debug_dir = output_path.parent / "debug_responses"
 
     if sequential:
         counter = StepCounter(total)
@@ -809,7 +814,7 @@ def process_guide(guide_path, image_dir, output_path, provider, sequential=False
             step_start(cur, total, step["title"], step.get("image", ""))
             t0 = time.monotonic()
             result = process_single_step(
-                step, guide_title, prev, nxt, image_dir, provider
+                step, guide_title, prev, nxt, image_dir, provider, debug_dir
             )
             elapsed = time.monotonic() - t0
             if "vision_error" in result:
@@ -836,26 +841,33 @@ def process_guide(guide_path, image_dir, output_path, provider, sequential=False
                 t0 = time.monotonic()
                 future = executor.submit(
                     process_single_step,
-                    step, guide_title, prev, nxt, image_dir, provider,
+                    step, guide_title, prev, nxt, image_dir, provider, debug_dir,
                 )
                 futures[future] = (cur, step["title"])
                 future_start[future] = t0
 
-            for future in as_completed(futures):
-                result = future.result()
-                cur, title = futures[future]
-                elapsed = time.monotonic() - future_start[future]
-                if "vision_error" in result:
-                    step_error(cur, total, title, result["vision_error"][:80])
-                    done, errs = counter.tick(success=False)
-                else:
-                    step_ok(cur, total, title, elapsed)
-                    done, errs = counter.tick(success=True)
-                if errs:
-                    info(f"  {done}/{total} complete ({errs} failed)")
-                else:
-                    info(f"  {done}/{total} complete")
-                results.append(result)
+            try:
+                for future in as_completed(futures):
+                    result = future.result()
+                    cur, title = futures[future]
+                    elapsed = time.monotonic() - future_start[future]
+                    if "vision_error" in result:
+                        step_error(cur, total, title, result["vision_error"][:80])
+                        done, errs = counter.tick(success=False)
+                    else:
+                        step_ok(cur, total, title, elapsed)
+                        done, errs = counter.tick(success=True)
+                    if errs:
+                        info(f"  {done}/{total} complete ({errs} failed)")
+                    else:
+                        info(f"  {done}/{total} complete")
+                    results.append(result)
+            except KeyboardInterrupt:
+                executor.shutdown(wait=False, cancel_futures=True)
+                print()
+                info("Interrupted by user. Partial results were not saved; re-run the step to retry.")
+                sys.stdout.flush()
+                os._exit(130)
 
     elapsed = time.monotonic() - start
     results.sort(key=lambda x: x.get("step_id", 0))
@@ -926,13 +938,19 @@ def main():
             error(f"{provider['name'].upper()}_API_KEY is not set.")
             sys.exit(1)
 
-    success = process_guide(
-        Path(args.guide),
-        Path(args.image_dir),
-        Path(args.output),
-        provider,
-        sequential=args.sequential,
-    )
+    try:
+        success = process_guide(
+            Path(args.guide),
+            Path(args.image_dir),
+            Path(args.output),
+            provider,
+            sequential=args.sequential,
+        )
+    except KeyboardInterrupt:
+        # The threaded branch exits via os._exit() inside process_guide; this
+        # handler covers the sequential branch (no worker threads to join).
+        info("Interrupted by user. Partial results were not saved.")
+        sys.exit(130)
     sys.exit(0 if success else 1)
 
 

@@ -175,13 +175,22 @@ carry a contrast ratio on its own. Full token definitions are in
 
 ## Where files live
 
-`folge_gui` resolves `.env`, `config.yaml`, `guide.json`, `images/`, and
-`output/` the same way `folge-cli` does — relative to the project root — by
-reading `folge_cli.config.PROJECT_ROOT` directly rather than recomputing
-it. Every subprocess it launches uses that directory as its working
-directory, so a path typed into any form (`guide.json`, `images`,
-`output/vision-results.json`, ...) behaves exactly as it would typed after
-`folge-cli` at a terminal in the project root.
+`folge_gui` resolves `.env` and `config.yaml` from the project root by
+reading `folge_cli.config.PROJECT_ROOT` directly rather than recomputing it.
+
+Guide data works exactly like `folge-cli`: each guide lives in a **project
+folder** under `~/Documents/FolgeProjects/<project>/` (the guide JSON — any
+name, it must be the only top-level JSON — plus `images/` and `output/`).
+The Steps and Full Pipeline pages show a **project selector** drop-down
+(project names come from `folge_cli.config.list_projects()`). Picking a
+project pre-fills every path field on the page from
+`folge_cli.config` helpers: the guide path, `<project>/images`, `<project>/output`,
+and the generated files inside `output/` (`vision-results.json`,
+`guide.enriched.json`, `guide.md`, `guide.pdf`, ...).
+
+The drop-down is only a shortcut — every field stays editable. You can type
+any absolute path and it will be honored as-is, exactly as if you had typed
+it after `folge-cli` at a terminal.
 
 ## Troubleshooting
 

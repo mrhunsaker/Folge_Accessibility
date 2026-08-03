@@ -9,11 +9,13 @@ than re-derived per page with room for a page to forget one.
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import replace
 from pathlib import Path
 
 from nicegui import app, ui
 from nicegui.element import Element
 
+from folge_cli.config import PROJECTS_DIR, list_projects
 from folge_gui.a11y import LiveRegion, heading, landmark
 from folge_gui.process_runner import ProcessRun, StepStatus
 from folge_gui.steps import FieldSpec, StepSpec
@@ -34,6 +36,63 @@ STATUS_META: dict[StepStatus, dict] = {
     StepStatus.ERROR: {"icon": "error", "text": "Failed", "color": COLOR["status_error"], "spin": False},
     StepStatus.CANCELLED: {"icon": "cancel", "text": "Cancelled", "color": COLOR["status_pending"], "spin": False},
 }
+
+
+# ---------------------------------------------------------------------------
+# Active project selection (local single-user tool: process-wide state)
+# ---------------------------------------------------------------------------
+
+_project_state = {"name": ""}
+
+
+def active_project() -> str:
+    """Return the currently selected FolgeProjects folder name (or ``""``)."""
+    return _project_state["name"]
+
+
+def set_active_project(name: str) -> None:
+    """Record the currently selected FolgeProjects folder name."""
+    _project_state["name"] = name
+
+
+def project_selector(page_path: str) -> None:
+    """Dropdown for picking the active FolgeProjects folder.
+
+    Reloads *page_path* after a change so the page re-renders with path
+    fields pre-filled from the chosen project.
+
+    :param page_path: the route to navigate to after a selection (the page
+        currently being viewed, so it re-renders with new defaults).
+    """
+    projects = list_projects()
+    current = active_project()
+
+    with ui.row().classes("items-center gap-3 flex-wrap"):
+        ui.label("Active project:").classes("text-sm font-medium").style(
+            f"color:{COLOR['text']}"
+        )
+        ui.select(
+            options=projects,
+            value=current or None,
+            label="Project folder",
+            clearable=True,
+        ).props("outlined dense").classes("min-w-64").on_value_change(
+            lambda e: _on_project_change(page_path, e.value)
+        )
+        ui.label(f"Projects: {PROJECTS_DIR}").classes("text-xs font-mono").style(
+            f"color:{COLOR['text_muted']}"
+        )
+
+    if not projects:
+        ui.label(
+            f"No project folders yet. Create {PROJECTS_DIR}/<project>/ with your "
+            "guide JSON (any name) and an images/ folder, then pick it here."
+        ).classes("text-xs").style(f"color:{COLOR['text_muted']}")
+
+
+def _on_project_change(page_path: str, value) -> None:
+    set_active_project(value or "")
+    ui.navigate.to(page_path)
 
 
 # ---------------------------------------------------------------------------
@@ -241,8 +300,14 @@ def render_field(spec: FieldSpec, values: dict) -> None:
 # Step card: one folge_cli sub-command as a self-contained, runnable form
 # ---------------------------------------------------------------------------
 
-def step_card(spec: StepSpec, *, cwd: Path) -> Element:
+def step_card(spec: StepSpec, *, cwd: Path, defaults: dict[str, str] | None = None) -> Element:
+    """Render one folge_cli sub-command as a self-contained, runnable form.
+
+    ``defaults`` maps ``FieldSpec.project_key`` -> an absolute path; fields
+    that resolve against it are pre-filled from the active project.
+    """
     values: dict = {}
+    defaults = defaults or {}
 
     card = ui.column().classes("fg-card w-full p-5 gap-3")
     live = LiveRegion()
@@ -264,7 +329,8 @@ def step_card(spec: StepSpec, *, cwd: Path) -> Element:
 
         with ui.column().classes("w-full gap-2"):
             for f in spec.fields:
-                render_field(f, values)
+                f_default = defaults.get(f.project_key, f.default) if f.project_key else f.default
+                render_field(replace(f, default=f_default), values)
 
         badge_container, update_badge = status_badge()
 

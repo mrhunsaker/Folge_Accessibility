@@ -4,8 +4,25 @@ The Folge Vision Publishing Pipeline transforms [Folge](https://folge.me) guide 
 
 ## Architecture
 
+Each guide lives in its own **project folder** under
+`~/Documents/FolgeProjects/<project>/`. The folder holds the guide JSON
+(any name — it must be the only top-level JSON), `images/` with the
+screenshots, and `output/` where every generated file is written:
+
+```text
+~/Documents/FolgeProjects/my-guide/
+├── my-export.json      # guide export from Folge (any name, only JSON here)
+├── images/             # screenshots (step-0.png, step-1.png, ...)
+└── output/             # created automatically
+    ├── vision-results.json
+    ├── guide.enriched.json
+    ├── guide.md
+    ├── guide.pdf
+    └── ...
 ```
-guide.json + images/
+
+```text
+guide.json + images/  (inside the project folder)
         |
         v
   [1] Batch Process  -->  vision-results.json
@@ -41,6 +58,8 @@ guide.json + images/
         |                    +--> guide.odt       (OpenDocument)
         |                    +--> guide.rst       (reStructuredText)
         |                    +--> guide.tex       (LaTeX)
+        |                    +--> ...             (every other format the
+        |                                          installed pandoc supports)
         v
   [6] Validate PDF       (PDF/UA compliance check)
 ```
@@ -68,22 +87,34 @@ The enriched JSON uses a versioned schema (`schema_version: "1.0"`). Future vers
 ### Full Pipeline (Source Installation)
 
 ```bash
-folge-cli pipeline guide.json output/
+folge-cli pipeline --project my-guide
 ```
 
-The orchestrator handles all stages with progress tracking, checks prerequisites, and validates the output.
+`--project` looks up the guide JSON automatically in
+`~/Documents/FolgeProjects/my-guide/`. The orchestrator handles all stages
+with progress tracking, checks prerequisites, and validates the output.
+
+You can also pass explicit paths instead of `--project`:
+
+```bash
+folge-cli pipeline /path/to/my-export.json /some/output-dir
+```
 
 ### Individual Steps (Binary or Source)
 
-Chain the individual subcommands for a lightweight workflow:
+Chain the individual subcommands for a lightweight workflow. `batch-process`,
+`pipeline`, and `publish` accept `--project NAME`; the other stages take
+explicit paths:
 
 ```bash
-folge-cli batch-process guide.json images/ vision-results.json
-folge-cli merge guide.json vision-results.json guide.enriched.json
-folge-cli validate-schema guide.enriched.json
-folge-cli validate-content guide.enriched.json 0.7
-folge-cli render guide.enriched.json pdf guide.md
-folge-cli publish guide.json output/ pdf,docx,html,epub,typst
+folge-cli batch-process --project my-guide
+folge-cli merge ~/Documents/FolgeProjects/my-guide/my-export.json \
+  ~/Documents/FolgeProjects/my-guide/output/vision-results.json \
+  ~/Documents/FolgeProjects/my-guide/output/guide.enriched.json
+folge-cli validate-schema ~/Documents/FolgeProjects/my-guide/output/guide.enriched.json
+folge-cli validate-content ~/Documents/FolgeProjects/my-guide/output/guide.enriched.json 0.7
+folge-cli render ~/Documents/FolgeProjects/my-guide/output/guide.enriched.json pdf guide.md
+folge-cli publish --project my-guide pdf,docx,html,epub,typst
 ```
 
 ### Check Version
@@ -96,10 +127,10 @@ folge-cli --version
 
 ```bash
 # Letter portrait (default)
-folge-cli publish guide.json output/ pdf
+folge-cli publish --project my-guide pdf
 
 # Letter landscape
-folge-cli publish guide.json output/ pdf --orientation landscape
+folge-cli publish --project my-guide pdf --orientation landscape
 ```
 
 ## Stage Details

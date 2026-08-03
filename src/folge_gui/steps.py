@@ -14,15 +14,19 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
-from folge_cli.config import PROVIDERS
+from folge_cli.config import (
+    PROJECTS_DIR,
+    PROVIDERS,
+    project_base,
+    project_images,
+    project_output,
+    resolve_guide,
+)
+from folge_cli.formats import ALL_TARGETS
 
-#: The 16 publishable target formats folge_cli knows about (from
-#: folge_cli.pipeline's default target list / folge_cli.render.TARGETS).
-TARGET_FORMATS: list[str] = [
-    "pdf", "docx", "html", "pptx", "github",
-    "typst", "asciidoc", "beamer", "commonmark", "gfm",
-    "multimarkdown", "docbook", "epub", "odt", "rst", "latex",
-]
+#: Every format folge_cli knows how to produce, from the shared registry
+#: in ``folge_cli.formats`` (single source of truth).
+TARGET_FORMATS: list[str] = list(ALL_TARGETS)
 
 RENDER_TARGETS: list[str] = ["pdf", "docx", "pptx", "html", "github"]
 
@@ -41,6 +45,42 @@ class FieldSpec:
     help: str = ""
     options: list[str] = field(default_factory=list)
     placeholder: str = ""
+    project_key: str = ""  # set to override `default` from the active project
+
+
+def project_defaults(project: str) -> dict[str, str]:
+    """Resolve absolute default paths for a project folder.
+
+    Returns a mapping from ``FieldSpec.project_key`` to an absolute path,
+    or ``""`` when the guide JSON cannot be discovered.  An empty dict is
+    returned when no project is selected.  Keys:
+
+    - ``guide``: the project's single JSON file (any name)
+    - ``images``: ``<project>/images``
+    - ``output``: ``<project>/output``
+    - ``vision`` / ``enriched`` / ``schema_warnings`` / ``manual`` /
+      ``md`` / ``pdf``: generated files inside ``output/``
+    """
+    if not project:
+        return {}
+    try:
+        guide = resolve_guide(project=project)
+    except (FileNotFoundError, ValueError):
+        guide = None
+    base = project_base(guide) if guide else PROJECTS_DIR / project
+    images = project_images(guide) if guide else base / "images"
+    output = project_output(guide) if guide else base / "output"
+    return {
+        "guide": str(guide) if guide else "",
+        "images": str(images),
+        "output": str(output),
+        "vision": str(output / "vision-results.json"),
+        "enriched": str(output / "guide.enriched.json"),
+        "schema_warnings": str(output / "schema-warnings.json"),
+        "manual": str(output / "manual-attention-needed.md"),
+        "md": str(output / "guide.md"),
+        "pdf": str(output / "guide.pdf"),
+    }
 
 
 @dataclass
@@ -100,7 +140,10 @@ def _validate_pdf_args(v: dict) -> list[str]:
 
 
 def _render_args(v: dict) -> list[str]:
-    return ["render", v["guide"], v["target"], v["output"]]
+    args = ["render", v["guide"], v["target"], v["output"]]
+    if v.get("images_dir"):
+        args += ["--images-dir", v["images_dir"]]
+    return args
 
 
 def _publish_args(v: dict) -> list[str]:
@@ -128,9 +171,12 @@ STEPS: list[StepSpec] = [
         ),
         fields=[
             FieldSpec("guide", "Guide JSON", default="guide.json", required=True,
-                       help="Path to the guide exported from Folge."),
-            FieldSpec("image_dir", "Images directory", default="images", required=True),
-            FieldSpec("output", "Output file", default="output/vision-results.json", required=True),
+                       project_key="guide",
+                       help="Path to the guide exported from Folge (any name)."),
+            FieldSpec("image_dir", "Images directory", default="images", required=True,
+                       project_key="images"),
+            FieldSpec("output", "Output file", default="output/vision-results.json", required=True,
+                       project_key="vision"),
             FieldSpec("provider", "Provider", kind="select", options=[""] + PROVIDERS,
                        help="Leave blank to use the provider configured in Setup."),
             FieldSpec("api_key", "API key override", kind="password",
@@ -148,9 +194,12 @@ STEPS: list[StepSpec] = [
         icon="merge",
         description="Deterministically combine the original guide with vision results into an enriched JSON file.",
         fields=[
-            FieldSpec("guide", "Guide JSON", default="guide.json", required=True),
-            FieldSpec("vision", "Vision results JSON", default="output/vision-results.json", required=True),
-            FieldSpec("output", "Output file", default="output/guide.enriched.json", required=True),
+            FieldSpec("guide", "Guide JSON", default="guide.json", required=True,
+                       project_key="guide"),
+            FieldSpec("vision", "Vision results JSON", default="output/vision-results.json", required=True,
+                       project_key="vision"),
+            FieldSpec("output", "Output file", default="output/guide.enriched.json", required=True,
+                       project_key="enriched"),
         ],
         build_args=_merge_args,
     ),
@@ -162,8 +211,10 @@ STEPS: list[StepSpec] = [
         fields=[
             FieldSpec("files", "File(s) to validate", kind="paths",
                        default="output/guide.enriched.json", required=True,
+                       project_key="enriched",
                        help="One path per line (or comma/space separated)."),
-            FieldSpec("warnings_out", "Warnings output file", default="output/schema-warnings.json"),
+            FieldSpec("warnings_out", "Warnings output file", default="output/schema-warnings.json",
+                       project_key="schema_warnings"),
         ],
         build_args=_validate_schema_args,
     ),
@@ -173,7 +224,8 @@ STEPS: list[StepSpec] = [
         icon="rule",
         description="Check enriched content against the minimum-confidence threshold.",
         fields=[
-            FieldSpec("file", "File to validate", default="output/guide.enriched.json", required=True),
+            FieldSpec("file", "File to validate", default="output/guide.enriched.json", required=True,
+                       project_key="enriched"),
             FieldSpec("min_confidence", "Minimum confidence", kind="number",
                        placeholder="e.g. 0.7",
                        help="Optional — leave blank to use the value from Setup / config.yaml."),
@@ -190,10 +242,14 @@ STEPS: list[StepSpec] = [
             "(and this report) before moving on to rendering."
         ),
         fields=[
-            FieldSpec("enriched", "Enriched guide JSON", default="output/guide.enriched.json", required=True),
-            FieldSpec("images_dir", "Images directory", default="images", required=True),
-            FieldSpec("output", "Output Markdown file", default="output/manual-attention-needed.md", required=True),
+            FieldSpec("enriched", "Enriched guide JSON", default="output/guide.enriched.json", required=True,
+                       project_key="enriched"),
+            FieldSpec("images_dir", "Images directory", default="images", required=True,
+                       project_key="images"),
+            FieldSpec("output", "Output Markdown file", default="output/manual-attention-needed.md", required=True,
+                       project_key="manual"),
             FieldSpec("warnings", "Schema warnings JSON", default="output/schema-warnings.json",
+                       project_key="schema_warnings",
                        help="Optional — include schema warnings in the report."),
         ],
         build_args=_manual_attention_args,
@@ -205,10 +261,15 @@ STEPS: list[StepSpec] = [
         icon="description",
         description="Render the enriched guide to an accessible Markdown file for a specific target.",
         fields=[
-            FieldSpec("guide", "Enriched guide JSON", default="output/guide.enriched.json", required=True),
+            FieldSpec("guide", "Enriched guide JSON", default="output/guide.enriched.json", required=True,
+                       project_key="enriched"),
             FieldSpec("target", "Target", kind="select", options=RENDER_TARGETS,
                        default="pdf", required=True),
-            FieldSpec("output", "Output Markdown file", default="output/guide.md", required=True),
+            FieldSpec("output", "Output Markdown file", default="output/guide.md", required=True,
+                       project_key="md"),
+            FieldSpec("images_dir", "Images directory", default="images",
+                       project_key="images",
+                       help="Used to compute relative image paths in the rendered Markdown."),
         ],
         build_args=_render_args,
     ),
@@ -221,8 +282,10 @@ STEPS: list[StepSpec] = [
             "in one go and publish the selected output formats."
         ),
         fields=[
-            FieldSpec("guide", "Guide JSON", default="guide.json", required=True),
-            FieldSpec("output", "Output directory", default="output", required=True),
+            FieldSpec("guide", "Guide JSON", default="guide.json", required=True,
+                       project_key="guide"),
+            FieldSpec("output", "Output directory", default="output", required=True,
+                       project_key="output"),
             FieldSpec("targets", "Target formats", kind="multiselect", options=TARGET_FORMATS,
                        default=",".join(TARGET_FORMATS), required=True),
             FieldSpec("provider", "Provider", kind="select", options=PROVIDERS,
@@ -243,7 +306,8 @@ STEPS: list[StepSpec] = [
             "has produced a PDF."
         ),
         fields=[
-            FieldSpec("pdf", "PDF file", default="output/guide.pdf", required=True),
+            FieldSpec("pdf", "PDF file", default="output/guide.pdf", required=True,
+                       project_key="pdf"),
         ],
         build_args=_validate_pdf_args,
     ),

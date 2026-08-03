@@ -40,4 +40,7 @@ ANTHROPIC_API_KEY=
 ANTHROPIC_MODEL=claude-sonnet-4-20250514
 ANTHROPIC_TIMEOUT=60
 
-MIN_CONFIDENCE=0.7
+# Where project folders live (guide JSON + images/ + output/).
+# Default: ~/Documents/FolgeProjects
+# FOLGE_PROJECTS_DIR=
+MIN_CONFIDENCE=0.2

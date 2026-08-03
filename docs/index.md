@@ -87,8 +87,9 @@ PDFs, DOCX, HTML, EPUB, LaTeX, Typst, and more.
 ## Key Features
 
 - **Eight AI providers** -- ollama (default), lmstudio, jan, llamacpp, openrouter, openai, gemini, anthropic
+- **Project folders** -- each guide lives in `~/Documents/FolgeProjects/<project>/` (guide JSON + `images/` + `output/`), so you can keep many guides organized
 - **Accessible GUI** -- a WCAG 2.2 AA NiceGUI front end (`uv run folge-gui`) for setup, individual steps, and the full pipeline
-- **16 output formats** -- PDF, DOCX, HTML, PPTX, GitHub Markdown, Typst, AsciiDoc, Beamer, CommonMark, GFM, MultiMarkdown, DocBook, EPUB, ODT, RST, LaTeX
+- **70+ output formats** -- every writer the installed pandoc supports (PDF, DOCX, HTML, PPTX, GitHub Markdown, Typst, AsciiDoc, Beamer, CommonMark, GFM, MultiMarkdown, DocBook, EPUB, ODT, RST, LaTeX, and more)
 - **Accessibility-first** -- WCAG 2.1 AA, ARIA, PDF/UA, DOCX accessibility support
 - **Accessible document metadata** -- auto-generated title, author, subject, keywords, language, tags, bookmarks, and copy-permissive security embedded into all formats
 - **PDF page orientation** -- Letter portrait (default) or Letter landscape
@@ -111,10 +112,10 @@ PDFs, DOCX, HTML, EPUB, LaTeX, Typst, and more.
     ollama pull qwen2.5vl-8k:latest
 
     # Run the full pipeline (all 16 formats)
-    folge-cli pipeline guide.json output/
+    folge-cli pipeline --project my-first-guide
 
     # Or publish specific formats
-    folge-cli publish guide.json output/ pdf,docx,html,epub,typst
+    folge-cli publish --project my-first-guide pdf,docx,html,epub,typst
     ```
 
 === "Pre-built Binary (Coming Soon)"

@@ -22,15 +22,23 @@ still required at runtime.
 Full end-to-end pipeline with progress tracking (source installation only).
 
 ```bash
-folge-cli pipeline <guide.json> [output-dir] [--targets pdf,docx,html] [--provider PROVIDER]
+folge-cli pipeline [guide.json] [output-dir] [--project NAME] [--targets pdf,docx,html] [--provider PROVIDER]
 ```
 
 | Argument | Default | Description |
 |----------|---------|-------------|
-| `guide` | (required) | Path to `guide.json` |
-| `output` | `output/` | Output directory |
-| `--targets` | `pdf,docx,html,pptx` | Comma-separated target formats |
+| `guide` | from `--project` | Path to the guide JSON (any name) |
+| `--project` | — | Project folder under `~/Documents/FolgeProjects` to process |
+| `output` | `<project>/output/` | Output directory |
+| `--targets` | all supported | Comma-separated target formats (default: every writer the installed pandoc supports; see `folge_cli.formats`). Writers missing from that pandoc version are skipped with a warning |
 | `--provider` | `ollama` | Vision AI provider |
+
+An explicit `guide` path always wins over `--project`; an explicit `output`
+wins over `<project>/output`. Example:
+
+```bash
+folge-cli pipeline --project my-guide --targets pdf,docx
+```
 
 !!! note
     The `pipeline` subcommand requires `uv` and Python because it spawns
@@ -44,16 +52,21 @@ folge-cli pipeline <guide.json> [output-dir] [--targets pdf,docx,html] [--provid
 Process all images through the Vision AI API.
 
 ```bash
-folge-cli batch-process <guide.json> <images-dir> <output.json> [--provider PROVIDER]
+folge-cli batch-process [guide.json] [images-dir] [output.json] [--project NAME] [--provider PROVIDER]
 ```
 
-| Argument | Description |
-|----------|-------------|
-| `guide.json` | Folge export file |
-| `images-dir` | Directory containing screenshots |
-| `output.json` | Where to save vision results |
-| `--provider` | Vision backend (default: from `.env`) |
-| `--api-key` | API key for cloud providers |
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `guide.json` | from `--project` | Folge export file |
+| `--project` | — | Project folder under `~/Documents/FolgeProjects` |
+| `images-dir` | `<project>/images/` | Directory containing screenshots |
+| `output.json` | `<project>/output/vision-results.json` | Where to save vision results |
+| `--provider` | from `.env` | Vision backend |
+| `--api-key` | — | API key for cloud providers |
+
+```bash
+folge-cli batch-process --project my-guide
+```
 
 **Key behaviors:**
 
@@ -93,14 +106,20 @@ folge-cli merge <guide.json> <vision-results.json> <output.json>
 Renders Markdown from enriched JSON using Jinja2 templates.
 
 ```bash
-folge-cli render <guide.enriched.json> [target] <output.md>
+folge-cli render <guide.enriched.json> [target] <output.md> [--images-dir <dir>]
 ```
 
-| Argument | Description |
-|----------|-------------|
-| `guide.enriched.json` | Enriched guide file |
-| `target` | `pdf`, `docx`, `html`, or `github` |
-| `output.md` | Output Markdown file |
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `guide.enriched.json` | — | Enriched guide file |
+| `target` | — | `pdf`, `docx`, `html`, `github`, ... |
+| `output.md` | — | Output Markdown file |
+| `--images-dir` | `<guide dir>/images` | Guide's images directory (used to compute relative image paths) |
+
+!!! tip
+    When the enriched JSON lives in `<project>/output/`, pass
+    `--images-dir <project>/images` so image references in the rendered
+    Markdown resolve correctly (e.g. `../images/step-0.png`).
 
 **Target-specific behavior:**
 
@@ -174,15 +193,24 @@ Uses two validation methods:
 Publishes guide to target formats with PDF/UA guarantee.
 
 ```bash
-folge-cli publish <guide.json> [output-dir] [targets] [provider]
+folge-cli publish [guide.json] [output-dir] [targets] [provider] [--project NAME]
 ```
 
 | Argument | Default | Description |
 |----------|---------|-------------|
-| `guide.json` | (required) | Folge export file |
-| `output-dir` | `output/` | Output directory |
-| `targets` | `pdf,docx,html` | Comma-separated formats |
+| `guide.json` | from `--project` | Folge export file |
+| `--project` | — | Project folder under `~/Documents/FolgeProjects` |
+| `output-dir` | `<project>/output/` | Output directory |
+| `targets` | all supported | Comma-separated formats (default: every writer the installed pandoc supports; see `folge_cli.formats`) |
 | `provider` | `ollama` | Vision provider |
+
+When `--project` is used, the positional arguments are interpreted as
+`[targets] [provider]`:
+
+```bash
+folge-cli publish --project my-guide pdf,docx,html
+folge-cli publish --project my-guide pdf --orientation landscape
+```
 
 ---
 
