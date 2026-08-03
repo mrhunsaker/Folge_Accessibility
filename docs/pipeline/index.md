@@ -40,7 +40,7 @@ guide.json + images/  (inside the project folder)
   [4] Render         -->  guide.md
         |
         v
-  [5] Publish        -->  16 output formats
+  [5] Publish        -->  every supported output format
         |                    |
         |                    +--> guide.pdf       (PDF/UA tagged PDF)
         |                    +--> guide.docx      (Word document)
@@ -142,4 +142,4 @@ Each stage is documented in detail in its own page:
 3. [Deterministic Merge](merge.md) -- Combine content with enrichment
 4. [Validate](validate.md) -- Ensure data quality
 5. [Render Markdown](render.md) -- Generate intermediate Markdown
-6. [Publish](publish.md) -- Convert to 16 output formats with PDF/UA guarantee
+6. [Publish](publish.md) -- Convert to every format the installed pandoc supports with PDF/UA guarantee

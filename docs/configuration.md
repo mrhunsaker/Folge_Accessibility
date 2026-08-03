@@ -86,7 +86,9 @@ uv sync
 
 ## config.yaml
 
-Pipeline configuration for providers, paths, output targets (16 formats), and validation thresholds.
+Pipeline configuration for providers, paths, output targets (informational;
+the runtime registry lives in `src/folge_cli/formats.py`), and validation
+thresholds.
 
 The `project.version` field is injected dynamically from `_version.py` — you do not need to set it manually.
 

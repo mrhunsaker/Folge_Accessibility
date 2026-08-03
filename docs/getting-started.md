@@ -148,8 +148,9 @@ folge-cli pipeline --project my-first-guide
 ```
 
 `--project` finds the guide JSON automatically. This runs all seven stages
-automatically with progress tracking and produces **all 16 output formats** by
-default into `~/Documents/FolgeProjects/my-first-guide/output/`.
+automatically with progress tracking and produces **every format the installed
+pandoc supports** (70+ writers) by default into
+`~/Documents/FolgeProjects/my-first-guide/output/`.
 
 You can also pass explicit paths instead of `--project` (useful outside the
 default layout):

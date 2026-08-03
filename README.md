@@ -17,8 +17,9 @@
 
 A semi-automated documentation publishing pipeline that enriches
 [Folge](https://folge.me) guide exports with Vision AI-generated accessibility
-metadata, then publishes to **16 output formats** including PDF/UA-compliant
-PDFs, DOCX, HTML, EPUB, LaTeX, Typst, and more.
+metadata, then publishes to **every format the installed pandoc supports**
+(70+ writers) including PDF/UA-compliant PDFs, DOCX, HTML, EPUB, LaTeX,
+Typst, and more.
 
 **Documentation:** [mrhunsaker.github.io/Folge_Accessibility](https://mrhunsaker.github.io/Folge_Accessibility/)
 
@@ -280,8 +281,8 @@ folge-cli pipeline --project my-guide
 ```
 
 Output files appear in `~/Documents/FolgeProjects/my-guide/output/`: a tagged
-PDF/UA-compliant PDF, DOCX, HTML, EPUB, LaTeX, Typst, and more — all 16
-supported formats.
+PDF/UA-compliant PDF, DOCX, HTML, EPUB, LaTeX, Typst, and more — every format
+the installed pandoc supports.
 
 ---
 
@@ -342,7 +343,8 @@ GEMINI_API_KEY=your-key-here
 ANTHROPIC_API_KEY=your-key-here
 ```
 
-**`config.yaml`** — Detailed provider settings, targets (16 output formats), validation thresholds.
+**`config.yaml`** — Detailed provider settings, targets (informational; the
+runtime registry lives in `src/folge_cli/formats.py`), validation thresholds.
 
 ---
 
@@ -413,7 +415,7 @@ folge-cli validate-content ~/Documents/FolgeProjects/my-guide/output/guide.enric
 # Render Markdown for a specific target
 folge-cli render ~/Documents/FolgeProjects/my-guide/output/guide.enriched.json pdf guide.md
 
-# Publish to multiple formats (all 16 supported)
+# Publish to selected formats (omit --targets for every supported format)
 folge-cli publish --project my-guide pdf,docx,html,epub,typst,latex
 
 # Publish with landscape orientation
@@ -689,7 +691,7 @@ Folge_Accessibility/
 | File | Purpose |
 |------|---------|
 | `pyproject.toml` | Project metadata, dependencies, `folge-cli` entry point, `[tool.uv.workspace]` members (`src/folge_gui`) |
-| `config.yaml` | Provider settings, 16 output targets, validation thresholds, `project.author` and `project.keywords` metadata defaults |
+| `config.yaml` | Provider settings, output targets (informational; registry in `folge_cli.formats`), validation thresholds, `project.author` and `project.keywords` metadata defaults |
 | `.env` | Environment variables: provider selection, API keys, paths |
 | `templates/prompt.txt` | Vision AI prompt template |
 | `templates/markdown.md` | Jinja2 Markdown rendering template |
