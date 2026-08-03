@@ -21,6 +21,7 @@ from folge_cli.config import (
     project_images,
     project_output,
     resolve_guide,
+    guide_stem,
 )
 from folge_cli.formats import ALL_TARGETS
 
@@ -70,16 +71,17 @@ def project_defaults(project: str) -> dict[str, str]:
     base = project_base(guide) if guide else PROJECTS_DIR / project
     images = project_images(guide) if guide else base / "images"
     output = project_output(guide) if guide else base / "output"
+    stem = guide_stem(guide) if guide else "guide"
     return {
         "guide": str(guide) if guide else "",
         "images": str(images),
         "output": str(output),
-        "vision": str(output / "vision-results.json"),
-        "enriched": str(output / "guide.enriched.json"),
-        "schema_warnings": str(output / "schema-warnings.json"),
-        "manual": str(output / "manual-attention-needed.md"),
-        "md": str(output / "guide.md"),
-        "pdf": str(output / "guide.pdf"),
+        "vision": str(output / f"{stem}.vision-results.json"),
+        "enriched": str(output / f"{stem}.enriched.json"),
+        "schema_warnings": str(output / f"{stem}.schema-warnings.json"),
+        "manual": str(output / f"{stem}.manual-attention-needed.md"),
+        "md": str(output / f"{stem}.md"),
+        "pdf": str(output / f"{stem}.pdf"),
     }
 
 

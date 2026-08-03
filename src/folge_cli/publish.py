@@ -17,6 +17,7 @@ from .config import (
     project_images,
     project_output,
     resolve_guide,
+    guide_stem,
 )
 from .formats import FORMATS, output_name, pandoc_args, resolve_targets, run_pandoc
 
@@ -143,6 +144,7 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama",
     except (FileNotFoundError, ValueError) as exc:
         print(f"ERROR: {exc}")
         return False
+    stem = guide_stem(guide_path)
     output_dir = project_output(guide_path, output_dir)
     images_dir = project_images(guide_path)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -151,11 +153,11 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama",
     for name in skipped:
         print(f"  [SKIP] {name}: not supported by this pandoc version")
 
-    md_file = output_dir / "guide.md"
+    md_file = output_dir / f"{stem}.md"
     min_conf = get_min_confidence()
 
     step_header("1-2", f"Processing with {provider.title()} Vision")
-    vision_results = output_dir / "vision-results.json"
+    vision_results = output_dir / f"{stem}.vision-results.json"
     if not run_cmd(
         f"uv run python -m folge_cli.batch_process {guide_path} {images_dir} {vision_results} --provider={provider}",
         cwd=str(PROJECT_ROOT),
@@ -163,7 +165,7 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama",
         return False
 
     step_header("3", "Merging guide with vision data")
-    enriched = output_dir / "guide.enriched.json"
+    enriched = output_dir / f"{stem}.enriched.json"
     if not run_cmd(
         f"uv run python -m folge_cli.merge {guide_path} {vision_results} {enriched}",
         cwd=str(PROJECT_ROOT),
@@ -192,7 +194,7 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama",
     step_header("5b", "Generating accessible document metadata")
     from folge_cli.metadata import build_metadata, write_metadata_file, apply_pdf_metadata
     metadata = build_metadata(enriched)
-    metadata_yaml = output_dir / "metadata.yaml"
+    metadata_yaml = output_dir / f"{stem}.metadata.yaml"
     write_metadata_file(metadata, metadata_yaml)
     print(f"  Metadata YAML written to {metadata_yaml}")
 
@@ -210,7 +212,7 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama",
         pdf_filter_args = f"--lua-filter={pagebreak} {pdf_filter_args}"
 
     if "pdf" in targets:
-        pdf_file = output_dir / "guide.pdf"
+        pdf_file = output_dir / f"{stem}.pdf"
         print("\n  -> PDF (weasyprint)...", end=" ", flush=True)
         result = run_pandoc(
             f"pandoc {md_file} {pdf_filter_args} "
@@ -258,7 +260,7 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama",
     for tname in targets:
         if tname in ("pdf", "github"):
             continue
-        out_file = output_name(tname)
+        out_file = output_name(tname, base=stem)
         out_path = output_dir / out_file
         print(f"\n  -> {tname.upper()}...", end=" ", flush=True)
         args = pandoc_args(tname, orientation)
@@ -276,7 +278,7 @@ def publish_with_pdf_ua(guide_path, output_dir, targets=None, provider="ollama",
             print("FAILED")
 
     if "github" in targets:
-        github_file = output_dir / "guide.md"
+        github_file = output_dir / f"{stem}.md"
         print("  -> GitHub Markdown...", end=" ", flush=True)
         result = subprocess.run(
             f"uv run python -m folge_cli.render {enriched} github {github_file} --images-dir {images_dir}",

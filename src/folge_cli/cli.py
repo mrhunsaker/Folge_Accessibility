@@ -162,7 +162,7 @@ def _main():
 
     elif args.command == "batch-process":
         from folge_cli.batch_process import main as bp_main
-        from folge_cli.config import resolve_guide, project_images, project_output
+        from folge_cli.config import resolve_guide, project_images, project_output, guide_stem
         from pathlib import Path
         if args.project:
             guide = resolve_guide(project=args.project)
@@ -177,7 +177,7 @@ def _main():
                 "batch-process",
                 str(guide),
                 str(image_dir or project_images(guide)),
-                str(output or (project_output(guide) / "vision-results.json")),
+                str(output or (project_output(guide) / f"{guide_stem(guide)}.vision-results.json")),
             ]
         else:
             if not (args.guide and args.image_dir and args.output):

@@ -214,6 +214,25 @@ def resolve_guide(guide=None, project=None):
     )
 
 
+def guide_stem(guide_path):
+    """Return the base name of the guide JSON without its extension.
+
+    All pipeline outputs are named after this stem so ``Headers.json``
+    produces ``Headers.enriched.json``, ``Headers.md``, ``Headers.pdf``, etc.
+
+    Parameters
+    ----------
+    guide_path : str or Path
+        Path to the guide JSON file.
+
+    Returns
+    -------
+    str
+        The guide filename without its suffix (e.g. ``"Headers"``).
+    """
+    return Path(guide_path).expanduser().resolve().stem
+
+
 def project_base(guide_path):
     """Return the folder that owns a guide — base for ``images/`` and ``output/``.
 

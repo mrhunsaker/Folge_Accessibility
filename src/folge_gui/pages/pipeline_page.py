@@ -190,11 +190,13 @@ def build() -> None:
                     "Manual review required. The pipeline is paused until you choose to "
                     "continue to rendering or re-verify the enriched JSON."
                 )
+                from pathlib import Path
+                stem = Path(str(values.get("guide", ""))).stem or "guide"
                 dialog = confirm_dialog(
                     title="Manual review required",
                     message=(
-                        "Before rendering, review output/guide.enriched.json and, if it "
-                        "was generated, output/manual-attention-needed.md in your file "
+                        f"Before rendering, review {stem}.enriched.json and, if it "
+                        f"was generated, {stem}.manual-attention-needed.md in your file "
                         "browser. Once you're satisfied, continue to rendering — or ask "
                         "folge-cli to re-run validation on the enriched JSON first."
                     ),

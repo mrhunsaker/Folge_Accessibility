@@ -36,6 +36,7 @@ from .config import (
     project_images,
     project_output,
     resolve_guide,
+    guide_stem,
 )
 from .formats import FORMATS, output_name, pandoc_args, resolve_targets, run_pandoc
 from .progress import StepCounter, info
@@ -340,6 +341,7 @@ def run_pipeline(args):
     except (FileNotFoundError, ValueError) as exc:
         print(f"ERROR: {exc}")
         sys.exit(1)
+    stem = guide_stem(guide_path)
     project_dir = project_base(guide_path)
     images_dir = project_images(guide_path)
     output_dir = project_output(guide_path, getattr(args, "output", None))
@@ -388,7 +390,7 @@ def run_pipeline(args):
 
     # --- Steps 1-2: Batch Vision Processing ---
     step_header("1-2", f"Processing images with {provider_name.title()} Vision")
-    vision_results = output_dir / "vision-results.json"
+    vision_results = output_dir / f"{stem}.vision-results.json"
 
     batch_cmd = (
         f"uv run python -m folge_cli.batch_process {guide_path} {images_dir} {vision_results}"
@@ -411,7 +413,7 @@ def run_pipeline(args):
 
     # --- Step 3: Merge ---
     step_header("3", "Merging guide with vision data")
-    enriched = output_dir / "guide.enriched.json"
+    enriched = output_dir / f"{stem}.enriched.json"
     if not run_cmd(
         f"uv run python -m folge_cli.merge {guide_path} {vision_results} {enriched}"
     ):
@@ -422,7 +424,7 @@ def run_pipeline(args):
 
     # --- Step 4: Validate ---
     step_header("4", "Validating enriched JSON")
-    schema_warnings = output_dir / "schema-warnings.json"
+    schema_warnings = output_dir / f"{stem}.schema-warnings.json"
     if not run_cmd(
         f"uv run python -m folge_cli.validate_schema {enriched} --warnings-out {schema_warnings}"
     ):
@@ -436,7 +438,7 @@ def run_pipeline(args):
 
     # --- Step 4b: Manual Review Pause ---
     step_header("4b", "MANUAL REVIEW REQUIRED")
-    manual_file = output_dir / "manual-attention-needed.md"
+    manual_file = output_dir / f"{stem}.manual-attention-needed.md"
     manual_cmd = (
         f"uv run python -m folge_cli.generate_manual_attention {enriched} {images_dir} {manual_file}"
     )
@@ -477,7 +479,7 @@ def run_pipeline(args):
 
     # --- Step 5: Render Markdown ---
     step_header("5", "Rendering Markdown")
-    md_file = output_dir / "guide.md"
+    md_file = output_dir / f"{stem}.md"
     if not run_cmd(f"uv run python -m folge_cli.render {enriched} pdf {md_file} --images-dir {images_dir}"):
         print("\nFATAL: Markdown rendering failed.")
         sys.exit(1)
@@ -488,7 +490,7 @@ def run_pipeline(args):
     step_header("5b", "Generating accessible document metadata")
     from folge_cli.metadata import build_metadata, write_metadata_file
     metadata = build_metadata(enriched)
-    metadata_yaml = output_dir / "metadata.yaml"
+    metadata_yaml = output_dir / f"{stem}.metadata.yaml"
     write_metadata_file(metadata, metadata_yaml)
     print(f"  Metadata YAML written to {metadata_yaml}")
     metadata_args = f"--metadata-file={metadata_yaml}"
@@ -499,15 +501,15 @@ def run_pipeline(args):
     pdf_errors = []
 
     if "pdf" in targets:
-        pdf_file = output_dir / "guide.pdf"
+        pdf_file = output_dir / f"{stem}.pdf"
         print("\n  -> PDF (weasyprint)...", end=" ", flush=True)
 
         data_args = _pandoc_data_args(orientation)
         result = run_pandoc(
-            f"pandoc guide.md {data_args} "
+            f"pandoc {stem}.md {data_args} "
             "--pdf-engine=weasyprint --pdf-engine-opt=--presentational-hints "
             f"{metadata_args} --metadata=tagged-pdf:true "
-            "--standalone --verbose -o guide.pdf",
+            f"--standalone --verbose -o {stem}.pdf",
             output_dir,
         )
         if result.returncode == 0:
@@ -522,12 +524,12 @@ def run_pipeline(args):
             print("  -> PDF (wkhtmltopdf)...", end=" ", flush=True)
             data_args = _pandoc_data_args(orientation)
             result2 = run_pandoc(
-                f"pandoc guide.md {data_args} "
+                f"pandoc {stem}.md {data_args} "
                 "--pdf-engine=wkhtmltopdf "
                 "--pdf-engine-opt=--enable-local-file-access "
                 "--pdf-engine-opt=--tagged-pdf "
                 f"{metadata_args} --metadata=tagged-pdf:true "
-                "--standalone --verbose -o guide.pdf",
+                f"--standalone --verbose -o {stem}.pdf",
                 output_dir,
             )
             if result2.returncode == 0:
@@ -542,10 +544,10 @@ def run_pipeline(args):
                 print("  -> PDF (xelatex)...", end=" ", flush=True)
                 data_args = _pandoc_data_args(orientation)
                 result3 = run_pandoc(
-                    f"pandoc guide.md {data_args} "
+                    f"pandoc {stem}.md {data_args} "
                     "--pdf-engine=xelatex --pdf-engine-opt=-x dvipdfmx "
                     f"{metadata_args} "
-                    "--standalone --verbose -o guide.pdf",
+                    f"--standalone --verbose -o {stem}.pdf",
                     output_dir,
                 )
                 if result3.returncode == 0:
@@ -567,12 +569,12 @@ def run_pipeline(args):
     for tname in targets:
         if tname in ("pdf", "github"):
             continue
-        out_file = output_name(tname)
+        out_file = output_name(tname, base=stem)
         print(f"\n  -> {tname.upper()}...", end=" ", flush=True)
         args = pandoc_args(tname, orientation)
         engine = f"--pdf-engine={FORMATS[tname]['engine']}" if "engine" in FORMATS[tname] else ""
         result = run_pandoc(
-            f"pandoc guide.md {args} {engine} {metadata_args} --verbose -o {out_file}",
+            f"pandoc {stem}.md {args} {engine} {metadata_args} --verbose -o {out_file}",
             output_dir,
         )
         if result.returncode == 0:
@@ -585,7 +587,7 @@ def run_pipeline(args):
                     print(f"    {line}")
 
     if "github" in targets:
-        github_file = output_dir / "guide.md"
+        github_file = output_dir / f"{stem}.md"
         print("  -> GitHub Markdown...", end=" ", flush=True)
         result = subprocess.run(
             f"uv run python -m folge_cli.render {enriched} github {github_file} --images-dir {images_dir}",

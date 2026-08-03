@@ -80,7 +80,7 @@ def generate(enriched_path, images_dir, output_path, warnings=None):
 
         lines.append(
             "*After filling in the descriptions, add them to "
-            "`output/guide.enriched.json` under the corresponding step's "
+            f"`{enriched_path.name}` under the corresponding step's "
             "`vision` field, then re-run the render step.*\n"
         )
 

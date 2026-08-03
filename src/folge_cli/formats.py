@@ -136,17 +136,19 @@ ALL_TARGETS = list(FORMATS) + list(SPECIAL_TARGETS)
 _supported_cache: frozenset[str] | None = None
 
 
-def output_name(target_name: str) -> str:
+def output_name(target_name: str, base: str = "guide") -> str:
     """Return the output filename for a registry target.
 
-    Targets without an ``abbrev`` keep the plain name ``guide<ext>``;
-    everything else is disambiguated as ``guide_<abbrev><ext>``.
+    Targets without an ``abbrev`` keep the plain name ``base<ext>``;
+    everything else is disambiguated as ``base_<abbrev><ext>``.  The
+    ``base`` is the guide JSON's stem (e.g. ``Headers``) so the outputs
+    mirror the input filename.
     """
     cfg = FORMATS[target_name]
     abbrev = cfg.get("abbrev")
     if abbrev:
-        return f"guide_{abbrev}{cfg['ext']}"
-    return f"guide{cfg['ext']}"
+        return f"{base}_{abbrev}{cfg['ext']}"
+    return f"{base}{cfg['ext']}"
 
 
 def pandoc_args(target_name: str, orientation: str = "portrait") -> str:
