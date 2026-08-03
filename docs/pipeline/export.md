@@ -6,18 +6,27 @@
 
 ## How to Export
 
-1. Open your guide in Folge
-2. Click **Export** > **JSON**
-3. Save the file as `guide.json` in the project root
-4. Export all screenshots
-5. Save all images to the `images/` directory (Folge uses names like `step-0.png`, `step-1.png`, etc.)
+1. Create a project folder (see [Getting Started](../getting-started.md)):
+
+   ```bash
+   mkdir -p ~/Documents/FolgeProjects/my-guide/images
+   ```
+
+2. Open your guide in Folge
+3. Click **Export** > **JSON**
+4. Save the file into `~/Documents/FolgeProjects/my-guide/` — it can keep any
+   name (e.g. `my-export.json`). It must be the **only** JSON file at the top
+   level of the project folder.
+5. Export all screenshots
+6. Save all images to the project's `images/` directory (Folge uses names like
+   `step-0.png`, `step-1.png`, etc.)
 
 ## Output
 
 | File | Location |
 |------|----------|
-| `guide.json` | Project root |
-| `step-*.png` screenshots | `images/` directory |
+| guide JSON (any name, e.g. `my-export.json`) | `~/Documents/FolgeProjects/my-guide/` |
+| `step-*.png` screenshots | `~/Documents/FolgeProjects/my-guide/images/` |
 
 ## Guide JSON Structure
 
@@ -91,7 +100,9 @@ This normalization happens automatically during the merge step — you do not
 need to rename any fields.
 
 !!! warning "Important"
-    Do **not** modify `guide.json` after export. It must remain unchanged as your source of truth. The pipeline's deterministic merge depends on this file being exactly as Folge produced it.
+    Do **not** modify the exported guide JSON after saving it. It must remain
+    unchanged as your source of truth. The pipeline's deterministic merge
+    depends on this file being exactly as Folge produced it.
 
 ## Image Naming
 

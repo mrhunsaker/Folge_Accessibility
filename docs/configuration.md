@@ -6,6 +6,52 @@ The pipeline is configured through several files. Settings follow a strict resol
 CLI argument  >  environment variable  >  config.yaml  >  hardcoded default
 ```
 
+## Project Folders
+
+Each guide lives in its own folder under `~/Documents/FolgeProjects/<project>/`:
+
+```text
+~/Documents/FolgeProjects/
+└── my-guide/
+    ├── my-export.json      # guide export — any name, the only top-level JSON
+    ├── images/             # screenshots (step-0.png, ...)
+    └── output/             # all generated files (created automatically)
+```
+
+`folge-cli pipeline --project my-guide`, `folge-cli publish --project my-guide`,
+and `folge-cli batch-process --project my-guide` look up these paths
+automatically. All other sub-commands take explicit paths (the GUI's project
+selector pre-fills them for you).
+
+### Choosing the projects directory
+
+The base directory resolves in this order:
+
+1. `FOLGE_PROJECTS_DIR` environment variable
+2. `paths.projects_dir` in `config.yaml`
+3. `~/Documents/FolgeProjects` (default)
+
+Example:
+
+```bash
+FOLGE_PROJECTS_DIR=/srv/folge folge-cli pipeline --project my-guide
+```
+
+or in `config.yaml`:
+
+```yaml
+paths:
+  projects_dir: "/srv/folge"
+```
+
+### Guide JSON discovery
+
+A project folder must contain **exactly one** top-level JSON file — the guide
+export, which may have any name. All generated JSON files
+(`vision-results.json`, `guide.enriched.json`, schema warnings, ...) live in
+`output/`, so discovery stays unambiguous. `folge-cli` fails with a clear
+message if a project has zero or more than one JSON file.
+
 ## pyproject.toml
 
 Project metadata and Python dependencies managed by `uv`.
@@ -40,7 +86,9 @@ uv sync
 
 ## config.yaml
 
-Pipeline configuration for providers, paths, output targets (16 formats), and validation thresholds.
+Pipeline configuration for providers, paths, output targets (informational;
+the runtime registry lives in `src/folge_cli/formats.py`), and validation
+thresholds.
 
 The `project.version` field is injected dynamically from `_version.py` — you do not need to set it manually.
 
@@ -52,6 +100,9 @@ project:
   keywords: ["accessibility", "documentation", "publishing", "pipeline"]  # Used by folge-cli metadata
 
 provider: "ollama"  # Default provider
+
+paths:
+  projects_dir: ""   # Where project folders live (default: ~/Documents/FolgeProjects)
 
 ollama:
   base_url: "http://localhost:11434/v1"
@@ -133,7 +184,7 @@ targets:
     include_long_descriptions: true
     output_extension: "_gh.md"
 
-  - name: "multimarkdown"
+  - name: "markdown_mmd"
     enabled: true
     include_long_descriptions: true
     output_extension: "_mmd.md"
@@ -178,7 +229,8 @@ qa:
 
 ## .env
 
-Environment variables for provider selection, API keys, and paths.
+Environment variables for provider selection, API keys, and the projects
+directory.
 
 ```bash
 # Provider selection (ollama is default)
@@ -196,6 +248,9 @@ OPENROUTER_API_KEY=your-key-here
 OPENAI_API_KEY=your-key-here
 GEMINI_API_KEY=your-key-here
 ANTHROPIC_API_KEY=your-key-here
+
+# Where project folders live (default: ~/Documents/FolgeProjects)
+FOLGE_PROJECTS_DIR=
 
 # Validation
 MIN_CONFIDENCE=0.7
@@ -262,10 +317,10 @@ Use the `--orientation` flag:
 
 ```bash
 # Letter portrait (default)
-folge-cli publish guide.json output/ pdf
+folge-cli publish --project my-guide pdf
 
 # Letter landscape
-folge-cli publish guide.json output/ pdf --orientation landscape
+folge-cli publish --project my-guide pdf --orientation landscape
 
 # Or set in config.yaml per target
 targets:
@@ -275,15 +330,22 @@ targets:
 
 ### Selecting Specific Targets
 
-By default, all 16 formats are produced. To build only specific formats:
+By default, every format supported by the installed pandoc is produced.
+To build only specific formats:
 
 ```bash
 # Only PDF and DOCX
-folge-cli pipeline guide.json output/ --targets pdf,docx
+folge-cli pipeline --project my-guide --targets pdf,docx
 
 # All formats (explicit)
-folge-cli pipeline guide.json output/ --targets pdf,docx,html,pptx,github,typst,asciidoc,beamer,commonmark,gfm,multimarkdown,docbook,epub,odt,rst,latex
+folge-cli pipeline --project my-guide --targets pdf,docx,html,pptx,github,typst,asciidoc,beamer,commonmark,gfm,markdown_mmd,docbook,epub,odt,rst,latex
 ```
+
+The runtime target registry lives in `src/folge_cli/formats.py` (the
+`targets:` block in this YAML is informational only).  Writers absent from
+the installed pandoc are skipped with a warning.  Every pandoc call runs
+with `--standalone` and `--verbose`; its output is appended to
+`<output>/pandoc.log`.
 
 ### Change PDF Engine
 

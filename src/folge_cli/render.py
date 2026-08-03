@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 
-from folge_cli.config import get_bundled_path, BUNDLED_DIR
+from folge_cli.config import get_bundled_path
 
 env = Environment(
     loader=FileSystemLoader(str(get_bundled_path("templates"))),
@@ -16,7 +16,7 @@ env = Environment(
 
 
 def render_markdown(guide_path, template_name="markdown.md",
-                    config=None, output_path=None):
+                    config=None, output_path=None, images_dir=None):
     """Render Markdown from enriched JSON using a Jinja2 template.
 
     Parameters
@@ -29,6 +29,10 @@ def render_markdown(guide_path, template_name="markdown.md",
         Template configuration overrides.
     output_path : str or Path, optional
         If provided, write the rendered Markdown to this path.
+    images_dir : str or Path, optional
+        Directory containing the guide's screenshots, used to compute the
+        relative ``image_prefix`` for the rendered Markdown. Defaults to
+        ``<guide dir>/images``.
 
     Returns
     -------
@@ -52,7 +56,9 @@ def render_markdown(guide_path, template_name="markdown.md",
 
     if output_path:
         output_dir = Path(output_path).resolve().parent
-        images_dir = (BUNDLED_DIR / "images").resolve()
+        if images_dir is None:
+            images_dir = guide_path.resolve().parent / "images"
+        images_dir = Path(images_dir).resolve()
         try:
             rel = os.path.relpath(images_dir, output_dir)
             default_config["image_prefix"] = rel + "/"
@@ -76,7 +82,7 @@ def render_markdown(guide_path, template_name="markdown.md",
     return markdown
 
 
-def render_for_target(guide_path, target, output_path):
+def render_for_target(guide_path, target, output_path, images_dir=None):
     """Render Markdown optimized for a specific target format.
 
     Parameters
@@ -84,9 +90,14 @@ def render_for_target(guide_path, target, output_path):
     guide_path : str or Path
         Path to the enriched JSON file.
     target : str
-        One of ``'pdf'``, ``'docx'``, ``'pptx'``, ``'html'``, ``'github'``.
+        Any format key, e.g. ``'pdf'``, ``'docx'``, ``'pptx'``,
+        ``'html'``, ``'github'``.  Unknown targets fall back to the
+        ``'pdf'`` configuration.
     output_path : str or Path
         Destination file path for the rendered Markdown.
+    images_dir : str or Path, optional
+        Directory containing the guide's screenshots (see
+        :func:`render_markdown`). Defaults to ``<guide dir>/images``.
     """
     configs = {
         "pdf": {
@@ -131,7 +142,27 @@ def render_for_target(guide_path, target, output_path):
             "include_long_descriptions": True,
             "newpage_enabled": False
         },
-        "multimarkdown": {
+        "markdown": {
+            "include_long_descriptions": True,
+            "newpage_enabled": False
+        },
+        "markdown_mmd": {
+            "include_long_descriptions": True,
+            "newpage_enabled": False
+        },
+        "markdown_phpextra": {
+            "include_long_descriptions": True,
+            "newpage_enabled": False
+        },
+        "markdown_strict": {
+            "include_long_descriptions": True,
+            "newpage_enabled": False
+        },
+        "markua": {
+            "include_long_descriptions": True,
+            "newpage_enabled": False
+        },
+        "commonmark_x": {
             "include_long_descriptions": True,
             "newpage_enabled": False
         },
@@ -158,26 +189,34 @@ def render_for_target(guide_path, target, output_path):
     }
 
     config = configs.get(target, configs["pdf"])
-    render_markdown(guide_path, "markdown.md", config, output_path)
+    render_markdown(guide_path, "markdown.md", config, output_path, images_dir)
 
 
 def main():
     """CLI entry point for the render sub-command."""
-    import sys
-    if len(sys.argv) < 3:
-        print("Usage: folge-cli render <guide.enriched.json> <target> <output.md>")
-        print("  Target: pdf, docx, pptx, html, github, typst, asciidoc, beamer,"
-              " commonmark, gfm, multimarkdown, docbook, epub, odt, rst, latex")
-        sys.exit(1)
+    import argparse
 
-    guide_path = Path(sys.argv[1])
+    parser = argparse.ArgumentParser(
+        prog="folge-cli render",
+        description="Render Markdown from an enriched guide JSON.",
+    )
+    parser.add_argument("--images-dir", default=None,
+                        help="Guide's images directory (default: <guide dir>/images)")
+    parser.add_argument("targets", nargs="*",
+                        help="<guide.json> [<target>] <output.md>")
+    args, _ = parser.parse_known_args()
+    remaining = args.targets
 
-    if len(sys.argv) == 3:
-        render_markdown(guide_path, output_path=Path(sys.argv[2]))
+    if len(remaining) < 2 or len(remaining) > 3:
+        parser.error("usage: folge-cli render <guide.json> [<target>] <output.md>")
+    guide_path = Path(remaining[0])
+
+    if len(remaining) == 2:
+        render_markdown(guide_path, output_path=Path(remaining[1]),
+                        images_dir=args.images_dir)
     else:
-        target = sys.argv[2]
-        output_path = Path(sys.argv[3])
-        render_for_target(guide_path, target, output_path)
+        render_for_target(guide_path, remaining[1], Path(remaining[2]),
+                          images_dir=args.images_dir)
 
 
 if __name__ == "__main__":

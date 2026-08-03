@@ -4,16 +4,20 @@
 """Folge CLI — single entry point for the vision publishing pipeline.
 
 Usage:
-    folge-cli pipeline <guide.json> [output-dir] [--targets ...] [--provider PROVIDER]
-    folge-cli batch-process <guide.json> <images/> <output> [--provider PROVIDER]
+    folge-cli pipeline [guide.json] [output-dir] [--project NAME] [--targets ...] [--provider PROVIDER]
+    folge-cli batch-process [guide.json] [images/] [output] [--project NAME] [--provider PROVIDER]
     folge-cli merge <guide.json> <vision-results.json> <output>
     folge-cli validate-schema <json-file> [--warnings-out <file>]
     folge-cli validate-content <json-file> [min-confidence]
     folge-cli validate-pdf <pdf-file>
     folge-cli render <json-file> <target> <output.md>
-    folge-cli publish <guide.json> <output-dir> [targets] [provider]
+    folge-cli publish [guide.json] [output-dir] [targets] [provider] [--project NAME]
     folge-cli metadata <guide.json> [-o metadata.yaml] [--apply-pdf guide.pdf] [--check]
     folge-cli generate-manual-attention <json> <images/> <output.md> [warnings.json]
+
+Projects live in ~/Documents/FolgeProjects/<project>/ with the guide JSON
+(any name — it must be the only top-level JSON), an images/ folder, and an
+output/ folder.  Use --project NAME to process one without typing paths.
 
 Providers: ollama, lmstudio, jan, llamacpp, openrouter, openai, gemini, anthropic
 """
@@ -25,6 +29,15 @@ from folge_cli.config import PROVIDERS
 
 
 def main():
+    """CLI entry point — dispatches to ``_main`` with a Ctrl+C safety net."""
+    try:
+        _main()
+    except KeyboardInterrupt:
+        print("\n\nInterrupted by user. Exiting cleanly.")
+        sys.exit(130)
+
+
+def _main():
     """Parse CLI arguments and dispatch to the appropriate sub-command."""
     parser = argparse.ArgumentParser(
         prog="folge-cli",
@@ -39,12 +52,16 @@ def main():
 
     # pipeline
     p_pipe = sub.add_parser("pipeline", help="Run the full end-to-end pipeline")
-    p_pipe.add_argument("guide", help="Path to guide.json")
-    p_pipe.add_argument("output", nargs="?", default="output", help="Output directory (default: output/)")
+    p_pipe.add_argument("guide", nargs="?", default=None,
+                        help="Path to guide JSON (any name; default: --project/<project>/<only JSON>)")
+    p_pipe.add_argument("--project", default=None,
+                        help="Project folder under ~/Documents/FolgeProjects to process")
+    p_pipe.add_argument("output", nargs="?", default=None,
+                        help="Output directory (default: <project>/output)")
     p_pipe.add_argument("--targets", default=None,
-                        help="Comma-separated: pdf,docx,html,pptx,github,typst,asciidoc,"
-                             "beamer,commonmark,gfm,multimarkdown,docbook,epub,odt,rst,latex"
-                             " (default: all)")
+                        help="Comma-separated target formats (e.g. pdf,docx,html). "
+                             "Default: every format supported by the installed pandoc "
+                             "(see folge_cli.formats).")
     p_pipe.add_argument("--provider", choices=PROVIDERS, default=None)
     p_pipe.add_argument("--api-key", default=None)
     p_pipe.add_argument("--orientation", choices=["portrait", "landscape"], default=None,
@@ -52,9 +69,14 @@ def main():
 
     # batch-process
     p_bp = sub.add_parser("batch-process", help="Process images through Vision API")
-    p_bp.add_argument("guide", help="Path to guide.json")
-    p_bp.add_argument("image_dir", help="Path to images directory")
-    p_bp.add_argument("output", help="Output path for vision-results.json")
+    p_bp.add_argument("guide", nargs="?", default=None,
+                      help="Path to guide.json (default: --project/<project>/<only JSON>)")
+    p_bp.add_argument("--project", default=None,
+                      help="Project folder under ~/Documents/FolgeProjects to process")
+    p_bp.add_argument("image_dir", nargs="?", default=None,
+                      help="Path to images directory (default: <project>/images)")
+    p_bp.add_argument("output", nargs="?", default=None,
+                      help="Output path for vision-results.json (default: <project>/output/vision-results.json)")
     p_bp.add_argument("--provider", choices=PROVIDERS, default=None)
     p_bp.add_argument("--api-key", default=None)
     p_bp.add_argument("--model", default=None)
@@ -85,13 +107,18 @@ def main():
     p_render = sub.add_parser("render", help="Render Markdown from enriched JSON")
     p_render.add_argument("guide", help="Path to guide.enriched.json")
     p_render.add_argument("target", nargs="?", default=None,
-                          help="Target: pdf, docx, pptx, html, github")
+                          help="Format key (e.g. pdf, docx, html, github)")
     p_render.add_argument("output", nargs="?", default=None, help="Output .md path")
+    p_render.add_argument("--images-dir", default=None,
+                          help="Guide's images directory (default: <guide dir>/images)")
 
     # publish
     p_pub = sub.add_parser("publish", help="Publish to target formats")
-    p_pub.add_argument("guide", help="Path to guide.json")
-    p_pub.add_argument("output", nargs="?", default="output", help="Output directory")
+    p_pub.add_argument("guide", nargs="?", default=None,
+                       help="Path to guide JSON (any name; default: --project/<project>/<only JSON>)")
+    p_pub.add_argument("--project", default=None,
+                       help="Project folder under ~/Documents/FolgeProjects to publish")
+    p_pub.add_argument("output", nargs="?", default=None, help="Output directory (default: <project>/output)")
     p_pub.add_argument("targets", nargs="?", default=None, help="Comma-separated targets")
     p_pub.add_argument("provider", nargs="?", default=None, help="Vision provider")
     p_pub.add_argument("--orientation", choices=["portrait", "landscape"], default=None,
@@ -135,7 +162,28 @@ def main():
 
     elif args.command == "batch-process":
         from folge_cli.batch_process import main as bp_main
-        sys.argv = ["batch-process", args.guide, args.image_dir, args.output]
+        from folge_cli.config import resolve_guide, project_images, project_output
+        from pathlib import Path
+        if args.project:
+            guide = resolve_guide(project=args.project)
+            image_dir, output = args.image_dir, args.output
+            if args.guide and Path(args.guide).suffix.lower() != ".json":
+                # First positional was an images dir (or output), not a guide.
+                if image_dir is None:
+                    image_dir = args.guide
+                elif output is None:
+                    output = args.guide
+            sys.argv = [
+                "batch-process",
+                str(guide),
+                str(image_dir or project_images(guide)),
+                str(output or (project_output(guide) / "vision-results.json")),
+            ]
+        else:
+            if not (args.guide and args.image_dir and args.output):
+                print("ERROR: provide <guide> <image_dir> <output> or use --project NAME")
+                sys.exit(1)
+            sys.argv = ["batch-process", args.guide, args.image_dir, args.output]
         if args.provider:
             sys.argv += ["--provider", args.provider]
         if args.api_key:
@@ -191,20 +239,47 @@ def main():
         from folge_cli.render import render_markdown, render_for_target
         from pathlib import Path
         if args.target:
-            render_for_target(Path(args.guide), args.target, Path(args.output))
+            render_for_target(Path(args.guide), args.target, Path(args.output),
+                              images_dir=args.images_dir)
         elif args.output:
-            render_markdown(Path(args.guide), output_path=Path(args.output))
+            render_markdown(Path(args.guide), output_path=Path(args.output),
+                            images_dir=args.images_dir)
         else:
             print("Usage: folge-cli render <guide.enriched.json> <target> <output.md>")
             sys.exit(1)
 
     elif args.command == "publish":
         from folge_cli.publish import publish_with_pdf_ua
+        from folge_cli.config import PROVIDERS as _PROVIDERS
         from pathlib import Path
-        targets = args.targets.split(",") if args.targets else None
+        if args.project:
+            # With --project, guide/output default to the project, so the
+            # positional slots are interpreted as [targets] [provider]
+            # (unless a value clearly names a path).
+            def _is_path(value):
+                return bool(value) and (
+                    Path(value).suffix == ".json" or Path(value).exists()
+                    or str(value).endswith("/") or "/" in value
+                )
+            guide = output = targets = provider = None
+            for value in (args.guide, args.output, args.targets, args.provider):
+                if not value:
+                    continue
+                if provider is None and value in _PROVIDERS:
+                    provider = value
+                elif guide is None and _is_path(value) and Path(value).suffix == ".json":
+                    guide = value
+                elif output is None and _is_path(value) and Path(value).suffix != ".json":
+                    output = value
+                elif targets is None:
+                    targets = value
+        else:
+            guide, output, targets, provider = args.guide, args.output, args.targets, args.provider
+        targets = targets.split(",") if targets else None
         success = publish_with_pdf_ua(
-            args.guide, args.output, targets, args.provider or "ollama",
+            guide, output, targets, provider or "ollama",
             orientation=getattr(args, "orientation", None) or "portrait",
+            project=args.project,
         )
         sys.exit(0 if success else 1)
 

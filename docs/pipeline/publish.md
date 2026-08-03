@@ -1,6 +1,7 @@
 # Step 7: Publish
 
-**What it does:** Converts Markdown to 16 output formats via Pandoc with Lua filter accessibility metadata injection.
+**What it does:** Converts Markdown to every output format the installed
+pandoc supports via Pandoc, with Lua filter accessibility metadata injection.
 
 **Why it matters:**
 
@@ -9,36 +10,49 @@
 - **HTML**: Self-contained with ARIA attributes, embedded resources
 - **EPUB**: Electronic publication with embedded resources
 - **Typst, AsciiDoc, LaTeX, RST, DocBook**: Typesetting and documentation formats
-- **Markdown variants**: CommonMark, GitHub Flavored, MultiMarkdown
+- **Markdown variants**: Markdown, CommonMark, GitHub Flavored, MultiMarkdown, and more
 
 ## Running
 
 ### Via the Pipeline Orchestrator
 
 ```bash
-folge-cli pipeline guide.json output/ --targets pdf,docx,html
+folge-cli pipeline --project my-guide --targets pdf,docx,html
+# or: folge-cli pipeline guide.json output/ --targets pdf,docx,html
 ```
 
 ### Via the Standalone Publish Script
 
 ```bash
-folge-cli publish guide.json output/ --targets pdf,docx,html
+folge-cli publish --project my-guide pdf,docx,html
+# or: folge-cli publish guide.json output/ --targets pdf,docx,html
 ```
 
 ### With Orientation Flag
 
 ```bash
 # Letter portrait (default)
-folge-cli publish guide.json output/ --targets pdf
+folge-cli publish --project my-guide pdf
 
 # Letter landscape
-folge-cli publish guide.json output/ --targets pdf --orientation landscape
+folge-cli publish --project my-guide pdf --orientation landscape
 ```
 
-### All 16 Targets
+### All Targets
+
+Omitting `--targets` produces **every format supported by the installed
+pandoc**; writers absent from that pandoc version (e.g. `ansi`, `bbcode*`,
+`djot` on 3.1.x) are skipped with a warning.  The registry lives in
+`src/folge_cli/formats.py`.  To build everything explicitly:
 
 ```bash
-folge-cli publish guide.json output/ --targets pdf,docx,html,pptx,github,typst,asciidoc,beamer,commonmark,gfm,multimarkdown,docbook,epub,odt,rst,latex
+folge-cli publish --project my-guide
+```
+
+Or a specific subset:
+
+```bash
+folge-cli publish --project my-guide pdf,docx,html,pptx,github,typst,asciidoc,beamer,commonmark,gfm,markdown_mmd,docbook,epub,odt,rst,latex
 ```
 
 ### Via Pandoc Directly
@@ -59,7 +73,7 @@ pandoc guide.md --lua-filter=docx-accessibility.lua -o guide.docx
 pandoc guide.md --lua-filter=accessibility.lua --standalone --embed-resources -o guide.html
 
 # EPUB (self-contained)
-pandoc guide.md --epub-embed-resources=true -o guide.epub
+pandoc guide.md --embed-resources -o guide.epub
 
 # Typst
 pandoc guide.md -t typst -o guide.typ
@@ -86,7 +100,13 @@ pandoc guide.md -t latex -o guide.tex
 |--------|--------|-------------|-----------|-------|
 | CommonMark | `commonmark` | `commonmark` | `_cm.md` | Standard CommonMark |
 | GitHub Flavored | `gfm` | `gfm` | `_gh.md` | With long descriptions |
-| MultiMarkdown | `multimarkdown` | `multimarkdown` | `_mmd.md` | MultiMarkdown extensions |
+| MultiMarkdown | `markdown_mmd` | `markdown_mmd` | `_mmd.md` | MultiMarkdown extensions |
+
+Other markdown/text variants (Markdown `_md.md`, CommonMark X `_cmx.md`,
+PHP Extra `_phpextra.md`, Markdown Strict `_strict.md`, Markua `_markua.md`,
+Plain `_plain.txt`, Org `.org`, Textile `.textile`, Texinfo `.texi`, man
+`.1`, ms `.ms`, Djot `.djot`, wiki dialects, and BBCode variants) follow
+the same `guide_<abbrev>.<ext>` convention.
 
 ### Typesetting and Document Formats
 
@@ -123,16 +143,25 @@ Each primary output format uses a specific Lua filter that injects accessibility
 | `docx-accessibility.lua` | DOCX, PPTX | `description` field, alt text | Full |
 | `accessibility.lua` | HTML | `aria-description`, `aria-label` | Full |
 
-Markdown variants (commonmark, gfm, multimarkdown), Typst, AsciiDoc, LaTeX, RST, DocBook, ODT, and EPUB do not use Lua filters — Pandoc handles the conversion natively.
+Markdown variants (markdown, commonmark, gfm, markdown_mmd), Typst, AsciiDoc,
+LaTeX, RST, DocBook, ODT, and EPUB do not use Lua filters — Pandoc handles the
+conversion natively.
 
 See [Lua Filters Reference](../reference/lua-filters.md) for detailed documentation.
 
 ## Self-Contained Output
 
-HTML and EPUB outputs are self-contained by default:
+HTML, EPUB, and slide outputs are self-contained by default:
 
-- **HTML**: Uses `--standalone --embed-resources` to embed all CSS, fonts, and images
-- **EPUB**: Uses `--epub-embed-resources=true` to embed all resources
+- **HTML/Slides**: Uses `--standalone --embed-resources` to embed all CSS, fonts, and images
+- **EPUB**: Uses `--embed-resources` to embed all resources
+
+## Verbose Logging
+
+Every pandoc invocation runs with `--standalone` (so each file carries the
+document metadata from `metadata.yaml`) and `--verbose`.  Its stdout/stderr
+is appended to `<output>/pandoc.log` under a header with the timestamp,
+command, and exit code.
 
 ## Custom Fonts
 

@@ -49,7 +49,8 @@ in the output, which the Pandoc Lua filters use to inject accessibility metadata
 | `beamer` | Included | `\newpage` | No | LaTeX Beamer presentations |
 | `commonmark` | Included | No | No | CommonMark standard |
 | `gfm` | Included | No | No | GitHub Flavored Markdown |
-| `multimarkdown` | Included | No | No | MultiMarkdown extensions |
+| `markdown_mmd` | Included | No | No | MultiMarkdown extensions |
+| `markdown` | Included | No | No | Pandoc Markdown |
 | `docbook` | Included | No | No | DocBook XML |
 | `epub` | Included | No | No | Electronic publication |
 | `odt` | Included | No | No | OpenDocument Text |

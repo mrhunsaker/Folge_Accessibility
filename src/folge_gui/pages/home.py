@@ -41,11 +41,13 @@ def build() -> None:
             heading("Before you start", level=2, classes="text-xl font-semibold m-0")
             with ui.column().classes("gap-1"):
                 icon_with_label(
-                    "check_circle", "Run this from the project root, or point Setup at your project.",
+                    "create_new_folder",
+                    "Create a project folder at ~/Documents/FolgeProjects/<project>/ with "
+                    "your guide JSON (any name) and an images/ folder.",
                     icon_color=COLOR["status_success"],
                 )
                 icon_with_label(
-                    "check_circle", "guide.json (exported from Folge) and an images/ folder should be in place.",
+                    "check_circle", "Pick the project on the Steps or Full Pipeline page to pre-fill the paths.",
                     icon_color=COLOR["status_success"],
                 )
                 icon_with_label(

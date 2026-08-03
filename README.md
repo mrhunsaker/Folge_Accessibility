@@ -17,8 +17,9 @@
 
 A semi-automated documentation publishing pipeline that enriches
 [Folge](https://folge.me) guide exports with Vision AI-generated accessibility
-metadata, then publishes to **16 output formats** including PDF/UA-compliant
-PDFs, DOCX, HTML, EPUB, LaTeX, Typst, and more.
+metadata, then publishes to **every format the installed pandoc supports**
+(70+ writers) including PDF/UA-compliant PDFs, DOCX, HTML, EPUB, LaTeX,
+Typst, and more.
 
 **Documentation:** [mrhunsaker.github.io/Folge_Accessibility](https://mrhunsaker.github.io/Folge_Accessibility/)
 
@@ -33,8 +34,19 @@ multi-format documentation** through seven stages. It is designed for
 
 ### Input: `guide.json`
 
-The pipeline accepts `guide.json` exports from [Folge](https://folge.me).
-Place the file in the project root with screenshots in `images/`:
+The pipeline accepts guide JSON exports from [Folge](https://folge.me) with
+any file name. Each guide lives in its own **project folder** under
+`~/Documents/FolgeProjects/<project>/` — the JSON file (any name, it must be
+the only top-level JSON), the screenshots in `images/`, and all generated
+files in `output/`:
+
+```text
+~/Documents/FolgeProjects/
+└── my-guide/
+    ├── my-export.json              # any name
+    ├── images/                     # step-0.png, step-1.png, ...
+    └── output/                     # created automatically
+```
 
 ```json
 {
@@ -125,15 +137,22 @@ to each step with accessibility metadata:
 
 | Stage | Description | Input | Output |
 |-------|-------------|-------|--------|
-| **1. Export** | Get your guide and screenshots from Folge | Folge | `guide.json` + images |
+| **1. Export** | Get your guide and screenshots from Folge | Folge | guide JSON + images |
 | **2. Enrich** | Vision AI generates alt text, descriptions, OCR, UI controls | `guide.json` + images | `vision-results.json` |
 | **3. Merge** | Combine authored content with vision data deterministically | `guide.json` + `vision-results.json` | `guide.enriched.json` |
 | **4. Validate** | Schema compliance, content quality, PDF/UA checks | `guide.enriched.json` | Validation report |
 | **5. Review** | Manual operator review (optional re-verify) | Validation report | Approved content |
 | **6. Render** | Generate Markdown with embedded accessibility metadata | `guide.enriched.json` | `guide.md` |
-| **7. Publish** | Convert to 16 output formats via Pandoc + Lua filters | `guide.md` | PDF, DOCX, HTML, EPUB, LaTeX, Typst, and more |
+| **7. Publish** | Convert to every supported pandoc output format via Pandoc + Lua filters | `guide.md` | PDF, DOCX, HTML, EPUB, LaTeX, Typst, and more |
 
 ### Output Formats
+
+Every writer the installed pandoc supports is exported on each run
+(`--targets` narrows the list).  Writers unavailable in a given pandoc
+version (e.g. `ansi`, `bbcode*`, `djot` on 3.1.x) are skipped with a
+warning.  Collision-free filenames follow `guide_<abbrev>.<ext>`; the
+primary formats keep plain names.  The registry lives in
+`src/folge_cli/formats.py`.
 
 | Format | File Extension | Description |
 |--------|---------------|-------------|
@@ -147,12 +166,34 @@ to each step with accessibility metadata:
 | **Beamer** | `_beamer.pdf` | LaTeX Beamer presentation (PDF) |
 | **CommonMark** | `_cm.md` | CommonMark Markdown |
 | **GitHub Flavored** | `_gh.md` | GitHub Flavored Markdown (with long descriptions) |
-| **MultiMarkdown** | `_mmd.md` | MultiMarkdown format |
+| **MultiMarkdown** | `_mmd.md` | MultiMarkdown format (`markdown_mmd`) |
 | **DocBook** | `.xml` | DocBook XML |
 | **EPUB** | `.epub` | Electronic publication (self-contained) |
 | **ODT** | `.odt` | OpenDocument Text |
 | **reStructuredText** | `.rst` | reStructuredText format |
 | **LaTeX** | `.tex` | LaTeX source |
+
+Additional markdown/text variants: Markdown (`_md.md`), CommonMark X
+(`_cmx.md`), PHP Extra (`_phpextra.md`), Markdown Strict (`_strict.md`),
+Markua (`_markua.md`), Plain (`_plain.txt`), Org (`.org`), Textile
+(`.textile`), Texinfo (`.texi`), man (`.1`), ms (`.ms`), Djot (`.djot`),
+and wiki dialects Dokuwiki, MediaWiki, XWiki, ZimWiki, Jira, Muse,
+Haddock, and native AST (all `_<name>.txt`).
+
+HTML family: HTML4 (`_html4.html`), HTML5 (`_html5.html`), and the slide
+formats Slideous, Slidy, DZSlides, RevealJS, and S5 (`_<name>.html`),
+plus Chunked HTML (`_chunkedhtml.zip`).
+
+XML family: DocBook4, DocBook5, JATS, JATS Archiving, JATS Article
+Authoring, JATS Publishing, OpenDocument XML, TEI (all `_<name>.xml`,
+except DocBook keeps `.xml`).
+
+Other formats: EPUB2/EPUB3 (`_epub2.epub`/`_epub3.epub`), FB2 (`.fb2`),
+ICML (`.icml`), Jupyter Notebook (`.ipynb`), RTF (`.rtf`), OPML
+(`.opml`), JSON AST (`.json`), ConTeXt (`_context.tex`), BibTeX (`.bib`),
+BibLaTeX (`_biblatex.bib`), AsciiDoc Legacy and Asciidoctor
+(`_asciidoc_legacy.adoc`/`_asciidoctor.adoc`), and BBCode variants
+(`_<name>.bbcode`).
 
 ### Key Features
 
@@ -160,9 +201,9 @@ to each step with accessibility metadata:
   (local), openrouter, openai, gemini, anthropic (cloud)
 - **Accessible GUI**: `folge_gui` — a WCAG 2.2 AA NiceGUI front end
   (`uv run folge-gui`) for setup, individual steps, and the full pipeline
-- **16 output formats**: PDF, DOCX, HTML, PPTX, GitHub Markdown, Typst,
-  AsciiDoc, Beamer, CommonMark, GFM, MultiMarkdown, DocBook, EPUB, ODT, RST,
-  LaTeX
+- **70+ output formats**: every writer the installed pandoc supports —
+  PDF, DOCX, HTML, PPTX, GitHub Markdown, Typst, AsciiDoc, Beamer,
+  CommonMark, GFM, MultiMarkdown, DocBook, EPUB, ODT, RST, LaTeX, and more
 - **Accessibility-first**: WCAG 2.1 AA, ARIA, PDF/UA, DOCX accessibility
 - **Accessible document metadata**: auto-generated title, author, subject,
   keywords, language, structure tags, bookmarks, and copy-permissive security
@@ -231,15 +272,17 @@ uv sync
 # Pull the vision model (if using ollama)
 ollama pull qwen2.5vl-8k:latest
 
-# Place your Folge export and screenshots
-# (guide.json in root, images in images/)
+# Place your Folge export and screenshots in a project folder
+mkdir -p ~/Documents/FolgeProjects/my-guide/images
+cp /path/to/guide-export.json ~/Documents/FolgeProjects/my-guide/
 
 # Run the full pipeline
-folge-cli pipeline guide.json output/
+folge-cli pipeline --project my-guide
 ```
 
-Output files appear in `output/`: a tagged PDF/UA-compliant PDF, DOCX, HTML,
-EPUB, LaTeX, Typst, and more — all 16 supported formats.
+Output files appear in `~/Documents/FolgeProjects/my-guide/output/`: a tagged
+PDF/UA-compliant PDF, DOCX, HTML, EPUB, LaTeX, Typst, and more — every format
+the installed pandoc supports.
 
 ---
 
@@ -300,7 +343,8 @@ GEMINI_API_KEY=your-key-here
 ANTHROPIC_API_KEY=your-key-here
 ```
 
-**`config.yaml`** — Detailed provider settings, targets (16 output formats), validation thresholds.
+**`config.yaml`** — Detailed provider settings, targets (informational; the
+runtime registry lives in `src/folge_cli/formats.py`), validation thresholds.
 
 ---
 
@@ -310,62 +354,81 @@ The `folge-cli` command provides ten subcommands:
 
 ```bash
 # Full pipeline (all stages with progress tracking)
-folge-cli pipeline <guide.json> [output-dir] [--targets pdf,docx,html,...] [--provider PROVIDER] [--orientation portrait|landscape]
+folge-cli pipeline [guide.json] [output-dir] [--project NAME] [--targets pdf,docx,html,...] [--provider PROVIDER] [--orientation portrait|landscape]
 
 # Check version
 folge-cli --version
 
 # Individual stages
-folge-cli batch-process <guide.json> <images/> <output.json> [--provider PROVIDER]
+folge-cli batch-process [guide.json] [images/] [output.json] [--project NAME] [--provider PROVIDER]
 folge-cli merge <guide.json> <vision-results.json> <output.json>
 folge-cli validate-schema <json-file> [--warnings-out <file>]
 folge-cli validate-content <json-file> [min-confidence]
 folge-cli validate-pdf <pdf-file>
-folge-cli render <guide.enriched.json> <target> <output.md>
-folge-cli publish <guide.json> [output-dir] [--targets pdf,docx,html,...] [--orientation portrait|landscape]
+folge-cli render <guide.enriched.json> <target> <output.md> [--images-dir <dir>]
+folge-cli publish [guide.json] [output-dir] [targets] [provider] [--project NAME] [--orientation portrait|landscape]
 folge-cli metadata <guide.json> [-o metadata.yaml] [--apply-pdf guide.pdf] [--check] [--strict]
 folge-cli generate-manual-attention <json> <images/> <output.md> [warnings.json]
 ```
 
-When `--targets` is not specified, **all 16 formats** are produced by default.
+Projects live in `~/Documents/FolgeProjects/<project>/`. `--project NAME`
+resolves the guide JSON (any name — it must be the only top-level JSON),
+`images/`, and `output/` automatically:
+
+```bash
+folge-cli pipeline --project my-guide
+folge-cli publish --project my-guide pdf,docx,html
+```
+
+When `--targets` is not specified, **every format supported by the installed
+pandoc** is produced by default (writers absent from that pandoc version are
+skipped with a warning).
 
 ### Available Targets
 
+The full list lives in `src/folge_cli/formats.py`.  Common targets:
+
 ```
 pdf  docx  html  pptx  github  typst  asciidoc  beamer
-commonmark  gfm  multimarkdown  docbook  epub  odt  rst  latex
+commonmark  gfm  markdown_mmd  docbook  epub  odt  rst  latex
 ```
+
+All pandoc invocations run with `--standalone` (so every file carries the
+document metadata) and `--verbose`; their output is appended to
+`<output>/pandoc.log`.
 
 ### Running Stages Individually
 
 ```bash
 # Process images through Vision API
-folge-cli batch-process guide.json images/ vision-results.json --provider ollama
+folge-cli batch-process --project my-guide --provider ollama
 
 # Merge guide with vision data
-folge-cli merge guide.json vision-results.json guide.enriched.json
+folge-cli merge ~/Documents/FolgeProjects/my-guide/my-export.json \
+  ~/Documents/FolgeProjects/my-guide/output/vision-results.json \
+  ~/Documents/FolgeProjects/my-guide/output/guide.enriched.json
 
 # Validate schema and content
-folge-cli validate-schema guide.enriched.json
-folge-cli validate-content guide.enriched.json 0.7
+folge-cli validate-schema ~/Documents/FolgeProjects/my-guide/output/guide.enriched.json
+folge-cli validate-content ~/Documents/FolgeProjects/my-guide/output/guide.enriched.json 0.7
 
 # Render Markdown for a specific target
-folge-cli render guide.enriched.json pdf guide.md
+folge-cli render ~/Documents/FolgeProjects/my-guide/output/guide.enriched.json pdf guide.md
 
-# Publish to multiple formats (all 16 supported)
-folge-cli publish guide.json output/ pdf,docx,html,epub,typst,latex
+# Publish to selected formats (omit --targets for every supported format)
+folge-cli publish --project my-guide pdf,docx,html,epub,typst,latex
 
 # Publish with landscape orientation
-folge-cli publish guide.json output/ pdf --orientation landscape
+folge-cli publish --project my-guide pdf --orientation landscape
 
 # Generate accessible-document metadata for all formats
-folge-cli metadata guide.json -o metadata.yaml
+folge-cli metadata ~/Documents/FolgeProjects/my-guide/my-export.json -o metadata.yaml
 
 # Embed metadata into a PDF and allow text copying
-folge-cli metadata guide.json --apply-pdf output/guide.pdf
+folge-cli metadata ~/Documents/FolgeProjects/my-guide/my-export.json --apply-pdf output/guide.pdf
 
 # Verify metadata against accessibility best practices
-folge-cli metadata guide.json --check --strict
+folge-cli metadata ~/Documents/FolgeProjects/my-guide/my-export.json --check --strict
 ```
 
 ### Accessible Document Metadata
@@ -605,8 +668,8 @@ Folge_Accessibility/
 │   └── AtkinsonHyperlegibleMono/   # Static OTF monospace font
 ├── schemas/                        # JSON schemas for validation
 ├── docs/                           # MkDocs documentation source
-├── images/                         # Screenshots from Folge (user-provided)
-├── output/                         # Published documents (generated)
+├── images/                         # Container workflow only (docker-compose mounts)
+├── output/                         # Container workflow only (docker-compose mounts)
 │
 ├── .github/workflows/
 │   ├── deploy-docs.yml             # Deploy MkDocs to GitHub Pages
@@ -628,7 +691,7 @@ Folge_Accessibility/
 | File | Purpose |
 |------|---------|
 | `pyproject.toml` | Project metadata, dependencies, `folge-cli` entry point, `[tool.uv.workspace]` members (`src/folge_gui`) |
-| `config.yaml` | Provider settings, 16 output targets, validation thresholds, `project.author` and `project.keywords` metadata defaults |
+| `config.yaml` | Provider settings, output targets (informational; registry in `folge_cli.formats`), validation thresholds, `project.author` and `project.keywords` metadata defaults |
 | `.env` | Environment variables: provider selection, API keys, paths |
 | `templates/prompt.txt` | Vision AI prompt template |
 | `templates/markdown.md` | Jinja2 Markdown rendering template |

@@ -112,6 +112,163 @@ def load_yaml_config():
     return config
 
 
+# ── Project (guide) directories ─────────────────────────────────────────
+# Each guide lives in its own folder under the user's Documents directory
+# (~/Documents/FolgeProjects/<project>/).  The folder holds the guide JSON
+# (any name — it must be the only top-level JSON file), an ``images/``
+# folder with the step screenshots, and an ``output/`` folder that all
+# generated files are written into.  Override the base with the
+# ``FOLGE_PROJECTS_DIR`` environment variable or ``paths.projects_dir`` in
+# ``config.yaml``.
+PROJECTS_DIR = Path(
+    get_env("FOLGE_PROJECTS_DIR")
+    or load_yaml_config().get("paths", {}).get("projects_dir")
+    or (Path.home() / "Documents" / "FolgeProjects")
+).expanduser()
+
+
+def list_projects():
+    """Return sorted names of project folders under ``PROJECTS_DIR``.
+
+    Returns
+    -------
+    list[str]
+        Names of the immediate subdirectories of the projects directory,
+        or an empty list when the directory does not exist yet.
+    """
+    if not PROJECTS_DIR.is_dir():
+        return []
+    return sorted(p.name for p in PROJECTS_DIR.iterdir() if p.is_dir())
+
+
+def project_guide_file(project_dir):
+    """Return the single top-level JSON file in a project folder.
+
+    A project folder is expected to hold exactly one JSON file — the guide
+    export from Folge, which may have any file name.
+
+    Parameters
+    ----------
+    project_dir : str or Path
+        Path to the project folder.
+
+    Returns
+    -------
+    Path
+        The resolved guide JSON path.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the folder does not exist or contains no JSON file.
+    ValueError
+        If the folder contains more than one JSON file.
+    """
+    project_dir = Path(project_dir)
+    matches = sorted(p for p in project_dir.glob("*.json") if p.is_file())
+    if not matches:
+        raise FileNotFoundError(
+            f"No guide JSON found in {project_dir}. "
+            "Export your guide from Folge and save it (with any name) in this folder."
+        )
+    if len(matches) > 1:
+        raise ValueError(
+            f"Multiple JSON files found in {project_dir}: "
+            f"{', '.join(p.name for p in matches)}. "
+            "Keep exactly one guide JSON file per project folder."
+        )
+    return matches[0].resolve()
+
+
+def resolve_guide(guide=None, project=None):
+    """Resolve the path to the guide JSON file.
+
+    Resolution order: an explicit ``guide`` path always wins; otherwise
+    ``project`` names a subfolder of ``PROJECTS_DIR`` whose single
+    top-level JSON file is used.
+
+    Parameters
+    ----------
+    guide : str or Path, optional
+        Explicit path to a guide JSON file.
+    project : str, optional
+        Name of a project folder under ``PROJECTS_DIR``.
+
+    Returns
+    -------
+    Path
+        Absolute path to the guide JSON file.
+
+    Raises
+    ------
+    ValueError
+        If neither ``guide`` nor ``project`` is provided.
+    """
+    if guide:
+        return Path(guide).expanduser().resolve()
+    if project:
+        return project_guide_file(PROJECTS_DIR / project)
+    raise ValueError(
+        "No guide specified. Pass a path to the guide JSON "
+        "or use --project NAME."
+    )
+
+
+def project_base(guide_path):
+    """Return the folder that owns a guide — base for ``images/`` and ``output/``.
+
+    Parameters
+    ----------
+    guide_path : str or Path
+        Path to the guide JSON file.
+
+    Returns
+    -------
+    Path
+        Absolute path to the project folder (the guide's parent directory).
+    """
+    return Path(guide_path).expanduser().resolve().parent
+
+
+def project_images(guide_path):
+    """Return the images folder for a guide (``<project>/images``).
+
+    Parameters
+    ----------
+    guide_path : str or Path
+        Path to the guide JSON file.
+
+    Returns
+    -------
+    Path
+        Absolute path to the project's ``images`` directory.
+    """
+    return project_base(guide_path) / "images"
+
+
+def project_output(guide_path, output=None):
+    """Return the output folder for a guide.
+
+    Defaults to ``<project>/output``; an explicit ``output`` path (e.g. a
+    CLI argument) is honored instead.
+
+    Parameters
+    ----------
+    guide_path : str or Path
+        Path to the guide JSON file.
+    output : str or Path, optional
+        Explicit output directory. Default is None.
+
+    Returns
+    -------
+    Path
+        Absolute output directory path.
+    """
+    if output:
+        return Path(output).expanduser().resolve()
+    return project_base(guide_path) / "output"
+
+
 def get_min_confidence(override=None):
     """Return the minimum confidence threshold.
 
@@ -139,6 +296,8 @@ def get_min_confidence(override=None):
 # ── Provider definitions ──────────────────────────────────────────────
 # Each entry maps an env prefix to its defaults and whether it needs an
 # API key.  The YAML section name matches the provider key.
+# The program defaults to ollama not for performance reasons, but rather
+# to prevent accidental cost overruns from openrouter, etc.
 _PROVIDER_DEFS = {
     "ollama": {
         "env_prefix": "OLLAMA",
@@ -208,7 +367,7 @@ _PROVIDER_DEFS = {
         "auth_style": "bearer",
         "defaults": {
             "base_url": "https://openrouter.ai/api/v1",
-            "model": "qwen/qwen3-vl-32b-instruct",
+            "model": "moonshotai/kimi-k3",
             "workers": 4,
             "timeout": 300,
             "retries": 2,

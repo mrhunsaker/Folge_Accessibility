@@ -32,8 +32,8 @@ git checkout -b feature/your-feature-name
 # Validate schema against a test file
 uv run python scripts/validate_schema.py test-data/guide.enriched.json
 
-# Run the pipeline with test data
-uv run run_pipeline.py test-data/guide.json test-output/
+# Run the pipeline against a project folder (see docs/getting-started.md)
+FOLGE_PROJECTS_DIR=/tmp/folge-dev folge-cli pipeline --project my-guide
 ```
 
 ### Building Documentation
