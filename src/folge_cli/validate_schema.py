@@ -51,7 +51,7 @@ SCHEMA = {
                                 "items": {
                                     "type": "object",
                                     "properties": {
-                                        "type": {"type": "string", "enum": ["button", "text_field", "dropdown", "checkbox", "radio", "slider", "navigation", "menu", "tab", "icon", "link", "other"]},
+                                        "type": {"type": "string", "enum": ["button", "text_field", "dropdown", "checkbox", "radio", "slider", "navigation", "menu", "tab", "icon", "link", "table", "other"]},
                                         "label": {"type": "string"},
                                         "bounding_box": {"type": "object", "properties": {"x": {"type": "number"}, "y": {"type": "number"}, "width": {"type": "number"}, "height": {"type": "number"}}},
                                         "action": {"type": "string"}

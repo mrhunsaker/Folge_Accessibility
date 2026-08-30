@@ -264,7 +264,7 @@ def parse_json_response(content):
 
 VALID_UI_TYPES = {
     "button", "text_field", "dropdown", "checkbox", "radio",
-    "slider", "navigation", "menu", "tab", "icon", "link", "other",
+    "slider", "navigation", "menu", "tab", "icon", "link", "table", "other",
 }
 
 UI_CONTROL_TYPE_MAP = {
@@ -675,9 +675,10 @@ def process_single_step(step, guide_title, previous_step, next_step,
             "vision_error": "No screenshot for this step (text-only step)",
             "processed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         }
-    image_path = image_dir / step.get("image", "")
 
-    if not image_path.exists():
+    image_path = image_dir / step["image"]
+
+    if not image_path.is_file():
         return {
             "step_id": step["step_id"],
             "vision_error": f"Image not found: {image_path}",
@@ -708,7 +709,7 @@ def process_single_step(step, guide_title, previous_step, next_step,
     }
 
     if provider["name"] in LOCAL_PROVIDERS:
-        payload_template.setdefault("options", {})["num_predict"] = 32768
+        payload_template.setdefault("options", {})["num_predict"] = 16384
 
     headers = _build_auth_headers(provider)
     temperatures = [0.1, 0.5, 0.7]
@@ -733,6 +734,13 @@ def process_single_step(step, guide_title, previous_step, next_step,
             choice = data["choices"][0]
             finish_reason = choice.get("finish_reason", "unknown")
             raw_content = choice["message"]["content"]
+
+            if raw_content is None:
+                raise ValueError(
+                    f"Model returned no content (finish_reason={finish_reason}); "
+                    "it likely exhausted max_tokens on internal reasoning before answering."
+                )
+
             content = raw_content
 
             result = parse_json_response(content)
@@ -840,6 +848,7 @@ def process_guide(guide_path, image_dir, output_path, provider, sequential=False
         with ThreadPoolExecutor(max_workers=provider["workers"]) as executor:
             futures = {}
             future_start = {}
+            future_step_id = {}
             for i, step in enumerate(steps):
                 cur = i + 1
                 prev = steps[i - 1] if i > 0 else None
@@ -852,14 +861,19 @@ def process_guide(guide_path, image_dir, output_path, provider, sequential=False
                 )
                 futures[future] = (cur, step["title"])
                 future_start[future] = t0
+                future_step_id[future] = step.get("step_id")
 
             try:
                 for future in as_completed(futures):
+                    cur, title = futures[future]
                     try:
                         result = future.result()
                     except Exception as e:
-                            result = {"step_id": step["step_id"], "vision_error": f"{type(e).__name__}: {e}"}
-                    cur, title = futures[future]
+                        result = {
+                            "step_id": future_step_id[future],
+                            "vision_error": f"{type(e).__name__}: {e}",
+                            "processed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                        }
                     elapsed = time.monotonic() - future_start[future]
                     if "vision_error" in result:
                         step_error(cur, total, title, result["vision_error"][:80])

@@ -145,6 +145,20 @@ to each step with accessibility metadata:
 | **6. Render** | Generate Markdown with embedded accessibility metadata | `guide.enriched.json` | `guide.md` |
 | **7. Publish** | Convert to every supported pandoc output format via Pandoc + Lua filters | `guide.md` | PDF, DOCX, HTML, EPUB, LaTeX, Typst, and more |
 
+If a `guide.enriched.json` already exists in the output directory from a
+prior run, `folge-cli pipeline` detects it and prompts:
+
+```
+Found existing enriched JSON: .../output/guide.enriched.json
+  (U)se existing enriched JSON and skip vision processing  or  (R)egenerate vision data from scratch? [U/R]
+```
+
+Choosing **U** skips stages 1-3 (vision processing + merge) entirely and
+resumes at validation and manual review — useful after fixing something by
+hand in the enriched JSON, or after a run that already succeeded at vision
+but failed later in the pipeline. Pass `--skip-vision` to do this
+non-interactively (errors out if no enriched JSON is present).
+
 ### Output Formats
 
 Every writer the installed pandoc supports is exported on each run
@@ -354,7 +368,7 @@ The `folge-cli` command provides ten subcommands:
 
 ```bash
 # Full pipeline (all stages with progress tracking)
-folge-cli pipeline [guide.json] [output-dir] [--project NAME] [--targets pdf,docx,html,...] [--provider PROVIDER] [--orientation portrait|landscape]
+folge-cli pipeline [guide.json] [output-dir] [--project NAME] [--targets pdf,docx,html,...] [--provider PROVIDER] [--orientation portrait|landscape] [--skip-vision]
 
 # Check version
 folge-cli --version
@@ -495,84 +509,6 @@ runtime.
 
 ---
 
-## Container Usage
-
-Pre-built images are not yet published. Use the files in the repository to
-build and run locally with Docker or Podman.
-
-### Docker
-
-```bash
-# Build the image
-docker build -t folge-cli .
-
-# Run CLI commands directly
-docker run --rm folge-cli --help
-docker run --rm folge-cli --version
-
-# Full pipeline with host Ollama
-mkdir -p images output
-cp /path/to/guide.json .
-docker compose run --rm folge-cli pipeline guide.json output
-
-# Validate the PDF output
-docker compose run --rm folge-cli validate-pdf output/guide.pdf
-```
-
-The `docker-compose.yml` mounts `guide.json`, `images/`, and `output/` from
-the current directory. Set API keys or provider via environment variables or
-a `.env` file:
-
-```bash
-PROVIDER=openai OPENAI_API_KEY=sk-... \
-  docker compose run --rm folge-cli pipeline guide.json output
-```
-
-Run Ollama as a companion service instead of pointing at the host:
-
-```bash
-docker compose --profile with-ollama up -d ollama
-# Then set OLLAMA_BASE_URL=http://ollama:11434/v1 in the compose file
-```
-
-### Podman
-
-Podman builds from `Containerfile` automatically. The `podman-compose.yml`
-mirrors `docker-compose.yml` with Podman-specific adjustments (`:Z` SELinux
-labels, `userns_mode: keep-id` for rootless file ownership).
-
-```bash
-# Build the image
-podman build -t folge-cli
-
-# Run CLI commands
-podman run --rm folge-cli --help
-podman run --rm folge-cli --version
-
-# Full pipeline with host Ollama
-mkdir -p images output
-cp /path/to/guide.json .
-podman-compose run --rm folge-cli pipeline guide.json output
-# or with Podman's built-in compose:
-podman compose run --rm folge-cli pipeline guide.json output
-
-# Validate the PDF output
-podman-compose run --rm folge-cli validate-pdf output/guide.pdf
-```
-
-Run Ollama as a companion service:
-
-```bash
-podman-compose --profile with-ollama up -d ollama
-```
-
-> **Note:** If `podman-compose` errors with `--userns and --pod cannot be
-> set together`, re-run with `podman-compose --in-pod=false up`. This is a
-> known interaction between `userns_mode: keep-id` and podman-compose's
-> default pod-per-project behavior on some versions.
-
----
-
 ## Graphical Interface (folge_gui)
 
 `folge_gui` is an accessible, browser-based front end for the pipeline, built
@@ -668,8 +604,6 @@ Folge_Accessibility/
 │   └── AtkinsonHyperlegibleMono/   # Static OTF monospace font
 ├── schemas/                        # JSON schemas for validation
 ├── docs/                           # MkDocs documentation source
-├── images/                         # Container workflow only (docker-compose mounts)
-├── output/                         # Container workflow only (docker-compose mounts)
 │
 ├── .github/workflows/
 │   ├── deploy-docs.yml             # Deploy MkDocs to GitHub Pages
@@ -714,6 +648,68 @@ Folge_Accessibility/
 | `require_alt_text` | `true` | Require alt text for all images |
 | `require_long_description` | `true` | Require long descriptions for images |
 | `max_alt_text_length` | `150` | Maximum characters for alt text |
+
+---
+
+## Troubleshooting
+
+### PDF generation fails on Windows: `cannot load library 'libgobject-2.0-0'`
+
+`weasyprint` (the default PDF engine) depends on Pango and its GTK/GLib
+dependencies, which aren't installed by `pip`/`uv` on Windows the way they
+are on Linux/macOS. If you see:
+
+```
+OSError: cannot load library 'libgobject-2.0-0': error 0x7e
+```
+
+1. Install [MSYS2](https://www.msys2.org/#installation) (default options).
+2. In the MSYS2 shell, run `pacman -S mingw-w64-x86_64-pango`.
+3. Point WeasyPrint at the resulting DLLs, either for the current session:
+   ```powershell
+   set WEASYPRINT_DLL_DIRECTORIES=C:\msys64\mingw64\bin
+   ```
+   or permanently:
+   ```powershell
+   setx WEASYPRINT_DLL_DIRECTORIES C:\msys64\mingw64\bin
+   ```
+
+See WeasyPrint's own [installation](https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#installation)
+and [troubleshooting](https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#troubleshooting)
+docs for details. If `weasyprint` still fails, the pipeline automatically
+falls back to `wkhtmltopdf`, then `xelatex` — check the console output past
+the `weasyprint` failure before troubleshooting further; you may already
+have a valid PDF from one of the fallback engines. `xelatex` ships with a
+MiKTeX install, which most Windows users already have from `pdfinfo`/TeX
+tooling.
+
+### Vision step fails with a "no content" or `'NoneType'` error
+
+If a vision request comes back with `finish_reason: "length"` and no
+content, it ran out of its token budget before producing an answer.
+`batch_process.py` now raises a clear error for this
+(`Model returned no content (finish_reason=length); it likely exhausted
+max_tokens on internal reasoning before answering`) instead of the
+confusing `'NoneType' object has no attribute 'strip'` it used to throw.
+This is a known behavior of reasoning models (including the default
+OpenRouter model, Kimi K3): reasoning tokens and the final answer share
+the same `max_tokens` budget, so a screenshot that needs a longer chain of
+thought can consume the whole budget before writing any JSON.
+`max_tokens` was raised from `16384` to `32768` in `batch_process.py` to
+give more headroom, and the batch processor retries automatically. If it
+still happens on a particular step, raise `max_tokens` further or reduce
+the model's reasoning effort if your provider exposes that setting.
+
+### Schema validation fails on an unrecognized `ui_controls` type
+
+The `type` field for detected UI controls is a closed vocabulary
+(`button`, `text_field`, `dropdown`, `checkbox`, `radio`, `slider`,
+`navigation`, `menu`, `tab`, `icon`, `link`, `table`, `other`). If the
+vision model returns a label outside this list, it's normalized to
+`other` automatically — if you hit a validation error naming a specific
+type instead, that type needs to be added to both `VALID_UI_TYPES` in
+`batch_process.py` and the schema `enum` in `validate_schema.py` (they
+must stay in sync).
 
 ---
 

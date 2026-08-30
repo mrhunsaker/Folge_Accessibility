@@ -14,6 +14,23 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (`YYYY.M.
 
 ### Added
 
+- **`--skip-vision` / reuse existing enriched JSON** — `folge-cli pipeline`
+  now detects an existing `<guide>.enriched.json` in the output directory
+  and prompts to reuse it, skipping vision processing and merge (stages
+  1-3) entirely and resuming at validation and manual review. Pass
+  `--skip-vision` to do this non-interactively; useful after fixing
+  something by hand in the enriched JSON, or after a run that succeeded at
+  vision but failed later in the pipeline.
+- **`table` UI control type** — `ui_controls[].type` now accepts `table`
+  (alongside the existing `button`, `text_field`, `dropdown`, `checkbox`,
+  `radio`, `slider`, `navigation`, `menu`, `tab`, `icon`, `link`, `other`)
+  in both `VALID_UI_TYPES` (`batch_process.py`) and the JSON Schema `enum`
+  (`validate_schema.py`) — the vision model was correctly identifying
+  tables in "Review Heading Plan" screenshots but had no valid slot to put
+  that classification in.
+- **Troubleshooting section in README** — covers the WeasyPrint-on-Windows
+  library error, vision-model token-truncation errors, and unrecognized
+  `ui_controls` types.
 - **Unified format registry** — `src/folge_cli/formats.py` is now the single
   source of truth for output formats, replacing the duplicated `TARGETS`
   dicts in `pipeline.py` and `publish.py`.
@@ -34,6 +51,67 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (`YYYY.M.
 - **`--verbose` + `pandoc.log`** — all pandoc runs pass `--verbose` and their
   stdout/stderr is appended to `<output>/pandoc.log` under per-format headers
   (timestamp, command, exit code).
+
+### Fixed
+
+- **Crash on steps with no screenshot** — a step with no `image` (e.g. a
+  text-only closing summary) resolved `image_dir / ""` to the images
+  *directory itself*, which `PIL.Image.open()` then tried to open as a
+  file, raising `PermissionError` on Windows (`IsADirectoryError` on
+  Linux/macOS) and aborting the whole batch. `process_single_step` now
+  checks for a missing/empty `image` up front and returns a `vision_error`
+  for that step instead of processing it.
+- **Empty vision result bypassed the `vision_error` exemption** — the fix
+  above initially returned a bare result with no `vision_error` key, which
+  `merge.py` then wrote out as an *empty but present* `vision: {}` object.
+  `validate_content.py`'s existing `vision_error` skip-check never
+  triggered, so it flagged missing `alt_text`/`long_description`/
+  `confidence` as hard errors. The no-image guard now sets `vision_error`
+  explicitly so both `merge.py` and `validate_content.py` handle it via
+  their existing exemption path.
+- **One failing vision step could discard an entire successful batch** —
+  `process_guide`'s `as_completed` loop called `future.result()`
+  unguarded, so any unexpected exception from a worker thread (including
+  ones raised before a step's own retry loop, e.g. in image decoding)
+  propagated and crashed `process_guide` before results were ever written
+  to disk — discarding every already-completed step in the process. Each
+  future's result is now resolved inside a `try/except`, degrading a
+  single unexpected failure to a `vision_error` on that one step.
+- **`generate-manual-attention` flagged text-only steps as needing manual
+  alt text** — after the fix above, any step with no image legitimately
+  carries a `vision_error`, but `generate_manual_attention.py` listed
+  every `vision_error` step as needing a manually-written `alt_text`/
+  `long_description`. It now also checks `step.get("image")`, so only
+  steps that have a real screenshot but failed vision processing show up
+  on the manual-review list.
+- **Confusing `'NoneType' object has no attribute 'strip'` on vision
+  responses** — reasoning models (e.g. Kimi K3, the OpenRouter default)
+  can return `finish_reason: "length"` with `message.content: null` when
+  they exhaust `max_tokens` on internal reasoning before writing an
+  answer. `parse_json_response()` assumed a string and crashed with an
+  opaque `AttributeError`. The response handler now checks for `None`
+  content immediately after extraction and raises a clear error
+  referencing `finish_reason` instead.
+
+### Changed
+
+- **Default vision `max_tokens` raised from `16384` to `32768`** — gives
+  reasoning models more headroom to finish internal reasoning and still
+  produce an answer on complex screenshots, reducing truncated/empty
+  responses.
+- **Image-path existence check uses `is_file()` instead of `exists()`** —
+  defense-in-depth so that if a step's `image` path ever resolves to a
+  directory again, it fails safely as "Image not found" instead of
+  reaching `PIL.Image.open()`.
+
+### Removed
+
+- **Docker/Podman documentation** — the `## Container Usage` section
+  (`### Docker`, `### Podman`) and the "Container workflow only"
+  directory-tree notes have been removed from `README.md`. The
+  `docker-compose.yml`, `podman-compose.yml`, `Containerfile`, and
+  `Dockerfile` themselves are untouched — say the word if you want those
+  removed from the repo too.
 
 ## [2026.8.2] - 2026-08-02
 

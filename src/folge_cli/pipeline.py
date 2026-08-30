@@ -14,9 +14,15 @@ Runs the full pipeline end-to-end using uv for dependency management:
   6. Publish to PDF, DOCX, HTML
   7. Validate PDF/UA compliance
 
+If an enriched JSON already exists in the output directory (from a prior
+run), the pipeline offers to reuse it and skip stages 1-3 (vision
+processing + merge) entirely, jumping straight to validation and manual
+review. Pass --skip-vision to do this non-interactively.
+
 Usage:
     folge-cli pipeline <guide.json> [output-dir] [--project NAME]
                        [--targets pdf,docx,html] [--provider PROVIDER]
+                       [--skip-vision]
 """
 import os
 import shutil
@@ -365,6 +371,26 @@ def run_pipeline(args):
 
     counter = StepCounter(7)
 
+    # --- Check for an existing enriched JSON to skip vision processing ---
+    enriched = output_dir / f"{stem}.enriched.json"
+    skip_vision = False
+    if getattr(args, "skip_vision", False):
+        if not enriched.exists():
+            print(f"ERROR: --skip-vision given but no enriched JSON found at {enriched}")
+            sys.exit(1)
+        skip_vision = True
+        print(f"\n  --skip-vision: reusing existing enriched JSON at {enriched.absolute()}")
+    elif enriched.exists():
+        print(f"\n  Found existing enriched JSON: {enriched.absolute()}")
+        try:
+            resp = input(
+                "  (U)se existing enriched JSON and skip vision processing"
+                "  or  (R)egenerate vision data from scratch? [U/R] "
+            ).strip().upper()
+        except EOFError:
+            resp = "R"
+        skip_vision = resp == "U"
+
     if not check_prerequisites():
         print("\nFATAL: Missing prerequisites. Install the tools listed above.")
         sys.exit(1)
@@ -389,38 +415,47 @@ def run_pipeline(args):
     min_conf = get_min_confidence()
 
     # --- Steps 1-2: Batch Vision Processing ---
-    step_header("1-2", f"Processing images with {provider_name.title()} Vision")
-    vision_results = output_dir / f"{stem}.vision-results.json"
+    if skip_vision:
+        step_header("1-2", "Skipping vision processing (reusing existing enriched JSON)")
+        done, _ = counter.tick()
+        info(f"  {done}/7 complete — batch vision processing skipped")
+    else:
+        step_header("1-2", f"Processing images with {provider_name.title()} Vision")
+        vision_results = output_dir / f"{stem}.vision-results.json"
 
-    batch_cmd = (
-        f"uv run python -m folge_cli.batch_process {guide_path} {images_dir} {vision_results}"
-        f" --provider={provider_name}"
-    )
-    batch_env = None
-    if api_key and provider_name not in LOCAL_PROVIDERS:
-        key_env = f"{provider_name.upper()}_API_KEY"
-        if api_key != get_env(key_env):
-            batch_env = {key_env: api_key}
+        batch_cmd = (
+            f"uv run python -m folge_cli.batch_process {guide_path} {images_dir} {vision_results}"
+            f" --provider={provider_name}"
+        )
+        batch_env = None
+        if api_key and provider_name not in LOCAL_PROVIDERS:
+            key_env = f"{provider_name.upper()}_API_KEY"
+            if api_key != get_env(key_env):
+                batch_env = {key_env: api_key}
 
-    if not run_cmd(batch_cmd, env=batch_env):
-        print("\nWARNING: Some vision processing steps returned errors.")
-        print("The pipeline will continue but enriched output may have vision_error fields.")
-        if not vision_results.exists():
-            print("\nFATAL: Vision processing produced no output.")
-            sys.exit(1)
-    done, _ = counter.tick()
-    info(f"  {done}/7 complete — batch vision processing done")
+        if not run_cmd(batch_cmd, env=batch_env):
+            print("\nWARNING: Some vision processing steps returned errors.")
+            print("The pipeline will continue but enriched output may have vision_error fields.")
+            if not vision_results.exists():
+                print("\nFATAL: Vision processing produced no output.")
+                sys.exit(1)
+        done, _ = counter.tick()
+        info(f"  {done}/7 complete — batch vision processing done")
 
     # --- Step 3: Merge ---
-    step_header("3", "Merging guide with vision data")
-    enriched = output_dir / f"{stem}.enriched.json"
-    if not run_cmd(
-        f"uv run python -m folge_cli.merge {guide_path} {vision_results} {enriched}"
-    ):
-        print("\nFATAL: Merge failed.")
-        sys.exit(1)
-    done, _ = counter.tick()
-    info(f"  {done}/7 complete — merge done")
+    if skip_vision:
+        step_header("3", "Skipping merge (reusing existing enriched JSON)")
+        done, _ = counter.tick()
+        info(f"  {done}/7 complete — merge skipped")
+    else:
+        step_header("3", "Merging guide with vision data")
+        if not run_cmd(
+            f"uv run python -m folge_cli.merge {guide_path} {vision_results} {enriched}"
+        ):
+            print("\nFATAL: Merge failed.")
+            sys.exit(1)
+        done, _ = counter.tick()
+        info(f"  {done}/7 complete — merge done")
 
     # --- Step 4: Validate ---
     step_header("4", "Validating enriched JSON")
@@ -686,6 +721,14 @@ def main():
         choices=["portrait", "landscape"],
         default=None,
         help="PDF page orientation (default: portrait)",
+    )
+    parser.add_argument(
+        "--skip-vision",
+        action="store_true",
+        help=(
+            "If an enriched JSON already exists in the output directory, "
+            "reuse it and skip vision processing + merge without prompting."
+        ),
     )
     args = parser.parse_args()
     try:
