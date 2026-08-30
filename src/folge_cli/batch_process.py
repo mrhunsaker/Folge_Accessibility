@@ -701,14 +701,14 @@ def process_single_step(step, guide_title, previous_step, next_step,
                 ],
             }
         ],
-        "max_tokens": 16384,
+        "max_tokens": 32768,
         "temperature": 0.1,
         "top_p": 0.9,
         "stream": False,
     }
 
     if provider["name"] in LOCAL_PROVIDERS:
-        payload_template.setdefault("options", {})["num_predict"] = 16384
+        payload_template.setdefault("options", {})["num_predict"] = 32768
 
     headers = _build_auth_headers(provider)
     temperatures = [0.1, 0.5, 0.7]
