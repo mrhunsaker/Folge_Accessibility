@@ -668,6 +668,13 @@ def process_single_step(step, guide_title, previous_step, next_step,
     dict
         Processed result dict, or a dict with 'vision_error' on failure.
     """
+    if not step.get("image"):
+        # Text-only step (e.g. a closing summary) — no screenshot to process.
+        return {
+            "step_id": step["step_id"],
+            "vision_error": "No screenshot for this step (text-only step)",
+            "processed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        }
     image_path = image_dir / step.get("image", "")
 
     if not image_path.exists():
@@ -848,7 +855,10 @@ def process_guide(guide_path, image_dir, output_path, provider, sequential=False
 
             try:
                 for future in as_completed(futures):
-                    result = future.result()
+                    try:
+                        result = future.result()
+                    except Exception as e:
+                            result = {"step_id": step["step_id"], "vision_error": f"{type(e).__name__}: {e}"}
                     cur, title = futures[future]
                     elapsed = time.monotonic() - future_start[future]
                     if "vision_error" in result:

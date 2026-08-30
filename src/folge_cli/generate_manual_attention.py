@@ -39,7 +39,7 @@ def generate(enriched_path, images_dir, output_path, warnings=None):
 
     failed = []
     for seq, step in enumerate(guide.get("steps", []), start=1):
-        if "vision_error" in step:
+        if "vision_error" in step and step.get("image"):
             failed.append((seq, step))
 
     if not failed and not warnings:
