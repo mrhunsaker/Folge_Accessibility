@@ -471,14 +471,6 @@ text copying is allowed. `--check --strict` exits with status 1 when a
 best-practice violation is found (for example, a generic title like
 "Document 1").
 
-!!! tip "Pre-built binaries"
-    Pre-built executables (Coming Soon from
-    [GitHub Releases](https://github.com/mrhunsaker/Folge_Accessibility/releases))
-    will include all individual subcommands. The `pipeline` subcommand (which chains
-    all steps together) requires the source installation with `uv` because it
-    spawns subprocess calls. For the full automated pipeline, use the source
-    installation or chain the individual commands manually.
-
 ---
 
 ## Building from Source
