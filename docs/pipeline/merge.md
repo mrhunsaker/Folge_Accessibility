@@ -38,6 +38,25 @@ folge-cli merge ~/Documents/FolgeProjects/my-guide/my-export.json \
 | Preserves | All authored fields from `guide.json` |
 | On missing data | Continues with warnings |
 
+## HTML Escaping of `long_description`
+
+When writing `guide.enriched.json`, the merge step **HTML-escapes** the vision
+model's `long_description` field using `html.escape(..., quote=True)`.
+
+!!! note "Why"
+    The vision model sometimes embeds literal HTML tags in its descriptions —
+    for example a screenshot may be described as "planned as `<h4>`". If those
+    tags are not escaped, an HTML intermediary (WeasyPrint, pandoc's HTML
+    output, etc.) interprets them as real markup and opens an unmatched
+    heading (`<h3>`/`<h4>`), hiding the surrounding text instead of showing
+    it.
+
+With escaping, the stored value becomes `planned as &lt;h4&gt;`, which renders
+as literal text.
+
+Only the `long_description` field is escaped. `alt_text`, `ocr_text`, and
+`ui_controls` are stored exactly as the model returned them.
+
 ## Output
 
 **File created:** `guide.enriched.json` (in `<project>/output/`)

@@ -14,6 +14,22 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (`YYYY.M.
 
 ### Added
 
+- **Custom vision prompts** — `folge-cli batch-process` (and `folge-cli
+  pipeline`) accept `--prompt <name>` to select an alternate prompt generator
+  for the vision model. Prompt modules live in `src/folge_cli/prompts/` and
+  each exposes `generate_prompt(step, guide_title, previous_step=None,
+  next_step=None)`. Available names are auto-discovered and offered as
+  `choices`, so any new module added to that folder automatically becomes a
+  valid `--prompt`. Without the flag, the built-in default prompt from
+  `batch_process.py` is used unchanged.
+- **`folge-cli new-prompt <name>`** — scaffolds a new custom vision prompt
+  module into `src/folge_cli/prompts/<name>.py` with the correct
+  `generate_prompt` signature and the standard JSON-schema prompt template,
+  so a new prompt can be added without hand-typing boilerplate (and without
+  misspelling the function name). The name is validated/normalized to a safe
+  identifier, existing modules are not overwritten unless `--force` is passed,
+  and the created module is immediately auto-registered as a `--prompt` choice.
+  Bundled example: `brailleblaster`.
 - **`--skip-vision` / reuse existing enriched JSON** — `folge-cli pipeline`
   now detects an existing `<guide>.enriched.json` in the output directory
   and prompts to reuse it, skipping vision processing and merge (stages
@@ -95,6 +111,14 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (`YYYY.M.
 
 ### Changed
 
+- **HTML-escape `long_description` in `guide.enriched.json`** — the merge
+  step now HTML-escapes the vision model's `long_description` (via
+  `html.escape(..., quote=True)`) before writing the enriched JSON, so tags
+  embedded in the description — e.g. `<h4>` — render as literal text in
+  Pandoc/WeasyPrint and other HTML intermediaries instead of being interpreted
+  as markup (which previously opened an unmatched `<h3>`/`<h4>` heading).
+  Only the `long_description` field is escaped; `alt_text`, `ocr_text`, and
+  `ui_controls` are left untouched.
 - **Default vision `max_tokens` raised from `16384` to `32768`** — gives
   reasoning models more headroom to finish internal reasoning and still
   produce an answer on complex screenshots, reducing truncated/empty

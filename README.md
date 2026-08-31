@@ -133,6 +133,15 @@ to each step with accessibility metadata:
 }
 ```
 
+During the **merge** step, the vision model's `long_description` is
+HTML-escaped before it is written to the enriched JSON. This ensures that any
+tags the model embeds in the description — e.g. an `<h4>` in "the last row is
+planned as `<h4>`" — are stored as `&lt;h4&gt;` and render as literal text in
+Pandoc/WeasyPrint and other HTML intermediaries, rather than being interpreted
+as markup (which previously opened an unmatched heading). Only the
+`long_description` field is escaped; `alt_text`, `ocr_text`, and
+`ui_controls` are stored as authored.
+
 ### Pipeline Stages
 
 | Stage | Description | Input | Output |
@@ -364,17 +373,18 @@ runtime registry lives in `src/folge_cli/formats.py`), validation thresholds.
 
 ## CLI Reference
 
-The `folge-cli` command provides ten subcommands:
+The `folge-cli` command provides eleven subcommands:
 
 ```bash
 # Full pipeline (all stages with progress tracking)
-folge-cli pipeline [guide.json] [output-dir] [--project NAME] [--targets pdf,docx,html,...] [--provider PROVIDER] [--orientation portrait|landscape] [--skip-vision]
+folge-cli pipeline [guide.json] [output-dir] [--project NAME] [--targets pdf,docx,html,...] [--provider PROVIDER] [--orientation portrait|landscape] [--skip-vision] [--prompt NAME]
 
 # Check version
 folge-cli --version
 
 # Individual stages
-folge-cli batch-process [guide.json] [images/] [output.json] [--project NAME] [--provider PROVIDER]
+folge-cli batch-process [guide.json] [images/] [output.json] [--project NAME] [--provider PROVIDER] [--prompt NAME]
+folge-cli new-prompt <name> [--force]
 folge-cli merge <guide.json> <vision-results.json> <output.json>
 folge-cli validate-schema <json-file> [--warnings-out <file>]
 folge-cli validate-content <json-file> [min-confidence]
@@ -398,6 +408,54 @@ When `--targets` is not specified, **every format supported by the installed
 pandoc** is produced by default (writers absent from that pandoc version are
 skipped with a warning).
 
+### Custom Vision Prompts
+
+The prompt sent to the vision model is generated per-step by a prompt module.
+By default the built-in prompt in `src/folge_cli/batch_process.py` is used,
+but you can select an alternate prompt for the cases that need one:
+
+```bash
+# Use the built-in default prompt (no --prompt flag)
+folge-cli batch-process --project my-guide --provider ollama
+
+# Use a custom prompt module
+folge-cli batch-process --project my-guide --provider ollama --prompt brailleblaster
+```
+
+Every prompt module:
+
+- Lives in `src/folge_cli/prompts/<name>.py`.
+- Exposes a single function
+  `generate_prompt(step, guide_title, previous_step=None, next_step=None)`
+  that returns the prompt string.
+- Is **auto-registered** — adding a file to that folder immediately makes its
+  name a valid `--prompt` choice (the flag's `choices` are discovered
+  automatically from the folder contents).
+
+`folge-cli new-prompt <name>` scaffolds a correctly formed prompt module so
+you never have to hand-type the function signature:
+
+```bash
+folge-cli new-prompt my-special-case
+# Creates src/folge_cli/prompts/my_special_case.py with the standard
+# generate_prompt() boilerplate and JSON-schema prompt template.
+```
+
+The name is normalized to a safe identifier (e.g. `My Special Case` becomes
+`my_special_case`). Existing modules are not overwritten unless you pass
+`--force`. After scaffolding, edit the function to add your custom
+instructions, then run `folge-cli batch-process ... --prompt my_special_case`.
+
+The `pipeline` command forwards the same option:
+
+```bash
+folge-cli pipeline --project my-guide --prompt brailleblaster
+```
+
+A bundled example, `brailleblaster`, demonstrates a highly customized prompt
+that instructs the model to describe the BrailleBlaster editor layout with a
+specific opening sentence.
+
 ### Available Targets
 
 The full list lives in `src/folge_cli/formats.py`.  Common targets:
@@ -416,6 +474,8 @@ document metadata) and `--verbose`; their output is appended to
 ```bash
 # Process images through Vision API
 folge-cli batch-process --project my-guide --provider ollama
+# Use a custom vision prompt instead of the default
+folge-cli batch-process --project my-guide --provider ollama --prompt brailleblaster
 
 # Merge guide with vision data
 folge-cli merge ~/Documents/FolgeProjects/my-guide/my-export.json \

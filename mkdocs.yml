@@ -75,6 +75,7 @@ nav:
   - Accessible Document Metadata: accessibility-metadata.md
   - Configuration: configuration.md
   - Graphical Interface (folge_gui): gui.md
+  - Custom Vision Prompts: prompts.md
   - Reference:
       - Scripts: reference/scripts.md
       - Lua Filters: reference/lua-filters.md

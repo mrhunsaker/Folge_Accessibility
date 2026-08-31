@@ -2,6 +2,7 @@
 # Copyright 2026 Michael Ryan Hunsaker, M.Ed., Ph.D.
 # SPDX-License-Identifier: Apache-2.0
 """Merge guide.json with vision-results.json using step_id as primary key."""
+import html
 import json
 import time
 from pathlib import Path
@@ -131,6 +132,50 @@ def _normalize_vision(vision):
     return vision
 
 
+def _escape_html_text(value):
+    """HTML-escape a string so it renders literally rather than as markup.
+
+    Only applies when the value is a string; other types pass through
+    unchanged.
+
+    Parameters
+    ----------
+    value : any
+        Value to escape, normally the vision ``long_description``.
+
+    Returns
+    -------
+    any
+        HTML-escaped string, or the original value if not a string.
+    """
+    if not isinstance(value, str):
+        return value
+    return html.escape(value, quote=True)
+
+
+def _escape_vision_long_description(vision):
+    """HTML-escape the ``long_description`` field of a vision dict.
+
+    Focuses only on ``long_description`` (the field most prone to
+    embedded HTML tags).  Other vision fields are left untouched.
+
+    Parameters
+    ----------
+    vision : dict
+        Vision dict, mutated in place.
+
+    Returns
+    -------
+    dict
+        The same vision dict with ``long_description`` escaped if string.
+    """
+    if not isinstance(vision, dict):
+        return vision
+    if "long_description" in vision:
+        vision["long_description"] = _escape_html_text(vision.get("long_description"))
+    return vision
+
+
 def deterministic_merge(guide_path, vision_path, output_path):
     """Merge guide.json with vision-results.json.
 
@@ -189,7 +234,8 @@ def deterministic_merge(guide_path, vision_path, output_path):
                 if _is_vision_error(vision):
                     enriched_step["vision_error"] = vision.get("vision_error") or vision.get("error", "unknown error")
                 else:
-                    enriched_step["vision"] = _normalize_vision(_clean(vision))
+                    validated = _normalize_vision(_clean(vision))
+                    enriched_step["vision"] = _escape_vision_long_description(validated)
             elif "vision_error" in vision_data:
                 enriched_step["vision_error"] = vision_data["vision_error"]
             else:
@@ -200,7 +246,8 @@ def deterministic_merge(guide_path, vision_path, output_path):
                 if _is_vision_error(root_vision):
                     enriched_step["vision_error"] = vision_data.get("error") or vision_data.get("vision_error", "unknown error")
                 else:
-                    enriched_step["vision"] = _normalize_vision(_clean(root_vision))
+                    validated = _normalize_vision(_clean(root_vision))
+                    enriched_step["vision"] = _escape_vision_long_description(validated)
         else:
             warnings.append(f"No vision data for step_id {step_id}")
 

@@ -8,6 +8,7 @@ openai, gemini, anthropic.  Configuration is resolved from .env with
 config.yaml as a secondary fallback.  See config.py for resolution order.
 """
 import argparse
+import importlib
 import html as html_module
 import json
 import os
@@ -22,6 +23,53 @@ from PIL import Image
 
 from .progress import error, info, ok, step_error, step_ok, step_start, summary, warn, StepCounter
 from .config import resolve_provider, PROVIDERS, LOCAL_PROVIDERS
+
+
+def get_available_prompts():
+    """Discover available prompt modules in the prompts directory.
+    
+    Returns
+    -------
+    list[str]
+        List of available prompt module names (excluding __init__).
+    """
+    prompts_dir = Path(__file__).parent / "prompts"
+    if not prompts_dir.exists():
+        return []
+    
+    prompts = []
+    for f in prompts_dir.glob("*.py"):
+        if f.name.startswith("_"):
+            continue
+        prompts.append(f.stem)
+    return sorted(prompts)
+
+
+def load_prompt_module(prompt_name):
+    """Load a prompt module by name.
+    
+    Parameters
+    ----------
+    prompt_name : str
+        Name of the prompt module to load.
+    
+    Returns
+    -------
+    module
+        The loaded prompt module.
+    
+    Raises
+    ------
+    ValueError
+        If the prompt module does not have a generate_prompt function.
+    """
+    try:
+        module = importlib.import_module(f".prompts.{prompt_name}", package="folge_cli")
+        if not hasattr(module, "generate_prompt"):
+            raise ValueError(f"Prompt module '{prompt_name}' does not have a generate_prompt function")
+        return module
+    except ImportError as e:
+        raise ValueError(f"Prompt module '{prompt_name}' not found: {e}")
 
 
 def _clean_html(text):
@@ -642,8 +690,10 @@ def _build_auth_headers(provider):
 
 
 def process_single_step(step, guide_title, previous_step, next_step,
-                        image_dir, provider, debug_dir=None):
+                        image_dir, provider, debug_dir=None, prompt_function=None):
     """Process a single step through vision API with retry.
+    prompt_function : callable, optional
+        Custom prompt generator. Defaults to generate_prompt when None.
 
     Parameters
     ----------
@@ -685,7 +735,8 @@ def process_single_step(step, guide_title, previous_step, next_step,
             "processed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         }
 
-    prompt = generate_prompt(step, guide_title, previous_step, next_step)
+    gen_prompt = prompt_function or generate_prompt
+    prompt = gen_prompt(step, guide_title, previous_step, next_step)
     payload_template = {
         "model": provider["model"],
         "messages": [
@@ -781,8 +832,10 @@ def process_single_step(step, guide_title, previous_step, next_step,
     }
 
 
-def process_guide(guide_path, image_dir, output_path, provider, sequential=False):
+def process_guide(guide_path, image_dir, output_path, provider, sequential=False, prompt_function=None):
     """Process all steps in a guide through vision API.
+    prompt_function : callable, optional
+        Custom prompt generator. Defaults to generate_prompt when None.
 
     Parameters
     ----------
@@ -829,7 +882,7 @@ def process_guide(guide_path, image_dir, output_path, provider, sequential=False
             step_start(cur, total, step["title"], step.get("image", ""))
             t0 = time.monotonic()
             result = process_single_step(
-                step, guide_title, prev, nxt, image_dir, provider, debug_dir
+                step, guide_title, prev, nxt, image_dir, provider, debug_dir, prompt_function,
             )
             elapsed = time.monotonic() - t0
             if "vision_error" in result:
@@ -857,7 +910,7 @@ def process_guide(guide_path, image_dir, output_path, provider, sequential=False
                 t0 = time.monotonic()
                 future = executor.submit(
                     process_single_step,
-                    step, guide_title, prev, nxt, image_dir, provider, debug_dir,
+                    step, guide_title, prev, nxt, image_dir, provider, debug_dir, prompt_function,
                 )
                 futures[future] = (cur, step["title"])
                 future_start[future] = t0
@@ -944,12 +997,26 @@ def main():
     parser.add_argument("--model", default=None, help="Override model name")
     parser.add_argument("--sequential", action="store_true",
                         help="Process steps one at a time (no threading)")
+    available_prompts = get_available_prompts()
+    parser.add_argument(
+        "--prompt",
+        choices=available_prompts if available_prompts else None,
+        default=None,
+        help=f"Custom prompt module to use (available: {', '.join(available_prompts) if available_prompts else 'none'})",
+    )
     args = parser.parse_args()
 
     provider = resolve_provider(args)
 
     if args.model:
         provider["model"] = args.model
+    
+    # Load custom prompt function if specified
+    prompt_function = None
+    if args.prompt:
+        prompt_module = load_prompt_module(args.prompt)
+        prompt_function = prompt_module.generate_prompt
+        info(f"Using custom prompt: {args.prompt}")
 
     if provider["name"] in LOCAL_PROVIDERS:
         if not check_model_loadable(provider):
@@ -969,6 +1036,7 @@ def main():
             Path(args.output),
             provider,
             sequential=args.sequential,
+            prompt_function=prompt_function,
         )
     except KeyboardInterrupt:
         # The threaded branch exits via os._exit() inside process_guide; this

@@ -50,6 +50,48 @@ The `ui_controls` array uses these types:
 3. Rate-limits requests (0.5s between calls) to avoid overloading the model
 4. Saves all responses to `vision-results.json`
 
+## Custom Vision Prompts
+
+By default, each step sends the built-in prompt from `src/folge_cli/batch_process.py`.
+You can select an alternate prompt generator for cases that need a highly
+customized instruction (for example, a specific application's editor layout):
+
+```bash
+folge-cli batch-process --project my-guide --prompt brailleblaster
+folge-cli pipeline --project my-guide --prompt brailleblaster
+```
+
+Prompt modules live in `src/folge_cli/prompts/`. Each module exposes a single
+function:
+
+```python
+def generate_prompt(step, guide_title, previous_step=None, next_step=None):
+    ...
+```
+
+Adding a new `.py` file to that folder **automatically registers** the prompt:
+its module name immediately becomes a valid `--prompt` choice (the flag's
+`choices` are discovered from the folder contents).
+
+### Scaffolding a new prompt
+
+Use `folge-cli new-prompt` to generate a correctly formed prompt module
+rather than typing the boilerplate by hand:
+
+```bash
+folge-cli new-prompt my-special-case
+# Creates src/folge_cli/prompts/my_special_case.py with the standard
+# generate_prompt() signature and JSON-schema prompt template.
+```
+
+- The name is normalized to a safe identifier (e.g. `My Special Case` →
+  `my_special_case`) and validated to prevent typos.
+- Existing modules are **not** overwritten unless you pass `--force`.
+- The created module is immediately available as a `--prompt` choice.
+
+The bundled `brailleblaster` example shows how to give the model a mandatory
+opening sentence for a specific tool's window layout.
+
 ## Configuration
 
 The vision processing is configured in `.env` and `config.yaml`:

@@ -1,6 +1,6 @@
 # CLI Reference
 
-The `folge-cli` command provides ten subcommands. It can be installed as a
+The `folge-cli` command provides eleven subcommands. It can be installed as a
 Python package or used as a pre-built executable.
 
 ## folge-cli (installed)
@@ -22,7 +22,7 @@ still required at runtime.
 Full end-to-end pipeline with progress tracking (source installation only).
 
 ```bash
-folge-cli pipeline [guide.json] [output-dir] [--project NAME] [--targets pdf,docx,html] [--provider PROVIDER]
+folge-cli pipeline [guide.json] [output-dir] [--project NAME] [--targets pdf,docx,html] [--provider PROVIDER] [--prompt NAME]
 ```
 
 | Argument | Default | Description |
@@ -32,6 +32,7 @@ folge-cli pipeline [guide.json] [output-dir] [--project NAME] [--targets pdf,doc
 | `output` | `<project>/output/` | Output directory |
 | `--targets` | all supported | Comma-separated target formats (default: every writer the installed pandoc supports; see `folge_cli.formats`). Writers missing from that pandoc version are skipped with a warning |
 | `--provider` | `ollama` | Vision AI provider |
+| `--prompt` | built-in | Custom vision prompt module name (e.g. `brailleblaster`); see [Custom Vision Prompts](../pipeline/enrich.md#custom-vision-prompts) |
 
 An explicit `guide` path always wins over `--project`; an explicit `output`
 wins over `<project>/output`. Example:
@@ -52,7 +53,7 @@ folge-cli pipeline --project my-guide --targets pdf,docx
 Process all images through the Vision AI API.
 
 ```bash
-folge-cli batch-process [guide.json] [images-dir] [output.json] [--project NAME] [--provider PROVIDER]
+folge-cli batch-process [guide.json] [images-dir] [output.json] [--project NAME] [--provider PROVIDER] [--prompt NAME]
 ```
 
 | Argument | Default | Description |
@@ -63,9 +64,11 @@ folge-cli batch-process [guide.json] [images-dir] [output.json] [--project NAME]
 | `output.json` | `<project>/output/vision-results.json` | Where to save vision results |
 | `--provider` | from `.env` | Vision backend |
 | `--api-key` | — | API key for cloud providers |
+| `--prompt` | built-in | Custom vision prompt module (the flag's choices are auto-discovered from `src/folge_cli/prompts/`) |
 
 ```bash
 folge-cli batch-process --project my-guide
+folge-cli batch-process --project my-guide --prompt brailleblaster
 ```
 
 **Key behaviors:**
@@ -75,6 +78,37 @@ folge-cli batch-process --project my-guide
 - Handles JSON parse errors gracefully
 - Returns error objects for failed steps instead of crashing
 - Progress counter shows completion status
+- Optional `--prompt` selects a custom prompt generator (see
+  [Custom Vision Prompts](../pipeline/enrich.md#custom-vision-prompts))
+
+---
+
+## new-prompt
+
+Scaffolds a new custom vision prompt module.
+
+```bash
+folge-cli new-prompt <name> [--force]
+```
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `name` | (required) | Name of the new prompt (e.g. `brailleblaster`). Normalized to a safe identifier |
+| `--force` | off | Overwrite an existing prompt module with the same name |
+
+```bash
+folge-cli new-prompt my-special-case
+```
+
+**Key behaviors:**
+
+- Writes a correctly formed `generate_prompt(step, guide_title,
+  previous_step=None, next_step=None)` module to `src/folge_cli/prompts/<name>.py`
+  with the standard JSON-schema prompt template, preventing hand-typed
+  signature errors.
+- Validates/normalizes the name (e.g. `My Special Case` → `my_special_case`).
+- Does not overwrite an existing module unless `--force` is passed.
+- The created module is immediately auto-registered as a `--prompt` choice.
 
 ---
 
@@ -98,6 +132,10 @@ folge-cli merge <guide.json> <vision-results.json> <output.json>
 - Adds only the `vision` field to each step
 - Logs warnings for unmatched step IDs
 - Preserves all original authored fields
+- HTML-escapes the vision `long_description` field so embedded tags (e.g.
+  `<h4>`) render as literal text in HTML intermediaries instead of opening an
+  unmatched heading (see
+  [HTML Escaping of `long_description`](../pipeline/merge.md#html-escaping-of-long_description))
 
 ---
 

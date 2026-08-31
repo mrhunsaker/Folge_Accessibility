@@ -427,6 +427,13 @@ def run_pipeline(args):
             f"uv run python -m folge_cli.batch_process {guide_path} {images_dir} {vision_results}"
             f" --provider={provider_name}"
         )
+        prompt_name = getattr(args, "prompt", None)
+        if prompt_name:
+            from folge_cli.batch_process import get_available_prompts
+            if prompt_name in get_available_prompts():
+                batch_cmd += f" --prompt={prompt_name}"
+            else:
+                print(f"  [SKIP] Unknown prompt module '{prompt_name}'; using default prompt")
         batch_env = None
         if api_key and provider_name not in LOCAL_PROVIDERS:
             key_env = f"{provider_name.upper()}_API_KEY"
@@ -729,6 +736,14 @@ def main():
             "If an enriched JSON already exists in the output directory, "
             "reuse it and skip vision processing + merge without prompting."
         ),
+    )
+    from folge_cli.batch_process import get_available_prompts
+    _available_prompts = get_available_prompts()
+    parser.add_argument(
+        "--prompt",
+        choices=_available_prompts if _available_prompts else None,
+        default=None,
+        help=f"Custom prompt module for vision processing (available: {', '.join(_available_prompts) or 'none'})",
     )
     args = parser.parse_args()
     try:

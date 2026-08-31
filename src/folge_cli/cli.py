@@ -81,6 +81,17 @@ def _main():
     p_bp.add_argument("--api-key", default=None)
     p_bp.add_argument("--model", default=None)
     p_bp.add_argument("--sequential", action="store_true")
+    from folge_cli.batch_process import get_available_prompts
+    _available_prompts = get_available_prompts()
+    p_bp.add_argument("--prompt", choices=_available_prompts if _available_prompts else None,
+                      default=None,
+                      help=f"Custom prompt module (available: {', '.join(_available_prompts) or 'none'})")
+
+    # new-prompt
+    p_np = sub.add_parser("new-prompt", help="Scaffold a new custom vision prompt module")
+    p_np.add_argument("name", help="Name of the new prompt (e.g. brailleblaster)")
+    p_np.add_argument("--force", action="store_true",
+                      help="Overwrite an existing prompt module with the same name")
 
     # merge
     p_merge = sub.add_parser("merge", help="Merge guide + vision results")
@@ -192,7 +203,21 @@ def _main():
             sys.argv += ["--model", args.model]
         if args.sequential:
             sys.argv += ["--sequential"]
+        if getattr(args, "prompt", None):
+            sys.argv += ["--prompt", args.prompt]
         bp_main()
+
+    elif args.command == "new-prompt":
+        from folge_cli.new_prompt import create_prompt_module
+        from folge_cli.progress import error
+        try:
+            target = create_prompt_module(args.name, force=args.force)
+        except ValueError as e:
+            error(str(e))
+            sys.exit(1)
+        print(f"Created prompt module: {target}")
+        print(f"Customize the generate_prompt() function, then run:")
+        print(f"  folge-cli batch-process <guide> <images> <output> --prompt {target.stem}")
 
     elif args.command == "merge":
         from folge_cli.merge import deterministic_merge
