@@ -153,18 +153,26 @@ Valid `--first-step` values map to the stage numbers below:
 | `--first-step` | Stage | Requires existing |
 |----------------|-------|-------------------|
 | `1` | Batch vision processing (stages 1-2) | `guide.json` + images |
-| `3` | Merge | (runs vision + merge fresh) |
+| `3` | Merge | `vision-results.json` (reused from disk) |
 | `4` | Validate | `guide.enriched.json` |
 | `4b` | Manual review | `guide.enriched.json` |
 | `5` | Render | `guide.enriched.json` |
 | `5b` | Metadata | `guide.enriched.json` |
-| `6` | Publish | `guide.enriched.json` |
+| `6` | Publish | `guide.enriched.json` + `guide.md` |
 
 Starting at `4` or later errors out with a clear message if
 `guide.enriched.json` is missing, so you cannot accidentally resume from a
 point with no prerequisite data. Every skipped stage's interactive prompts
 (the reuse-vision prompt and the manual-review pause, for example) are
 bypassed as well.
+
+When resuming, the pipeline **discovers the intermediate files by their
+on-disk names** in the output directory rather than assuming they were
+created on the current date. A project last run on an earlier day (e.g.
+files named `Headings-2026-08-28.enriched.json`) is therefore resumed
+correctly. In particular, `--first-step 3` **reuses** the existing
+`*-vision-results.json` (it does not regenerate vision data) and errors if
+that file is missing.
 
 ## Stage Details
 

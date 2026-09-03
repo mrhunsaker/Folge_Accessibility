@@ -49,6 +49,15 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (`YYYY.M.
   existing `<guide>.enriched.json` and errors out with a clear message if
   it is missing, so you cannot accidentally resume without prerequisite
   data.
+- **Resume discovers artifacts from disk** — when `--first-step` is used,
+  the pipeline locates its intermediate files (enriched JSON, vision
+  results, Markdown, metadata YAML) by their **on-disk names** in the
+  output directory rather than assuming they were created on the current
+  date. This means a project last run on an earlier day (e.g.
+  `Headings-2026-08-28.enriched.json`) resumes correctly. In particular,
+  `--first-step 3` **reuses** an existing `vision-results.json` (it does
+  not regenerate vision data) and errors with a clear message if that file
+  is missing.
 - **`table` UI control type** — `ui_controls[].type` now accepts `table`
   (alongside the existing `button`, `text_field`, `dropdown`, `checkbox`,
   `radio`, `slider`, `navigation`, `menu`, `tab`, `icon`, `link`, `other`)

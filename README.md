@@ -189,6 +189,14 @@ pause, are bypassed). Starting at stage `4` or later requires an existing
 `guide.enriched.json`; the pipeline errors out with a clear message if it
 is missing.
 
+When resuming, the intermediate files are **discovered by their on-disk
+names** in the output directory, not assumed to be from the current date —
+so a project last run on an earlier day (e.g. files named
+`Headings-2026-08-28.enriched.json`) is resumed correctly. In particular,
+`--first-step 3` **reuses** the existing `vision-results.json` from disk
+rather than regenerating vision data, and errors with a clear message if
+that file is missing.
+
 ### Output Formats
 
 Every writer the installed pandoc supports is exported on each run

@@ -19,6 +19,13 @@ run), the pipeline offers to reuse it and skip stages 1-3 (vision
 processing + merge) entirely, jumping straight to validation and manual
 review. Pass --skip-vision to do this non-interactively.
 
+--first-step <stage> resumes the pipeline from a specific stage
+(1 | 3 | 4 | 4b | 5 | 5b | 6), skipping every earlier stage and its
+interactive prompts. When resuming, the intermediate artifacts (enriched
+JSON, vision results, Markdown, metadata) are discovered from the output
+directory by their on-disk names — so a run from an earlier date is picked
+up correctly even though today's date differs.
+
 Usage:
     folge-cli pipeline <guide.json> [output-dir] [--project NAME]
                        [--targets pdf,docx,html] [--provider PROVIDER]
@@ -70,6 +77,98 @@ def _step_order(step_id):
         return _PIPELINE_STEPS.index(step_id)
     except ValueError:
         return len(_PIPELINE_STEPS)
+
+
+def _discover_file(output_dir, *suffixes):
+    """Find an existing output file matching any of the given suffixes.
+
+    When resuming mid-pipeline (``--first-step``), the artifacts from a
+    previous run may carry an older date in their names (e.g.
+    ``Headings-2026-08-28.enriched.json``), so the pipeline must look them
+    up on disk rather than assume the current date.
+
+    Parameters
+    ----------
+    output_dir : str or Path
+        Directory to search for the artifact.
+    suffixes : str
+        One or more filename suffixes to match. A file matches if its
+        name ends with any suffix, tolerating ``-`` vs ``_`` variants.
+
+    Returns
+    -------
+    Path or None
+        The single matching file, or ``None`` if none is found. When
+        multiple stems match, the most recently modified file is chosen.
+    """
+    output_dir = Path(output_dir)
+    if not output_dir.is_dir():
+        return None
+    matches = [
+        p
+        for p in output_dir.iterdir()
+        if p.is_file() and any(p.name.endswith(sfx) for sfx in suffixes)
+    ]
+    if not matches:
+        return None
+    matches.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+    return matches[0]
+
+
+def _discover_stem(output_dir, fallback):
+    """Derive the effective run stem from existing output artifacts.
+
+    Uses the most recently produced artifact in the output directory
+    (preferring the enriched JSON, then vision results, then Markdown) so
+    that files written during a resumed run share the same stem as the
+    earlier run, even if that run was on a different date.
+
+    Parameters
+    ----------
+    output_dir : str or Path
+        Output directory to inspect.
+    fallback : str
+        Stem to return when no artifact is found (the guide stem).
+
+    Returns
+    -------
+    str
+        The discovered stem, or *fallback*.
+    """
+    output_dir = Path(output_dir)
+    if output_dir.is_dir():
+        for pattern in ("*.enriched.json", "*.vision-results.json", "*.md"):
+            matches = sorted(
+                (p for p in output_dir.glob(pattern) if p.is_file()),
+                key=lambda p: p.stat().st_mtime,
+                reverse=True,
+            )
+            if matches:
+                return Path(matches[0].name).with_suffix("").with_suffix("")
+    return fallback
+
+
+def _skip_step(first_step, step_id):
+    """Return whether a pipeline step should be skipped given ``--first-step``.
+
+    A step runs when every stage before it has already run or is skipped,
+    i.e. it is skipped only when it comes strictly before the chosen start.
+
+    Parameters
+    ----------
+    first_step : str or None
+        The ``--first-step`` value, or ``None`` for a full run.
+    step_id : str
+        The step identifier to test (e.g. ``"4b"``).
+
+    Returns
+    -------
+    bool
+        ``True`` if the step should be skipped.
+    """
+    if not first_step:
+        return False
+    return _step_order(step_id) < _step_order(first_step)
 
 
 def banner(text, char="=", width=60):
@@ -395,12 +494,36 @@ def run_pipeline(args):
 
     counter = StepCounter(8)
 
-    # --- Determine which steps to skip ---
-    enriched = output_dir / f"{stem}.enriched.json"
+    # --- Resolve pipeline artifact paths ---
+    # Discovery-first: when resuming mid-pipeline, the artifacts from an
+    # earlier run may carry a date other than today's, so look them up by
+    # their on-disk names rather than assuming the current stem.  New files
+    # written this run use the same discovered stem so everything stays
+    # grouped with the existing folder.
     first_step = getattr(args, "first_step", None)
+    art_stem = _discover_stem(output_dir, stem)
+    enriched = _discover_file(output_dir, ".enriched.json") or output_dir / f"{art_stem}.enriched.json"
+    vision_results = (
+        _discover_file(output_dir, ".vision-results.json", "-vision-results.json", "_vision-results.json")
+        or output_dir / f"{art_stem}.vision-results.json"
+    )
+    schema_warnings = (
+        _discover_file(output_dir, ".schema-warnings.json")
+        or output_dir / f"{art_stem}.schema-warnings.json"
+    )
+    md_file = output_dir / f"{art_stem}.md"
+    manual_file = (
+        _discover_file(output_dir, ".manual-attention-needed.md")
+        or output_dir / f"{art_stem}.manual-attention-needed.md"
+    )
+    metadata_yaml = (
+        _discover_file(output_dir, ".metadata.yaml")
+        or output_dir / f"{art_stem}.metadata.yaml"
+    )
+
+    # --- Determine which steps to skip ---
     skip_vision = False
     if first_step:
-        skip_vision = _step_order(first_step) <= _step_order("1")
         print(f"\n  --first-step {first_step}: starting pipeline from step {first_step}")
     elif getattr(args, "skip_vision", False):
         if not enriched.exists():
@@ -451,13 +574,12 @@ def run_pipeline(args):
     min_conf = get_min_confidence()
 
     # --- Steps 1-2: Batch Vision Processing ---
-    if skip_vision or (first_step and _step_order(first_step) > _step_order("1")):
+    if _skip_step(first_step, "1") or skip_vision:
         step_header("1-2", "Skipping vision processing (reusing existing enriched JSON)")
         done, _ = counter.tick()
         info(f"  {done}/8 complete — batch vision processing skipped")
     else:
         step_header("1-2", f"Processing images with {provider_name.title()} Vision")
-        vision_results = output_dir / f"{stem}.vision-results.json"
 
         batch_cmd = (
             f"uv run python -m folge_cli.batch_process {guide_path} {images_dir} {vision_results}"
@@ -486,12 +608,18 @@ def run_pipeline(args):
         info(f"  {done}/8 complete — batch vision processing done")
 
     # --- Step 3: Merge ---
-    if skip_vision or (first_step and _step_order(first_step) > _step_order("3")):
+    if _skip_step(first_step, "3") or skip_vision:
         step_header("3", "Skipping merge (reusing existing enriched JSON)")
         done, _ = counter.tick()
         info(f"  {done}/8 complete — merge skipped")
     else:
         step_header("3", "Merging guide with vision data")
+        if not vision_results.exists():
+            print(f"\nFATAL: --first-step {first_step} requires an existing vision-results JSON "
+                  f"but none was found at:\n  {vision_results}\n"
+                  "Run --first-step 1 to regenerate vision data, or --first-step 4 to "
+                  "resume after merge.")
+            sys.exit(1)
         if not run_cmd(
             f"uv run python -m folge_cli.merge {guide_path} {vision_results} {enriched}"
         ):
@@ -501,8 +629,7 @@ def run_pipeline(args):
         info(f"  {done}/8 complete — merge done")
 
     # --- Step 4: Validate ---
-    schema_warnings = output_dir / f"{stem}.schema-warnings.json"
-    if first_step and _step_order(first_step) > _step_order("4"):
+    if _skip_step(first_step, "4"):
         step_header("4", "Skipping validation")
         done, _ = counter.tick()
         info(f"  {done}/8 complete — validation skipped")
@@ -520,13 +647,12 @@ def run_pipeline(args):
         info(f"  {done}/8 complete — validation done")
 
     # --- Step 4b: Manual Review Pause ---
-    if first_step and _step_order(first_step) > _step_order("4b"):
+    if _skip_step(first_step, "4b"):
         step_header("4b", "Skipping manual review")
         done, _ = counter.tick()
         info(f"  {done}/8 complete — manual review skipped")
     else:
         step_header("4b", "MANUAL REVIEW REQUIRED")
-        manual_file = output_dir / f"{stem}.manual-attention-needed.md"
         manual_cmd = (
             f"uv run python -m folge_cli.generate_manual_attention {enriched} {images_dir} {manual_file}"
         )
@@ -566,13 +692,12 @@ def run_pipeline(args):
                 print("  Please enter C or R")
 
     # --- Step 5: Render Markdown ---
-    if first_step and _step_order(first_step) > _step_order("5"):
+    if _skip_step(first_step, "5"):
         step_header("5", "Skipping render")
         done, _ = counter.tick()
         info(f"  {done}/8 complete — render skipped")
     else:
         step_header("5", "Rendering Markdown")
-        md_file = output_dir / f"{stem}.md"
         if not run_cmd(f"uv run python -m folge_cli.render {enriched} pdf {md_file} --images-dir {images_dir}"):
             print("\nFATAL: Markdown rendering failed.")
             sys.exit(1)
@@ -581,15 +706,19 @@ def run_pipeline(args):
 
     # --- Step 5b: Accessible document metadata ---
     metadata_args = ""
-    if first_step and _step_order(first_step) > _step_order("5b"):
+    if _skip_step(first_step, "5b"):
         step_header("5b", "Skipping metadata generation")
+        if metadata_yaml.exists():
+            # Reuse the metadata file discovered from a prior run so
+            # publishing (step 6) still embeds document metadata.
+            metadata_args = f"--metadata-file={metadata_yaml}"
+            print(f"  Reusing existing metadata YAML at {metadata_yaml}")
         done, _ = counter.tick()
         info(f"  {done}/8 complete — metadata skipped")
     else:
         step_header("5b", "Generating accessible document metadata")
         from folge_cli.metadata import build_metadata, write_metadata_file
         metadata = build_metadata(enriched)
-        metadata_yaml = output_dir / f"{stem}.metadata.yaml"
         write_metadata_file(metadata, metadata_yaml)
         print(f"  Metadata YAML written to {metadata_yaml}")
         metadata_args = f"--metadata-file={metadata_yaml}"
@@ -600,15 +729,15 @@ def run_pipeline(args):
     pdf_errors = []
 
     if "pdf" in targets:
-        pdf_file = output_dir / f"{stem}.pdf"
+        pdf_file = output_dir / f"{art_stem}.pdf"
         print("\n  -> PDF (weasyprint)...", end=" ", flush=True)
 
         data_args = _pandoc_data_args(orientation)
         result = run_pandoc(
-            f"pandoc {stem}.md {data_args} "
+            f"pandoc {art_stem}.md {data_args} "
             "--pdf-engine=weasyprint --pdf-engine-opt=--presentational-hints "
             f"{metadata_args} --metadata=tagged-pdf:true "
-            f"--standalone --verbose -o {stem}.pdf",
+            f"--standalone --verbose -o {art_stem}.pdf",
             output_dir,
         )
         if result.returncode == 0:
@@ -623,12 +752,12 @@ def run_pipeline(args):
             print("  -> PDF (wkhtmltopdf)...", end=" ", flush=True)
             data_args = _pandoc_data_args(orientation)
             result2 = run_pandoc(
-                f"pandoc {stem}.md {data_args} "
+                f"pandoc {art_stem}.md {data_args} "
                 "--pdf-engine=wkhtmltopdf "
                 "--pdf-engine-opt=--enable-local-file-access "
                 "--pdf-engine-opt=--tagged-pdf "
                 f"{metadata_args} --metadata=tagged-pdf:true "
-                f"--standalone --verbose -o {stem}.pdf",
+                f"--standalone --verbose -o {art_stem}.pdf",
                 output_dir,
             )
             if result2.returncode == 0:
@@ -643,10 +772,10 @@ def run_pipeline(args):
                 print("  -> PDF (xelatex)...", end=" ", flush=True)
                 data_args = _pandoc_data_args(orientation)
                 result3 = run_pandoc(
-                    f"pandoc {stem}.md {data_args} "
+                    f"pandoc {art_stem}.md {data_args} "
                     "--pdf-engine=xelatex --pdf-engine-opt=-x dvipdfmx "
                     f"{metadata_args} "
-                    f"--standalone --verbose -o {stem}.pdf",
+                    f"--standalone --verbose -o {art_stem}.pdf",
                     output_dir,
                 )
                 if result3.returncode == 0:
@@ -668,12 +797,12 @@ def run_pipeline(args):
     for tname in targets:
         if tname in ("pdf", "github"):
             continue
-        out_file = output_name(tname, base=stem)
+        out_file = output_name(tname, base=art_stem)
         print(f"\n  -> {tname.upper()}...", end=" ", flush=True)
         args = pandoc_args(tname, orientation)
         engine = f"--pdf-engine={FORMATS[tname]['engine']}" if "engine" in FORMATS[tname] else ""
         result = run_pandoc(
-            f"pandoc {stem}.md {args} {engine} {metadata_args} --verbose -o {out_file}",
+            f"pandoc {art_stem}.md {args} {engine} {metadata_args} --verbose -o {out_file}",
             output_dir,
         )
         if result.returncode == 0:
@@ -686,7 +815,7 @@ def run_pipeline(args):
                     print(f"    {line}")
 
     if "github" in targets:
-        github_file = output_dir / f"{stem}.md"
+        github_file = output_dir / f"{art_stem}.md"
         print("  -> GitHub Markdown...", end=" ", flush=True)
         result = subprocess.run(
             f"uv run python -m folge_cli.render {enriched} github {github_file} --images-dir {images_dir}",
@@ -701,7 +830,7 @@ def run_pipeline(args):
 
     # --- Summary ---
     done, _ = counter.tick()
-    info(f"  {done}/7 complete — all phases done")
+    info(f"  {done}/8 complete — all phases done")
     elapsed = time.time() - start_time
     banner("PIPELINE COMPLETE")
     print(f"  Published {len(published)} formats: {', '.join(published)}")

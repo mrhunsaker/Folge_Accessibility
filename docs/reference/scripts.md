@@ -35,7 +35,7 @@ folge-cli pipeline [guide.json] [output-dir] [--project NAME] [--targets pdf,doc
 | `--api-key` | from `.env` | API key for cloud providers |
 | `--orientation` | `portrait` | PDF page orientation (`portrait` or `landscape`) |
 | `--skip-vision` | off | Reuse an existing enriched JSON and skip vision processing + merge |
-| `--first-step` | beginning | Start the pipeline from this step instead of the beginning. Valid values: `1` (enrich), `3` (merge), `4` (validate), `4b` (manual review), `5` (render), `5b` (metadata), `6` (publish). Every earlier stage and its interactive prompts are skipped; starting at `4` or later requires an existing `guide.enriched.json` |
+| `--first-step` | beginning | Start the pipeline from this step instead of the beginning. Valid values: `1` (enrich), `3` (merge), `4` (validate), `4b` (manual review), `5` (render), `5b` (metadata), `6` (publish). Every earlier stage and its interactive prompts are skipped; starting at `4` or later requires an existing `guide.enriched.json`, and `--first-step 3` reuses the on-disk `vision-results.json` (errors if absent). Artifacts are discovered by their on-disk names, so an earlier dated run is resumed correctly. |
 | `--prompt` | built-in | Custom vision prompt module name (e.g. `brailleblaster`); see [Custom Vision Prompts](../pipeline/enrich.md#custom-vision-prompts) |
 
 An explicit `guide` path always wins over `--project`; an explicit `output`
