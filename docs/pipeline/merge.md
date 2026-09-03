@@ -38,6 +38,18 @@ folge-cli merge ~/Documents/FolgeProjects/my-guide/my-export.json \
 | Preserves | All authored fields from `guide.json` |
 | On missing data | Continues with warnings |
 
+## Manual Step Labels
+
+The optional `step_label` field, if present on a step, is **preserved through
+the merge** into `guide.enriched.json` — the merge step never modifies or
+strips it. You can add `step_label` either:
+
+- **Before merge** (in `guide.json`) — it survives the merge unchanged
+- **After merge** (directly in `guide.enriched.json`) — for quick manual edits
+
+For a description of how `step_label` affects rendering, see the
+[Render step](render.md#manual-step-numbering).
+
 ## HTML Escaping of `long_description`
 
 When writing `guide.enriched.json`, the merge step **HTML-escapes** the vision

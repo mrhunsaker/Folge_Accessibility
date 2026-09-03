@@ -75,6 +75,10 @@
             "type": "string",
             "description": "Path to screenshot image"
           },
+          "step_label": {
+            "type": "string",
+            "description": "Custom heading label replacing the auto-generated 'Step X'. Use 'Step N' to manually number a step and reset the auto-counter (subsequent unlabeled steps continue from N+1). Use '' (empty string) for no step prefix. Omit this field to keep default auto-numbering."
+          },
           "order": {
             "type": "integer",
             "minimum": 0,

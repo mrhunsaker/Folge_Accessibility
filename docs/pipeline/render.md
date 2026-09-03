@@ -90,6 +90,46 @@ Click the Settings button in the sidebar.
 
 The `longdesc` attribute is what the Pandoc Lua filters use to inject accessibility metadata into the final output formats.
 
+### Manual Step Numbering
+
+By default each step gets an auto-generated heading (`## Step 1:`, `## Step 2:`,
+...) based on its position in the `steps` array. Each step may instead carry an
+optional `step_label` field that overrides this heading:
+
+| `step_label` value | Rendered heading |
+|---|---|
+| omitted | `## Step 1: Title` (auto-numbered) |
+| `"Step 1"` | `## Step 1 Title` |
+| `"Step 2"` | `## Step 2 Title` |
+| `""` (empty) | `## Title` (no step prefix) |
+| `"Phase A"` | `## Phase A Title` (any custom text) |
+
+When a `step_label` containing a number (e.g. `"Step 1"`) is encountered, it
+displays that number and **resets the auto-counter** so the next step without a
+label continues from `Step 2`, `Step 3`, and so on. This is useful when
+different sections of a guide have independent step sequences.
+
+The `##` heading level is always supplied by the template — only the text
+(e.g. `"Step 1"`) goes in the JSON field, not `"## Step 1"`.
+
+Example: a guide with two independent step sequences.
+
+```json
+"steps": [
+  {
+    "step_label": "Step 1",
+    "title": "Open the app"
+  },
+  { "title": "Configure the connection" },   // renders "Step 2"
+  { "title": "Save the profile" },           // renders "Step 3"
+  {
+    "step_label": "Step 1",
+    "title": "Sync the device"
+  },
+  { "title": "Verify sync status" }          // renders "Step 2"
+]
+```
+
 ## Data-Driven Targets
 
 The rendering pipeline uses a data-driven `TARGETS` registry rather than

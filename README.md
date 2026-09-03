@@ -103,6 +103,7 @@ to each step with accessibility metadata:
   "steps": [
     {
       "step_id": "QatJX1vxONIm_nySDUIyv",
+      "step_label": "Step 1",
       "title": "Check Heading Levels in Original Document",
       "body": "<p>I click by each of my headings just to see what the reported heading level is in LibreOffice.</p>",
       "image": "step-0.png",
@@ -132,6 +133,14 @@ to each step with accessibility metadata:
   }
 }
 ```
+
+The optional `step_label` field controls the "Step X:" heading rendered for
+each step. Set it to `"Step 1"` to manually number a step and reset the
+auto-counter (subsequent steps without a label continue from `Step 2`,
+`Step 3`, ...). Set it to `""` (empty string) to omit the step prefix and
+render just the title. Omit the field entirely for default auto-numbering.
+You do not need to include the leading `##` in the label — the render
+template supplies the heading level.
 
 During the **merge** step, the vision model's `long_description` is
 HTML-escaped before it is written to the enriched JSON. This ensures that any

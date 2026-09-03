@@ -38,6 +38,7 @@ SCHEMA = {
                     "description": {"type": "string"},
                     "image": {"type": "string"},
                     "screenshotFilename": {"type": "string"},
+                    "step_label": {"type": "string"},
                     "order": {"type": "integer", "minimum": 0},
                     "index": {"type": "integer"},
                     "vision": {

@@ -82,6 +82,13 @@ Authored content (`guide.json`) and AI-generated enrichment (`vision-results.jso
 
 The enriched JSON uses a versioned schema (`schema_version: "1.0"`). Future versions can add new fields without breaking existing tools. The `TARGETS` registry makes adding new output formats trivial.
 
+!!! tip "Manual Step Labels"
+    After merge, you can add a `step_label` field to any step in
+    `guide.enriched.json` to control its numbering. Set `"Step 1"` to manually
+    number and reset the counter, `""` for no step prefix, or omit it for
+    default auto-numbering. Useful when different sections of a guide have
+    independent step sequences. See the [Render step](render.md#manual-step-numbering).
+
 ## Running the Pipeline
 
 ### Full Pipeline (Source Installation)
