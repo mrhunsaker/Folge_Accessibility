@@ -25,6 +25,7 @@ folge-cli merge ~/Documents/FolgeProjects/my-guide/my-export.json \
     - Creates a copy (never modifies the original)
     - Finds matching vision data by `step_id`
     - Adds the `vision` field with all AI-generated content
+    - Ensures a `step_label` is present (preserving any prior value, else seeding the auto-number)
     - Preserves all original fields
 4. Logs warnings for any mismatches
 5. Saves to `guide.enriched.json`
@@ -40,12 +41,26 @@ folge-cli merge ~/Documents/FolgeProjects/my-guide/my-export.json \
 
 ## Manual Step Labels
 
-The optional `step_label` field, if present on a step, is **preserved through
-the merge** into `guide.enriched.json` — the merge step never modifies or
-strips it. You can add `step_label` either:
+`step_label` is a **merge-managed** field that is independent of `guide.json`
+(which never provides one). The merge step guarantees every output step carries
+a `step_label`:
 
-- **Before merge** (in `guide.json`) — it survives the merge unchanged
-- **After merge** (directly in `guide.enriched.json`) — for quick manual edits
+- **Seeded by default** — steps without an existing label get the auto-number
+  (`"Step 1"`, `"Step 2"`, ...) matching their position, so output is unchanged
+  until you edit it.
+- **Preserved on re-merge** — hand-edited values are carried forward by
+  `step_id` from the existing `guide.enriched.json`, so manual labels survive
+  recomputes.
+
+Edit `step_label` directly in `guide.enriched.json`. You never need to touch
+`guide.json` to control step numbering:
+
+| `step_label` value | Rendered heading |
+|---|---|
+| `"Step 1"` (default seed) | `## Step 1 Title` |
+| `"Step 2"` | `## Step 2 Title` |
+| `""` (empty) | `## Title` (no step prefix) |
+| `"Phase A"` | `## Phase A Title` (any custom text) |
 
 For a description of how `step_label` affects rendering, see the
 [Render step](render.md#manual-step-numbering).

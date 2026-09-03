@@ -134,12 +134,13 @@ to each step with accessibility metadata:
 }
 ```
 
-The optional `step_label` field controls the "Step X:" heading rendered for
-each step. Set it to `"Step 1"` to manually number a step and reset the
-auto-counter (subsequent steps without a label continue from `Step 2`,
-`Step 3`, ...). Set it to `""` (empty string) to omit the step prefix and
-render just the title. Omit the field entirely for default auto-numbering.
-You do not need to include the leading `##` in the label — the render
+The `step_label` field controls the "Step X" heading rendered for each step.
+The **merge** step guarantees every step carries one, independent of
+`guide.json`: steps are seeded with the auto-number (`"Step 1"`, `"Step 2"`,
+...) and any hand-edited values are preserved across re-merges by `step_id`.
+Edit it directly in `guide.enriched.json` to set `"Step 1"` (resetting the
+sequence), `""` (empty string, no step prefix, just the title), or any custom
+text. You do not need to include the leading `##` in the label — the render
 template supplies the heading level.
 
 During the **merge** step, the vision model's `long_description` is

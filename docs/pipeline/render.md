@@ -92,41 +92,36 @@ The `longdesc` attribute is what the Pandoc Lua filters use to inject accessibil
 
 ### Manual Step Numbering
 
-By default each step gets an auto-generated heading (`## Step 1:`, `## Step 2:`,
-...) based on its position in the `steps` array. Each step may instead carry an
-optional `step_label` field that overrides this heading:
+Each step carries a `step_label` field that controls its rendered heading.
+The **merge** step seeds every step with the auto-number (`"Step 1"`,
+`"Step 2"`, ...) and preserves hand-edited values, so by default output is
+auto-numbered by position. Edit `step_label` in `guide.enriched.json` to
+override it:
 
 | `step_label` value | Rendered heading |
 |---|---|
-| omitted | `## Step 1: Title` (auto-numbered) |
-| `"Step 1"` | `## Step 1 Title` |
+| `"Step 1"` (default seed) | `## Step 1 Title` |
 | `"Step 2"` | `## Step 2 Title` |
 | `""` (empty) | `## Title` (no step prefix) |
 | `"Phase A"` | `## Phase A Title` (any custom text) |
 
-When a `step_label` containing a number (e.g. `"Step 1"`) is encountered, it
-displays that number and **resets the auto-counter** so the next step without a
-label continues from `Step 2`, `Step 3`, and so on. This is useful when
-different sections of a guide have independent step sequences.
-
 The `##` heading level is always supplied by the template — only the text
 (e.g. `"Step 1"`) goes in the JSON field, not `"## Step 1"`.
+
+Because the label is stored verbatim per step, you control the sequence
+directly — set `"Step 1"` to restart numbering at any slide, or set `""` to
+skip a step prefix entirely. This is useful when different sections of a guide
+have independent step sequences.
 
 Example: a guide with two independent step sequences.
 
 ```json
 "steps": [
-  {
-    "step_label": "Step 1",
-    "title": "Open the app"
-  },
-  { "title": "Configure the connection" },   // renders "Step 2"
-  { "title": "Save the profile" },           // renders "Step 3"
-  {
-    "step_label": "Step 1",
-    "title": "Sync the device"
-  },
-  { "title": "Verify sync status" }          // renders "Step 2"
+  { "step_label": "Step 1", "title": "Open the app" },
+  { "step_label": "Step 2", "title": "Configure the connection" },
+  { "step_label": "Step 3", "title": "Save the profile" },
+  { "step_label": "Step 1", "title": "Sync the device" },
+  { "step_label": "Step 2", "title": "Verify sync status" }
 ]
 ```
 

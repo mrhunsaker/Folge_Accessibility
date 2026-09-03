@@ -14,14 +14,15 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (`YYYY.M.
 
 ### Added
 
-- **Manual step numbering** — each step in `guide.enriched.json` now
-  accepts an optional `step_label` field that overrides the auto-generated
-  "Step X:" heading. Set `"step_label": "Step 1"` to manually number a step
-  and reset the auto-counter (subsequent unlabeled steps continue from that
-  number). Set `"step_label": ""` (empty string) to omit the step prefix
-  entirely and render just the title. Omit the field to keep default
-  auto-numbering. The `##` heading level stays in the render template, so
-  label values contain only the text (e.g. `"Step 1"`, not `"## Step 1"`).
+- **Manual step numbering** — each step in `guide.enriched.json` carries a
+  `step_label` field that controls the rendered "Step X" heading. It is a
+  **merge-managed** field independent of `guide.json`: the merge step seeds
+  every step with its auto-number (`"Step 1"`, `"Step 2"`, ...) and preserves
+  any hand-edited values across re-merges by `step_id`. Set
+  `"step_label": "Step 1"` to manually number a step, `"step_label": ""`
+  (empty string) for no step prefix, or any custom text. The `##` heading
+  level stays in the render template, so label values contain only the text
+  (e.g. `"Step 1"`, not `"## Step 1"`).
 - **Custom vision prompts** — `folge-cli batch-process` (and `folge-cli
   pipeline`) accept `--prompt <name>` to select an alternate prompt generator
   for the vision model. Prompt modules live in `src/folge_cli/prompts/` and

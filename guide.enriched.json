@@ -77,7 +77,7 @@
           },
           "step_label": {
             "type": "string",
-            "description": "Custom heading label replacing the auto-generated 'Step X'. Use 'Step N' to manually number a step and reset the auto-counter (subsequent unlabeled steps continue from N+1). Use '' (empty string) for no step prefix. Omit this field to keep default auto-numbering."
+            "description": "Heading label controlling the rendered 'Step X'. Merge-managed and independent of guide.json: seeded with the auto-number ('Step N') on every merge and preserved across re-merges by step_id. Set 'Step N' to manually number, '' (empty string) for no step prefix, or any custom text."
           },
           "order": {
             "type": "integer",

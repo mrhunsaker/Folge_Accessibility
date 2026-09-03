@@ -176,12 +176,50 @@ def _escape_vision_long_description(vision):
     return vision
 
 
+def _load_prior_step_labels(output_path):
+    """Load ``step_label`` values from an existing enriched JSON, if any.
+
+    The merge step manages ``step_label`` as a merge-owned field that is
+    independent of ``guide.json`` (which never provides one).  When the
+    destination enriched JSON already exists, its hand-edited ``step_label``
+    values are carried forward by ``step_id`` so manual labels survive
+    re-merges.
+
+    Parameters
+    ----------
+    output_path : Path
+        The destination enriched JSON path (may not exist yet).
+
+    Returns
+    -------
+    dict
+        Mapping of ``step_id`` -> ``step_label`` from the prior file, or an
+        empty dict if the file does not exist or cannot be read.
+    """
+    lookup = {}
+    if not output_path.exists():
+        return lookup
+    try:
+        prior = json.loads(output_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return lookup
+    for step in prior.get("steps", []):
+        if "step_label" in step and _get_step_id(step) is not None:
+            lookup[_get_step_id(step)] = step["step_label"]
+    return lookup
+
+
 def deterministic_merge(guide_path, vision_path, output_path):
     """Merge guide.json with vision-results.json.
 
     Uses step_id as the primary key to attach vision data to each
     guide step. Only the ``vision`` field is created or replaced;
     all other authored fields are preserved.
+
+    ``step_label`` is a merge-managed field independent of ``guide.json``.
+    Every output step is guaranteed to carry one: existing hand-edited values
+    from a prior ``guide.enriched.json`` are preserved by ``step_id``, and
+    steps without one are seeded with the auto-number (``"Step N"``).
 
     Parameters
     ----------
@@ -204,6 +242,8 @@ def deterministic_merge(guide_path, vision_path, output_path):
     with open(vision_path, "r", encoding="utf-8") as f:
         vision_results = json.load(f)
 
+    step_label_lookup = _load_prior_step_labels(output_path)
+
     vision_lookup = {}
     for step in vision_results.get("steps", []):
         step_id = _get_step_id(step)
@@ -213,7 +253,7 @@ def deterministic_merge(guide_path, vision_path, output_path):
     enriched_steps = []
     warnings = []
 
-    for step in guide.get("steps", []):
+    for i, step in enumerate(guide.get("steps", [])):
         step_id = _get_step_id(step)
         enriched_step = step.copy()
 
@@ -250,6 +290,12 @@ def deterministic_merge(guide_path, vision_path, output_path):
                     enriched_step["vision"] = _escape_vision_long_description(validated)
         else:
             warnings.append(f"No vision data for step_id {step_id}")
+
+        if "step_label" not in enriched_step:
+            if step_id is not None and step_id in step_label_lookup:
+                enriched_step["step_label"] = step_label_lookup[step_id]
+            else:
+                enriched_step["step_label"] = f"Step {i + 1}"
 
         enriched_steps.append(enriched_step)
 
