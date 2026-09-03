@@ -133,6 +133,39 @@ folge-cli publish --project my-guide pdf
 folge-cli publish --project my-guide pdf --orientation landscape
 ```
 
+### Resume from a Stage
+
+By default the pipeline always starts at the beginning. If a run is
+interrupted (e.g. by a power outage) or you only need to regenerate part of
+the output, use `--first-step` to start from a specific stage and skip
+everything before it:
+
+```bash
+# Pick up mid-pipeline after an interruption
+folge-cli pipeline --project my-guide --first-step 5
+
+# Re-run only validation + manual review
+folge-cli pipeline --project my-guide --first-step 4
+```
+
+Valid `--first-step` values map to the stage numbers below:
+
+| `--first-step` | Stage | Requires existing |
+|----------------|-------|-------------------|
+| `1` | Batch vision processing (stages 1-2) | `guide.json` + images |
+| `3` | Merge | (runs vision + merge fresh) |
+| `4` | Validate | `guide.enriched.json` |
+| `4b` | Manual review | `guide.enriched.json` |
+| `5` | Render | `guide.enriched.json` |
+| `5b` | Metadata | `guide.enriched.json` |
+| `6` | Publish | `guide.enriched.json` |
+
+Starting at `4` or later errors out with a clear message if
+`guide.enriched.json` is missing, so you cannot accidentally resume from a
+point with no prerequisite data. Every skipped stage's interactive prompts
+(the reuse-vision prompt and the manual-review pause, for example) are
+bypassed as well.
+
 ## Stage Details
 
 Each stage is documented in detail in its own page:

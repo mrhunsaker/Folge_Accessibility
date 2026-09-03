@@ -66,6 +66,21 @@ def _main():
     p_pipe.add_argument("--api-key", default=None)
     p_pipe.add_argument("--orientation", choices=["portrait", "landscape"], default=None,
                         help="PDF page orientation (default: portrait)")
+    p_pipe.add_argument("--skip-vision", action="store_true",
+                        help="Reuse an existing enriched JSON and skip vision processing + merge")
+    p_pipe.add_argument("--first-step", default=None,
+                        choices=["1", "3", "4", "4b", "5", "5b", "6"],
+                        help=(
+                            "Start pipeline from this step instead of the beginning. "
+                            "Valid values: 1 (batch vision), 3 (merge), 4 (validate), "
+                            "4b (manual review), 5 (render), 5b (metadata), 6 (publish). "
+                            "Requires intermediate artifacts (e.g. enriched JSON) to already exist."
+                        ))
+    from folge_cli.batch_process import get_available_prompts
+    _available_prompts = get_available_prompts()
+    p_pipe.add_argument("--prompt", choices=_available_prompts if _available_prompts else None,
+                        default=None,
+                        help=f"Custom prompt module for vision processing (available: {', '.join(_available_prompts) or 'none'})")
 
     # batch-process
     p_bp = sub.add_parser("batch-process", help="Process images through Vision API")

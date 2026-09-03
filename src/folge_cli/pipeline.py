@@ -22,7 +22,7 @@ review. Pass --skip-vision to do this non-interactively.
 Usage:
     folge-cli pipeline <guide.json> [output-dir] [--project NAME]
                        [--targets pdf,docx,html] [--provider PROVIDER]
-                       [--skip-vision]
+                       [--skip-vision] [--first-step STEP]
 """
 import os
 import shutil
@@ -46,6 +46,30 @@ from .config import (
 )
 from .formats import FORMATS, output_name, pandoc_args, resolve_targets, run_pandoc
 from .progress import StepCounter, info
+
+# Canonical pipeline step identifiers in execution order.
+# Each entry matches the step_num shown in step_header() calls.
+_PIPELINE_STEPS = ["1", "3", "4", "4b", "5", "5b", "6"]
+
+
+def _step_order(step_id):
+    """Return the ordinal position of a pipeline step.
+
+    Parameters
+    ----------
+    step_id : str
+        A pipeline step identifier (e.g. ``"4b"``).
+
+    Returns
+    -------
+    int
+        Ordinal position (0-based) of the step, or ``len(_PIPELINE_STEPS)``
+        if the step is not found.
+    """
+    try:
+        return _PIPELINE_STEPS.index(step_id)
+    except ValueError:
+        return len(_PIPELINE_STEPS)
 
 
 def banner(text, char="=", width=60):
@@ -369,12 +393,16 @@ def run_pipeline(args):
 
     ensure_directories(project_dir, images_dir, output_dir)
 
-    counter = StepCounter(7)
+    counter = StepCounter(8)
 
-    # --- Check for an existing enriched JSON to skip vision processing ---
+    # --- Determine which steps to skip ---
     enriched = output_dir / f"{stem}.enriched.json"
+    first_step = getattr(args, "first_step", None)
     skip_vision = False
-    if getattr(args, "skip_vision", False):
+    if first_step:
+        skip_vision = _step_order(first_step) <= _step_order("1")
+        print(f"\n  --first-step {first_step}: starting pipeline from step {first_step}")
+    elif getattr(args, "skip_vision", False):
         if not enriched.exists():
             print(f"ERROR: --skip-vision given but no enriched JSON found at {enriched}")
             sys.exit(1)
@@ -395,7 +423,7 @@ def run_pipeline(args):
         print("\nFATAL: Missing prerequisites. Install the tools listed above.")
         sys.exit(1)
     done, _ = counter.tick()
-    info(f"  {done}/7 complete — prerequisites OK")
+    info(f"  {done}/8 complete — prerequisites OK")
 
     if not check_provider(provider_name, api_key):
         print(f"\nWARNING: {provider_name.title()} may not be available.")
@@ -407,7 +435,15 @@ def run_pipeline(args):
         if resp != "y":
             sys.exit(1)
     done, _ = counter.tick()
-    info(f"  {done}/7 complete — provider check OK")
+    info(f"  {done}/8 complete — provider check OK")
+
+    # When starting mid-pipeline, verify that required intermediate files exist.
+    if first_step and _step_order(first_step) >= _step_order("4"):
+        if not enriched.exists():
+            print(f"\nFATAL: --first-step {first_step} requires enriched JSON but none found at:")
+            print(f"  {enriched}")
+            print("Run the full pipeline first, or use --first-step 1 to regenerate from scratch.")
+            sys.exit(1)
 
     start_time = time.time()
 
@@ -415,10 +451,10 @@ def run_pipeline(args):
     min_conf = get_min_confidence()
 
     # --- Steps 1-2: Batch Vision Processing ---
-    if skip_vision:
+    if skip_vision or (first_step and _step_order(first_step) > _step_order("1")):
         step_header("1-2", "Skipping vision processing (reusing existing enriched JSON)")
         done, _ = counter.tick()
-        info(f"  {done}/7 complete — batch vision processing skipped")
+        info(f"  {done}/8 complete — batch vision processing skipped")
     else:
         step_header("1-2", f"Processing images with {provider_name.title()} Vision")
         vision_results = output_dir / f"{stem}.vision-results.json"
@@ -447,13 +483,13 @@ def run_pipeline(args):
                 print("\nFATAL: Vision processing produced no output.")
                 sys.exit(1)
         done, _ = counter.tick()
-        info(f"  {done}/7 complete — batch vision processing done")
+        info(f"  {done}/8 complete — batch vision processing done")
 
     # --- Step 3: Merge ---
-    if skip_vision:
+    if skip_vision or (first_step and _step_order(first_step) > _step_order("3")):
         step_header("3", "Skipping merge (reusing existing enriched JSON)")
         done, _ = counter.tick()
-        info(f"  {done}/7 complete — merge skipped")
+        info(f"  {done}/8 complete — merge skipped")
     else:
         step_header("3", "Merging guide with vision data")
         if not run_cmd(
@@ -462,80 +498,101 @@ def run_pipeline(args):
             print("\nFATAL: Merge failed.")
             sys.exit(1)
         done, _ = counter.tick()
-        info(f"  {done}/7 complete — merge done")
+        info(f"  {done}/8 complete — merge done")
 
     # --- Step 4: Validate ---
-    step_header("4", "Validating enriched JSON")
     schema_warnings = output_dir / f"{stem}.schema-warnings.json"
-    if not run_cmd(
-        f"uv run python -m folge_cli.validate_schema {enriched} --warnings-out {schema_warnings}"
-    ):
-        print("\nFATAL: Schema validation failed.")
-        sys.exit(1)
-    if not run_cmd(f"uv run python -m folge_cli.validate_content {enriched} {min_conf}"):
-        print("\nFATAL: Content validation failed.")
-        sys.exit(1)
-    done, _ = counter.tick()
-    info(f"  {done}/7 complete — validation done")
+    if first_step and _step_order(first_step) > _step_order("4"):
+        step_header("4", "Skipping validation")
+        done, _ = counter.tick()
+        info(f"  {done}/8 complete — validation skipped")
+    else:
+        step_header("4", "Validating enriched JSON")
+        if not run_cmd(
+            f"uv run python -m folge_cli.validate_schema {enriched} --warnings-out {schema_warnings}"
+        ):
+            print("\nFATAL: Schema validation failed.")
+            sys.exit(1)
+        if not run_cmd(f"uv run python -m folge_cli.validate_content {enriched} {min_conf}"):
+            print("\nFATAL: Content validation failed.")
+            sys.exit(1)
+        done, _ = counter.tick()
+        info(f"  {done}/8 complete — validation done")
 
     # --- Step 4b: Manual Review Pause ---
-    step_header("4b", "MANUAL REVIEW REQUIRED")
-    manual_file = output_dir / f"{stem}.manual-attention-needed.md"
-    manual_cmd = (
-        f"uv run python -m folge_cli.generate_manual_attention {enriched} {images_dir} {manual_file}"
-    )
-    if schema_warnings.exists():
-        manual_cmd += f" {schema_warnings}"
-    run_cmd(manual_cmd, check=False)
+    if first_step and _step_order(first_step) > _step_order("4b"):
+        step_header("4b", "Skipping manual review")
+        done, _ = counter.tick()
+        info(f"  {done}/8 complete — manual review skipped")
+    else:
+        step_header("4b", "MANUAL REVIEW REQUIRED")
+        manual_file = output_dir / f"{stem}.manual-attention-needed.md"
+        manual_cmd = (
+            f"uv run python -m folge_cli.generate_manual_attention {enriched} {images_dir} {manual_file}"
+        )
+        if schema_warnings.exists():
+            manual_cmd += f" {schema_warnings}"
+        run_cmd(manual_cmd, check=False)
 
-    print("\n  Please review the following files before continuing:")
-    print(f"    - {enriched.absolute()}")
-    if manual_file.exists():
-        print(f"    - {manual_file.absolute()}")
-    print()
+        print("\n  Please review the following files before continuing:")
+        print(f"    - {enriched.absolute()}")
+        if manual_file.exists():
+            print(f"    - {manual_file.absolute()}")
+        print()
 
-    while True:
-        try:
-            resp = input("  (C)ontinue to rendering  or  (R)eVerify enriched JSON? [C/R] ").strip().upper()
-        except EOFError:
-            print("\n\nInterrupted by user. Exiting cleanly.")
-            sys.exit(130)
-        if resp == "R":
-            step_header("4b-r", "Re-validating enriched JSON")
-            run_cmd(
-                f"uv run python -m folge_cli.validate_schema {enriched} --warnings-out {schema_warnings}"
-            )
-            run_cmd(f"uv run python -m folge_cli.validate_content {enriched} {min_conf}")
-            run_cmd(manual_cmd, check=False)
-            print("\n  Please review the updated files:")
-            print(f"    - {enriched.absolute()}")
-            if manual_file.exists():
-                print(f"    - {manual_file.absolute()}")
-            print()
-        elif resp == "C":
-            done, _ = counter.tick()
-            info(f"  {done}/7 complete — manual review done")
-            break
-        else:
-            print("  Please enter C or R")
+        while True:
+            try:
+                resp = input("  (C)ontinue to rendering  or  (R)eVerify enriched JSON? [C/R] ").strip().upper()
+            except EOFError:
+                print("\n\nInterrupted by user. Exiting cleanly.")
+                sys.exit(130)
+            if resp == "R":
+                step_header("4b-r", "Re-validating enriched JSON")
+                run_cmd(
+                    f"uv run python -m folge_cli.validate_schema {enriched} --warnings-out {schema_warnings}"
+                )
+                run_cmd(f"uv run python -m folge_cli.validate_content {enriched} {min_conf}")
+                run_cmd(manual_cmd, check=False)
+                print("\n  Please review the updated files:")
+                print(f"    - {enriched.absolute()}")
+                if manual_file.exists():
+                    print(f"    - {manual_file.absolute()}")
+                print()
+            elif resp == "C":
+                done, _ = counter.tick()
+                info(f"  {done}/8 complete — manual review done")
+                break
+            else:
+                print("  Please enter C or R")
 
     # --- Step 5: Render Markdown ---
-    step_header("5", "Rendering Markdown")
-    md_file = output_dir / f"{stem}.md"
-    if not run_cmd(f"uv run python -m folge_cli.render {enriched} pdf {md_file} --images-dir {images_dir}"):
-        print("\nFATAL: Markdown rendering failed.")
-        sys.exit(1)
-    done, _ = counter.tick()
-    info(f"  {done}/7 complete — render done")
+    if first_step and _step_order(first_step) > _step_order("5"):
+        step_header("5", "Skipping render")
+        done, _ = counter.tick()
+        info(f"  {done}/8 complete — render skipped")
+    else:
+        step_header("5", "Rendering Markdown")
+        md_file = output_dir / f"{stem}.md"
+        if not run_cmd(f"uv run python -m folge_cli.render {enriched} pdf {md_file} --images-dir {images_dir}"):
+            print("\nFATAL: Markdown rendering failed.")
+            sys.exit(1)
+        done, _ = counter.tick()
+        info(f"  {done}/8 complete — render done")
 
     # --- Step 5b: Accessible document metadata ---
-    step_header("5b", "Generating accessible document metadata")
-    from folge_cli.metadata import build_metadata, write_metadata_file
-    metadata = build_metadata(enriched)
-    metadata_yaml = output_dir / f"{stem}.metadata.yaml"
-    write_metadata_file(metadata, metadata_yaml)
-    print(f"  Metadata YAML written to {metadata_yaml}")
-    metadata_args = f"--metadata-file={metadata_yaml}"
+    metadata_args = ""
+    if first_step and _step_order(first_step) > _step_order("5b"):
+        step_header("5b", "Skipping metadata generation")
+        done, _ = counter.tick()
+        info(f"  {done}/8 complete — metadata skipped")
+    else:
+        step_header("5b", "Generating accessible document metadata")
+        from folge_cli.metadata import build_metadata, write_metadata_file
+        metadata = build_metadata(enriched)
+        metadata_yaml = output_dir / f"{stem}.metadata.yaml"
+        write_metadata_file(metadata, metadata_yaml)
+        print(f"  Metadata YAML written to {metadata_yaml}")
+        metadata_args = f"--metadata-file={metadata_yaml}"
 
     # --- Step 6: Publish ---
     step_header("6", "Publishing to target formats")
@@ -735,6 +792,17 @@ def main():
         help=(
             "If an enriched JSON already exists in the output directory, "
             "reuse it and skip vision processing + merge without prompting."
+        ),
+    )
+    parser.add_argument(
+        "--first-step",
+        default=None,
+        choices=["1", "3", "4", "4b", "5", "5b", "6"],
+        help=(
+            "Start pipeline from this step instead of the beginning. "
+            "Valid values: 1 (batch vision), 3 (merge), 4 (validate), "
+            "4b (manual review), 5 (render), 5b (metadata), 6 (publish). "
+            "Requires intermediate artifacts (e.g. enriched JSON) to already exist."
         ),
     )
     from folge_cli.batch_process import get_available_prompts

@@ -168,6 +168,27 @@ hand in the enriched JSON, or after a run that already succeeded at vision
 but failed later in the pipeline. Pass `--skip-vision` to do this
 non-interactively (errors out if no enriched JSON is present).
 
+**Resume from an arbitrary stage** — `--first-step <stage>` starts the
+pipeline from any step instead of the beginning, so you can pick up after a
+power outage, regenerate output from a particular stage, or re-run just the
+tail of the pipeline without replaying everything before it:
+
+```bash
+# Pick up at manual review after losing power mid-run
+folge-cli pipeline --project my-guide --first-step 4b
+
+# Re-render Markdown + republish only
+folge-cli pipeline --project my-guide --first-step 5
+```
+
+Valid values match the stage numbers below: `1` (enrich), `3` (merge),
+`4` (validate), `4b` (manual review), `5` (render), `5b` (metadata),
+`6` (publish). Every stage before the chosen one is skipped (its
+interactive prompts, including the reuse-vision prompt and manual-review
+pause, are bypassed). Starting at stage `4` or later requires an existing
+`guide.enriched.json`; the pipeline errors out with a clear message if it
+is missing.
+
 ### Output Formats
 
 Every writer the installed pandoc supports is exported on each run
@@ -377,7 +398,7 @@ The `folge-cli` command provides eleven subcommands:
 
 ```bash
 # Full pipeline (all stages with progress tracking)
-folge-cli pipeline [guide.json] [output-dir] [--project NAME] [--targets pdf,docx,html,...] [--provider PROVIDER] [--orientation portrait|landscape] [--skip-vision] [--prompt NAME]
+folge-cli pipeline [guide.json] [output-dir] [--project NAME] [--targets pdf,docx,html,...] [--provider PROVIDER] [--orientation portrait|landscape] [--skip-vision] [--first-step STEP] [--prompt NAME]
 
 # Check version
 folge-cli --version

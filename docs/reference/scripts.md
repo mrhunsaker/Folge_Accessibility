@@ -22,7 +22,7 @@ still required at runtime.
 Full end-to-end pipeline with progress tracking (source installation only).
 
 ```bash
-folge-cli pipeline [guide.json] [output-dir] [--project NAME] [--targets pdf,docx,html] [--provider PROVIDER] [--prompt NAME]
+folge-cli pipeline [guide.json] [output-dir] [--project NAME] [--targets pdf,docx,html] [--provider PROVIDER] [--api-key KEY] [--orientation portrait|landscape] [--skip-vision] [--first-step STEP] [--prompt NAME]
 ```
 
 | Argument | Default | Description |
@@ -31,7 +31,11 @@ folge-cli pipeline [guide.json] [output-dir] [--project NAME] [--targets pdf,doc
 | `--project` | — | Project folder under `~/Documents/FolgeProjects` to process |
 | `output` | `<project>/output/` | Output directory |
 | `--targets` | all supported | Comma-separated target formats (default: every writer the installed pandoc supports; see `folge_cli.formats`). Writers missing from that pandoc version are skipped with a warning |
-| `--provider` | `ollama` | Vision AI provider |
+| `--provider` | `ollama` | Vision AI provider (`ollama`, `lmstudio`, `jan`, `llamacpp`, `openrouter`, `openai`, `gemini`, `anthropic`) |
+| `--api-key` | from `.env` | API key for cloud providers |
+| `--orientation` | `portrait` | PDF page orientation (`portrait` or `landscape`) |
+| `--skip-vision` | off | Reuse an existing enriched JSON and skip vision processing + merge |
+| `--first-step` | beginning | Start the pipeline from this step instead of the beginning. Valid values: `1` (enrich), `3` (merge), `4` (validate), `4b` (manual review), `5` (render), `5b` (metadata), `6` (publish). Every earlier stage and its interactive prompts are skipped; starting at `4` or later requires an existing `guide.enriched.json` |
 | `--prompt` | built-in | Custom vision prompt module name (e.g. `brailleblaster`); see [Custom Vision Prompts](../pipeline/enrich.md#custom-vision-prompts) |
 
 An explicit `guide` path always wins over `--project`; an explicit `output`

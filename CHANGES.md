@@ -37,6 +37,18 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (`YYYY.M.
   `--skip-vision` to do this non-interactively; useful after fixing
   something by hand in the enriched JSON, or after a run that succeeded at
   vision but failed later in the pipeline.
+- **`--first-step <stage>`** — `folge-cli pipeline` can now start from any
+  step instead of the beginning, so you can pick up where an interrupted
+  run left off (e.g. after a power outage) or regenerate output from a
+  given stage without replaying everything before it. Valid values match
+  the stage numbers shown in the pipeline's step headers: `1` (batch
+  vision, stages 1-2), `3` (merge), `4` (validate), `4b` (manual review),
+  `5` (render), `5b` (metadata), `6` (publish). Every earlier stage and its
+  interactive prompts are skipped and the step counter is adjusted to
+  account for the skipped phases. Starting at `4` or later requires an
+  existing `<guide>.enriched.json` and errors out with a clear message if
+  it is missing, so you cannot accidentally resume without prerequisite
+  data.
 - **`table` UI control type** — `ui_controls[].type` now accepts `table`
   (alongside the existing `button`, `text_field`, `dropdown`, `checkbox`,
   `radio`, `slider`, `navigation`, `menu`, `tab`, `icon`, `link`, `other`)
