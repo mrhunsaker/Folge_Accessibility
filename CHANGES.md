@@ -98,6 +98,15 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (`YYYY.M.
   stdout/stderr is appended to `<output>/pandoc.log` under per-format headers
   (timestamp, command, exit code).
 
+### Changed
+
+- **`brailleblaster` prompt output rules** — the bundled prompt now requires
+  double (not single) quotation marks around quoted material (button labels,
+  menu names, tooltips) and forbids describing button appearance/glyphs;
+  buttons and controls must be named exactly as they appear in the
+  BrailleBlaster GUI (no "T icon", "H button", "H (Heading)", "A button",
+  or formatting-bar icon descriptions).
+
 ### Fixed
 
 - **Crash on steps with no screenshot** — a step with no `image` (e.g. a

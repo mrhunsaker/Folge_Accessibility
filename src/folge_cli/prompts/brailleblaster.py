@@ -56,6 +56,8 @@ BrailleBlaster-specific instructions:
 Describe the image in detail. If the image shows the BrailleBlaster editor, begin your description with the following exact sentence:
 "BrailleBlaster window showing a style panel on the left, print text editing panel in the center, and braille preview on the right. The top menu bar and toolbars provide editing controls."
 Then, continue with a detailed description of the specific content, actions, or elements visible in the image.
+- Use double quotation marks (") around any quoted material, such as button labels, menu names, or tooltips. Never use single quotes for quoting.
+- Name every button or control exactly as it appears in the BrailleBlaster GUI. Do NOT describe the appearance or glyph of any button (e.g. do not write "a T icon", "an H button", "H (Heading)", "an A button", or describe formatting-bar icons). Use the real GUI name (e.g. "Style", "Heading", "Bold", "Italic", "Underline", "Font").
 
 CRITICAL: Return a single JSON object. NOT an array. Do NOT include any text before or after the JSON. Do NOT wrap in markdown code fences."""
     return prompt

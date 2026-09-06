@@ -90,6 +90,15 @@ opening sentence describing the window layout:
 > editing panel in the center, and braille preview on the right. The top
 > menu bar and toolbars provide editing controls."
 
+It adds two further rules for this specific tool:
+
+- Quoted material (button labels, menu names, tooltips) must be wrapped in
+  **double** quotation marks, never single quotes.
+- Every button or control must be named **exactly as it appears in the
+  BrailleBlaster GUI**, with no description of the button's appearance or
+  glyph (no "T icon", "H button", "H (Heading)", "A button", or
+  formatting-bar icon descriptions).
+
 This kind of structured instruction is appropriate for BrailleBlaster
 documentation but would be inappropriate for other projects — which is
 precisely why prompts are kept as swappable modules.
